@@ -1,0 +1,150 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "setup": {
+      ".read": true,
+      ".write": "auth != null && !data.exists() && newData.val() === true && root.child('admins/'+auth.uid).val() === true",
+      ".validate": "newData.val() === true"
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && !root.child('setup').exists() && newData.val() === true",
+        ".validate": "newData.val() === true"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins/'+auth.uid).val() === true)",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth.uid === $uid && !data.exists() && newData.child('trial').val() === true && !root.child('resm/'+newData.child('rid').val()).exists()))",
+        ".validate": "newData.hasChild('rid') && newData.child('rid').isString() && newData.child('rid').val().length > 0 && newData.child('rid').val().length <= 40",
+        "rid": {
+          ".validate": "newData.isString()"
+        },
+        "trial": {
+          ".validate": "newData.isBoolean()"
+        },
+        "$o": {
+          ".validate": false
+        }
+      }
+    },
+    "master": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      ".validate": "newData.hasChild('j')",
+      "j": {
+        ".validate": "newData.isString() && newData.val().length <= 60000"
+      },
+      "$o": {
+        ".validate": false
+      }
+    },
+    "trialPhones": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$k": {
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (!data.exists() && newData.val() === true))",
+        ".validate": "newData.val() === true && $k.matches(/^[0-9]{10,15}$/)"
+      }
+    },
+    "secrets": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$rid": {
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth != null && !data.exists() && root.child('users/'+auth.uid+'/rid').val() === $rid && root.child('users/'+auth.uid+'/trial').val() === true && newData.isString()))",
+        ".validate": "newData.isString() && newData.val().length <= 100"
+      }
+    },
+    "resm": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$rid": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth != null && !data.exists() && root.child('users/'+auth.uid+'/rid').val() === $rid && root.child('users/'+auth.uid+'/trial').val() === true && newData.child('trial').val() === true && newData.child('fee').val() === 0 && newData.child('dueMs').val() <= now + 8*24*3600*1000))",
+        ".validate": "newData.hasChild('j')",
+        "j": {
+          ".validate": "newData.isString() && newData.val().length <= 20000"
+        },
+        "trial": {
+          ".validate": "newData.isBoolean()"
+        },
+        "fee": {
+          ".validate": "newData.isNumber()"
+        },
+        "dueMs": {
+          ".validate": "newData.isNumber()"
+        },
+        "$o": {
+          ".validate": false
+        }
+      }
+    },
+    "res": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$rid": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (!root.child('resm/'+$rid+'/trial').val() || root.child('resm/'+$rid+'/dueMs').val() > now)))",
+        ".validate": "newData.hasChild('j')",
+        "j": {
+          ".validate": "newData.isString() && newData.val().length <= 8000000"
+        },
+        "$o": {
+          ".validate": false
+        }
+      }
+    },
+    "logo": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$rid": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (!root.child('resm/'+$rid+'/trial').val() || root.child('resm/'+$rid+'/dueMs').val() > now)))",
+        ".validate": "newData.isString() && newData.val().length <= 450000"
+      }
+    },
+    "pub": {
+      "$phone": {
+        ".read": true,
+        "$cid": {
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((root.child('users/'+auth.uid+'/rid').val() === newData.child('rid').val() || (!newData.exists() && root.child('users/'+auth.uid+'/rid').val() === data.child('rid').val())) && (!data.exists() || data.child('rid').val() === root.child('users/'+auth.uid+'/rid').val())))",
+          ".validate": "$phone.matches(/^[0-9]{10,15}$/) && newData.hasChildren(['rid','salt','iv','ct']) && newData.child('rid').isString() && newData.child('rid').val().length <= 40",
+          "rid": {
+            ".validate": "newData.isString()"
+          },
+          "salt": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "iv": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "ct": {
+            ".validate": "newData.isString() && newData.val().length <= 60000"
+          },
+          "$o": {
+            ".validate": false
+          }
+        },
+        ".validate": "$phone.matches(/^[0-9]{10,15}$/)"
+      }
+    },
+    "req": {
+      "$rid": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
+        "$k": {
+          ".write": "(!data.exists() && newData.exists() && root.child('resm/'+$rid).exists()) || (!newData.exists() && auth != null && (root.child('admins/'+auth.uid).val() === true || root.child('users/'+auth.uid+'/rid').val() === $rid))",
+          ".validate": "newData.hasChildren(['id','cid','months']) && (newData.child('months').val() === 1 || newData.child('months').val() === 3 || newData.child('months').val() === 6 || newData.child('months').val() === 12)",
+          "id": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "cid": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "months": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}

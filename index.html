@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Painel de Cobrança</title>
+<title>Painel de Cobrança</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a3d"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Cobrança"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f5f7;--card:#fff;--tx:#101828;--mut:#667085;--bd:#e4e7ec;--bg2:#e8ecf0;--pri:#0f766e;--onpri:#fff;--ink:#0f2a3d;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--slate:#475569;--sh:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1218;--card:#121b24;--tx:#e6edf3;--mut:#8b98a7;--bd:#223040;--bg2:#1a2531;--pri:#2dd4bf;--onpri:#04211e;--ink:#0f2231;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--slate:#94a3b8;--sh:none}}
@@ -1365,17 +1365,19 @@ function toggleTheme(){const n=effTheme()==='dark'?'light':'dark';document.docum
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',paintTT)}catch(e){}
 paintTT();
 const K='cobranca_v1';
-let db;try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
-if(!db)db={master:{user:'islande',pass:'So050316'},resellers:[],clients:[]};
-db.renewals=db.renewals||[];if(db.master.user==='master'&&db.master.pass==='master123')db.master={user:'islande',pass:'So050316'};let lmode='adm';
+const FBMODE=/^https?:$/.test(location.protocol)&&!/claude|anthropic/i.test(location.hostname);
+const DEFPASS='';
+let db;if(!FBMODE){try{db=JSON.parse(localStorage.getItem(K))}catch(e){}}
+if(!db)db=FBMODE?{master:{},resellers:[],clients:[],renewals:[]}:{master:{user:'admin',pass:DEFPASS},resellers:[],clients:[]};
+db.renewals=db.renewals||[];if(!FBMODE&&db.master.user==='master'&&db.master.pass==='master123')db.master={user:'admin',pass:DEFPASS};let lmode='adm';
 let ses=null,tab='dash',err='';
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){storeOk=false}cloudSave()};
+const save=()=>{if(FBMODE){fbSave();return}try{localStorage.setItem(K,JSON.stringify(db))}catch(e){storeOk=false}cloudSave()};
 let storeOk=true;try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){storeOk=false}
 function toast(m){let t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 20px rgba(0,0,0,.3);padding:10px 16px;border-radius:10px;z-index:99;max-width:90%';document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
 function ask(msg,input,cb){$('#modal').innerHTML=`<div class="ov"><div class="md"><p>${esc(msg)}</p>${input?'<input id="askv" type="password" autofocus>':''}<div style="display:flex;gap:8px;margin-top:12px;justify-content:center"><button id="askok">OK</button><button class="s" onclick="closeM()">Cancelar</button></div></div></div>`;
  $('#askok').onclick=()=>{const v=input?$('#askv').value:true;closeM();cb(v)}}
 
-let cloud=null,last={},timer=null,cloudMsg=false;
+let cloud=null,timer=null,cloudMsg=false;
 function docsOf(){const d={'app/master':{j:JSON.stringify(db.master)}};
  db.resellers.forEach(r=>{const o={...r};delete o.logo;d['res/'+r.id]={j:JSON.stringify({r:o,c:db.clients.filter(c=>c.rid===r.id),n:db.renewals.filter(x=>x.rid===r.id)})};if(r.logo)d['logo/'+r.id]={j:r.logo}});return d}
 function cloudSave(){if(!cloud)return;clearTimeout(timer);timer=setTimeout(async()=>{const d=docsOf();
@@ -1390,7 +1392,7 @@ function applyDoc(kind,id,j){
   if(i>=0)db.resellers[i]=o.r;else db.resellers.push(o.r);db.clients.push(...o.c);db.renewals.push(...(o.n||[]))}
  else{const r=db.resellers.find(r=>r.id===id);if(r){if(j!=null)r.logo=j;else delete r.logo}}}
 function softRender(){if(ses&&ses.role==='rev'&&!db.resellers.find(r=>r.id===ses.id))ses=null;
- try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
+ if(!FBMODE)try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
  const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest('#app'))return;render()}
 function onRemote(pre,snap){let ch=false;const cur=docsOf(),seen={},pend=k=>cur[k]&&cur[k].j!==last[k];
  snap.docs.forEach(x=>{const k=pre+'/'+x.id,j=x.data().j;seen[k]=1;if(j===last[k]||pend(k))return;last[k]=j;applyDoc(pre,x.id,j);ch=true});
@@ -1412,6 +1414,151 @@ async function cloudInit(){try{const c=await claude.use('db');if(!c)return;
   if(ses&&ses.role==='rev'&&!db.resellers.find(r=>r.id===ses.id))ses=null;render();toast('Dados carregados da nuvem.')}
  else{cloud=c;cloudSave();render()}subRemote(c)}catch(e){}}
 
+/* ===== Firebase (login + dados na nuvem, via REST) — só ativo no site hospedado ===== */
+const FBC={apiKey:'AIzaSyBVYLdQ1lq1mP4rIzl_-JrnKq76gBIEKaE',db:'https://painelcobranca-f8fe5-default-rtdb.firebaseio.com',dom:'u.painelcobranca.online'};
+const kid=s=>String(s).replace(/[^A-Za-z0-9_-]/g,'_');
+const fbEm=u=>[...new TextEncoder().encode(u)].map(b=>b.toString(16).padStart(2,'0')).join('')+'@'+FBC.dom;
+const ADM_F=['id','name','user','phone','unlimited','fee','due','paid','active','created','trial','uid','prevDue'];
+let fb=null,last={},lastPub={},prevPP=new Set(),fbT=null,fbBusy=false,fbDirty=false,pollT=null,recBusy=false,authErr={},trialKnown=new Set();
+async function itCall(m,body){const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+m+'?key='+FBC.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error((j.error&&j.error.message)||'ERRO');e.code=String(e.message).split(' ')[0];throw e}return j}
+const mkS=j=>({tok:j.idToken,ref:j.refreshToken,uid:j.localId,exp:Date.now()+(+j.expiresIn||3600)*1000});
+const signIn=(u,p)=>itCall('signInWithPassword',{email:fbEm(u),password:p,returnSecureToken:true}).then(mkS);
+async function tok(s){s=s||fb;if(Date.now()>s.exp-60000){const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FBC.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(s.ref)});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('SESSION');s.tok=j.id_token;s.ref=j.refresh_token;s.exp=Date.now()+(+j.expires_in||3600)*1000}return s.tok}
+async function rt(method,path,body,s){let q='';if(s!==false)q='?auth='+encodeURIComponent(await tok(s));
+ const r=await fetch(FBC.db+'/'+path+'.json'+q,{method,headers:body===undefined?undefined:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ if(!r.ok){const e=new Error('RT'+r.status);e.status=r.status;throw e}return r.json()}
+const netErr=(x,bad)=>{const c=x&&x.code;if(['INVALID_LOGIN_CREDENTIALS','EMAIL_NOT_FOUND','INVALID_PASSWORD','INVALID_EMAIL'].includes(c)||x==='bad')return bad;
+ if(c==='TOO_MANY_ATTEMPTS_TRY_LATER')return 'Muitas tentativas. Aguarde alguns minutos e tente de novo.';
+ if(c==='OPERATION_NOT_ALLOWED'||c==='CONFIGURATION_NOT_FOUND')return 'O login por e-mail/senha ainda não foi ativado no Firebase.';
+ if(x&&x.message==='NOACCESS')return 'Usuário sem acesso liberado. Fale com o administrador.';
+ return 'Não foi possível conectar ao servidor ('+((x&&(x.code||x.status||x.message))||'erro')+'). Tente novamente.'};
+const dOf=ms=>{const d=new Date(ms),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+const splitR=r=>{const a={},o={};for(const k in r){if(k==='pass'||k==='logo')continue;(ADM_F.includes(k)?a:o)[k]=r[k]}return[a,o]};
+const cpass=c=>c.pass||String(c.phone||'').replace(/\D/g,'').slice(-4);
+function pubKey(c){const d=String(c.phone||'').replace(/\D/g,'');return d.length>=10&&d.length<=15?d+'/'+kid(c.id):''}
+const ppOf=(D,rid)=>D.clients.filter(c=>c.rid===rid).map(pubKey).filter(Boolean).sort();
+const pubPlain=(D,c)=>{const r=D.resellers.find(r=>r.id===c.rid)||{};return JSON.stringify({c,r:{id:r.id,name:r.name,phone:r.phone,pix:r.pix},n:D.renewals.filter(x=>x.cid===c.id)})};
+const b64=u=>btoa(String.fromCharCode(...u)),ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function pubKeyOf(pass,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:60000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function pubEnc(plain,c){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await pubKeyOf(cpass(c),salt);
+ const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(plain)));return{rid:kid(c.rid),salt:b64(salt),iv:b64(iv),ct:b64(ct)}}
+function fbDocsOf(D,adm){const d={};
+ if(adm){const m={...D.master};delete m.pass;delete m.trialPhones;d['master']={j:JSON.stringify(m)}}
+ D.resellers.forEach(r=>{const[a,o]=splitR(r),k=kid(r.id);
+  if(adm){const x={j:JSON.stringify(a)};if(r.trial){x.trial=true;x.fee=0;x.dueMs=r.due?Date.parse(r.due+'T12:00:00'):Date.now()}d['resm/'+k]=x;if(r.pass)d['secrets/'+k]=r.pass}
+  d['res/'+k]={j:JSON.stringify({r:o,c:D.clients.filter(c=>c.rid===r.id),n:D.renewals.filter(x=>x.rid===r.id),pp:ppOf(D,r.id)})};
+  if(r.logo)d['logo/'+k]=r.logo});return d}
+const sameDocs=(a,b)=>{const x=Object.keys(a),y=Object.keys(b);return x.length===y.length&&x.every(k=>a[k]===b[k])};
+const fbStr=(D,adm)=>{const d=fbDocsOf(D,adm),o={};for(const k in d)o[k]=JSON.stringify(d[k]);return o};
+function fbSave(){if(!fb||fb.role==='cli')return;clearTimeout(fbT);fbT=setTimeout(fbFlush,500)}
+async function fbFlush(){fbT=null;if(!fb)return;if(fbBusy){fbDirty=true;return}fbBusy=true;
+ try{do{fbDirty=false;await fbPush()}while(fbDirty&&fb)}
+ catch(e){toast('Não foi possível salvar na nuvem ('+(e.status||e.message)+'). Vou tentar de novo.');clearTimeout(fbT);fbT=setTimeout(fbFlush,10000)}
+ fbBusy=false;fbRecon()}
+async function fbPush(){const adm=fb.role==='master';
+ const want={};db.clients.forEach(c=>{const p=pubKey(c);if(p)want[p]=c});
+ for(const p in want){const pl=pubPlain(db,want[p]);if(lastPub[p]!==pl){await rt('PUT','pub/'+p,await pubEnc(pl,want[p]));lastPub[p]=pl}}
+ for(const p of [...prevPP]){if(!want[p]){await rt('DELETE','pub/'+p);delete lastPub[p]}}
+ prevPP=new Set(Object.keys(want));
+ const d=fbDocsOf(db,adm);
+ for(const k in d){const s=JSON.stringify(d[k]);if(last[k]!==s){await rt('PUT',k,d[k]);last[k]=s}}
+ for(const k of Object.keys(last)){if(!(k in d)){await rt('DELETE',k);delete last[k]}}}
+async function fbFetch(withLogo){const adm=fb.role==='master';let nd,pp=[];
+ if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp]=await Promise.all(['master','resm','res','secrets','trialPhones'].map(g));
+  nd={master:{...(m&&m.j?JSON.parse(m.j):{}),user:db.master.user},resellers:[],clients:[],renewals:[]};nd.master.trialPhones=Object.keys(tp||{});
+  const lg=withLogo?await g('logo'):null;
+  for(const k in (rs||{})){const o=JSON.parse(rs[k].j),a=rm&&rm[k]?JSON.parse(rm[k].j):{},r={...o.r,...a};r.id=r.id||k;
+   if(rm&&rm[k]&&rm[k].trial&&rm[k].dueMs)r.due=dOf(rm[k].dueMs);if(sc&&sc[k])r.pass=sc[k];
+   const old=db.resellers.find(x=>x.id===r.id);if(lg&&lg[k])r.logo=lg[k];else if(!withLogo&&old&&old.logo)r.logo=old.logo;
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp.push(...(o.pp||[]))}}
+ else{const k=kid(fb.rid);const [rm,rs,lg]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null]);
+  nd={master:{},resellers:[],clients:[],renewals:[]};
+  if(rm){const o=rs?JSON.parse(rs.j):{r:{},c:[],n:[],pp:[]},a=JSON.parse(rm.j),r={...o.r,...a};r.id=r.id||fb.rid;if(rm.trial&&rm.dueMs)r.due=dOf(rm.dueMs);
+   const old=db.resellers.find(x=>x.id===r.id);if(lg)r.logo=lg;else if(!withLogo&&old&&old.logo)r.logo=old.logo;
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp=o.pp||[]}}
+ return{nd,pp}}
+function fbSeed(nd){lastPub={};nd.clients.forEach(c=>{const p=pubKey(c);if(p)lastPub[p]=pubPlain(nd,c)})}
+async function fbLoad(){const{nd,pp}=await fbFetch(true);db=nd;last=fbStr(db,fb.role==='master');prevPP=new Set(pp);fbSeed(db)}
+async function reqPull(){if(!fb||fb.role!=='rev'||!db.resellers[0])return false;const rid=kid(fb.rid);let m=null;try{m=await rt('GET','req/'+rid)}catch(e){return false}
+ if(!m)return false;let ch=false;
+ for(const k in m){const q=m[k]||{},c=db.clients.find(c=>c.id===q.cid);
+  if(c&&[1,3,6,12].includes(+q.months)&&!db.renewals.some(x=>x.id===String(q.id))){db.renewals.push({id:String(q.id).slice(0,40),cid:c.id,rid:c.rid,months:+q.months,value:c.value*(+q.months),date:today(),status:'pend'});ch=true}
+  try{await rt('DELETE','req/'+rid+'/'+k)}catch(e){}}
+ if(ch){save();softRender();toast('Novo pedido de renovação.')}return ch}
+async function fbPoll(){if(!fb||fb.role==='cli'||document.hidden||fbBusy||fbT)return;
+ const m=$('#modal'),a=document.activeElement;if((m&&m.innerHTML)||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest('#app')))return;
+ try{await reqPull();if(fbBusy||fbT)return;const{nd}=await fbFetch(false),adm=fb.role==='master',rs=fbStr(nd,adm);
+  const loc=fbStr(db,adm);if(sameDocs(rs,loc))return;
+  if(!sameDocs(loc,last)||fbBusy||fbT)return;
+  db=nd;last=fbStr(db,adm);fbSeed(db);softRender()}catch(e){if(e.message==='SESSION'){toast('Sessão expirada. Entre novamente.');fbBye()}}}
+async function fbRecon(){if(!fb||fb.role!=='master'||recBusy)return;recBusy=true;let ch=false;
+ try{for(const r of db.resellers){
+   if(!r.uid&&r.pass&&r.user){if(r.pass.length<6||new TextEncoder().encode(r.user).length>30){authErr[r.id]='Senha precisa ter 6+ caracteres e usuário até 30.';continue}
+    try{const s=await itCall('signUp',{email:fbEm(r.user),password:r.pass,returnSecureToken:true}).then(mkS);r.uid=s.uid}
+    catch(e){if(e.code==='EMAIL_EXISTS'){try{r.uid=(await signIn(r.user,r.pass)).uid}catch(_){authErr[r.id]='Usuário já existe no Firebase com outra senha.';continue}}else throw e}
+    await rt('PUT','users/'+r.uid,{rid:kid(r.id)});delete authErr[r.id];ch=true}
+   const k=phKey(r.phone);if(k&&!trialKnown.has(k)){await rt('PUT','trialPhones/'+k,true);trialKnown.add(k)}}}
+ catch(e){}finally{recBusy=false}
+ if(ch){save();render()}}
+async function fbEnter(role,extra){fb={...fb,role,...extra};await fbLoad();clearInterval(pollT);pollT=setInterval(fbPoll,30000);
+ if(role==='rev'){reqPull()}else fbRecon()}
+async function fbLogin(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value,b=e.target.querySelector('button:not([type=button])');
+ if(b)b.disabled=true;err='';
+ try{
+  if(lmode==='cli'){const d=u.replace(/\D/g,'');if(d.length<10)throw 'bad';const m=await rt('GET','pub/'+d,undefined,false);let o=null;
+   for(const id in (m||{})){try{const x=m[id],k=await pubKeyOf(p,ub64(x.salt)),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(x.iv)},k,ub64(x.ct));o=JSON.parse(new TextDecoder().decode(pt));break}catch(_){}}
+   if(!o)throw 'bad';fb={role:'cli'};db={master:{},resellers:[o.r],clients:[o.c],renewals:o.n||[]};ses={role:'cli',id:o.c.id};render();return}
+  const s=await signIn(u,p);fb=s;const adm=await rt('GET','admins/'+s.uid);
+  if(adm===true){db={master:{user:u},resellers:[],clients:[],renewals:[]};await fbEnter('master');ses={role:'master'};tab='dash'}
+  else{const me=await rt('GET','users/'+s.uid);if(!me||!me.rid)throw new Error('NOACCESS');await fbEnter('rev',{rid:me.rid});const r=db.resellers[0];
+   if(!r)throw new Error('NOACCESS');
+   if(!r.active){fbReset();err='Revenda desativada. Fale com o administrador.'}
+   else if(stR(r)==='atr'){fbReset();err=blockMsg(r)}
+   else{ses={role:'rev',id:r.id};tab='dash'}}
+ }catch(x){fbReset();err=netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
+ render()}
+function fbReset(){clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
+async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
+ if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
+ if(b)b.disabled=true;let s=null;
+ try{const pass=rndStr(6,'abcdefghjkmnpqrstuvwxyz23456789');let user,tr=0;
+  for(;;){user='teste'+rndStr(4,'0123456789');try{s=await itCall('signUp',{email:fbEm(user),password:pass,returnSecureToken:true}).then(mkS);break}catch(x){if(x.code!=='EMAIL_EXISTS'||++tr>8)throw x}}
+  try{await rt('PUT','trialPhones/'+k,true,s)}catch(x){if(x.status===401||x.status===403){await itCall('delete',{idToken:s.tok}).catch(()=>{});s=null;terr='Esse número já foi usado. Cada número tem direito a apenas um teste grátis.';render();return}throw x}
+  const nid=uid(),due=addDays(today(),TRIAL_DAYS),r={id:nid,name:(f.name.value||'').trim()||'Teste',user,phone:ph,fee:0,due,paid:false,active:true,trial:true,created:today(),uid:s.uid},[a,o]=splitR(r);
+  await rt('PUT','users/'+s.uid,{rid:nid,trial:true},s);
+  await rt('PUT','resm/'+nid,{j:JSON.stringify(a),trial:true,fee:0,dueMs:Date.parse(due+'T12:00:00')},s);
+  await rt('PUT','secrets/'+nid,pass,s);
+  await rt('PUT','res/'+nid,{j:JSON.stringify({r:o,c:[],n:[],pp:[]})},s);
+  tres={id:nid,user,pass,due,name:r.name,s};tview=2;terr=''
+ }catch(x){if(s)await itCall('delete',{idToken:s.tok}).catch(()=>{});terr='Não foi possível criar o teste agora ('+((x&&(x.code||x.status||x.message))||'erro')+'). Tente novamente.'}
+ render()}
+async function fbEnterTrial(){if(!tres)return;try{fb={...tres.s};await fbEnter('rev',{rid:tres.id});const r=db.resellers[0];if(!r)throw new Error('NOACCESS');ses={role:'rev',id:r.id};err='';tab='dash';tview=0;tres=null}catch(x){fbReset();err=netErr(x,'')}render()}
+async function fbChg(r,nu,np){if(!r.uid)return;const s=await signIn(r.user,r.pass),b={idToken:s.tok,returnSecureToken:false};
+ if(nu&&nu!==r.user)b.email=fbEm(nu);if(np&&np!==r.pass)b.password=np;await itCall('update',b)}
+async function fbDelRes(id){const r=db.resellers.find(r=>r.id===id);if(!r)return;
+ if(r.uid){try{const s=await signIn(r.user,r.pass);await itCall('delete',{idToken:s.tok})}catch(e){}try{await rt('DELETE','users/'+r.uid)}catch(e){}}
+ db.resellers=db.resellers.filter(x=>x.id!==id);db.clients=db.clients.filter(c=>c.rid!==id);db.renewals=db.renewals.filter(x=>x.rid!==id);save();render()}
+let fbSetup=null;
+async function fbCheckSetup(){try{const v=await rt('GET','setup',undefined,false);fbSetup=v!==true}catch(e){fbSetup=false}render()}
+async function fbSetupGo(e){e.preventDefault();const f=e.target,u=f.user.value.trim(),p=f.pass.value,b=f.querySelector('button:not([type=button])');
+ if(!u){err='Informe o usuário.';render();return}
+ if(!fbPwOk(u,p)){err=FB_PW_MSG;render();return}
+ if(p!==f.pass2.value){err='As senhas não conferem.';render();return}
+ if(b)b.disabled=true;err='';let s=null;
+ try{try{s=await itCall('signUp',{email:fbEm(u),password:p,returnSecureToken:true}).then(mkS)}catch(x){if(x.code!=='EMAIL_EXISTS')throw x;try{s=await signIn(u,p)}catch(_){throw x}}
+  await rt('PUT','admins/'+s.uid,true,s);await rt('PUT','setup',true,s);
+  fb=s;db={master:{user:u},resellers:[],clients:[],renewals:[]};last={};
+  await rt('PUT','master',{j:JSON.stringify({user:u})},s);last['master']=JSON.stringify({j:JSON.stringify({user:u})});
+  fbSetup=false;await fbEnter('master');ses={role:'master'};tab='dash'}
+ catch(x){fbReset();err=x&&x.code==='EMAIL_EXISTS'?'Esse usuário já existe no Firebase. Escolha outro nome de usuário.':x&&x.status===401||x&&x.status===403?'O administrador já foi criado por outra pessoa.':netErr(x,'Não foi possível criar o administrador.');if(x&&(x.status===401||x.status===403))fbCheckSetup()}
+ render()}
+const fbPwOk=(u,p)=>p.length>=6&&new TextEncoder().encode(u).length<=30;
+const FB_PW_MSG='No modo online a senha precisa ter pelo menos 6 caracteres e o usuário no máximo 30.';
+
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const brl=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -1424,7 +1571,7 @@ const lbC={pago:'Renovado',pend:'Pendente',exp:'Prestes a expirar',atr:'Devendo'
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 function addDays(d,n){const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 
-function login(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value;
+function login(e){if(FBMODE)return fbLogin(e);e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value;
  if(lmode==='cli'){const d=u.replace(/\D/g,'');const c=db.clients.find(c=>d&&(c.phone||'').replace(/\D/g,'')===d&&(c.pass||d.slice(-4))===p);
   if(c){ses={role:'cli',id:c.id};err=''}else err='WhatsApp ou senha inválidos.';render();return}
  if(u===db.master.user&&p===db.master.pass){ses={role:'master'};err='';tab='dash'}
@@ -1434,17 +1581,22 @@ function login(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#p').valu
   else if(stR(r)==='atr')err=blockMsg(r);
   else{ses={role:'rev',id:r.id};err='';tab='dash'}}
  render()}
-const logout=()=>{ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()};
+const logout=()=>{if(FBMODE){fbBye();return}ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()};
 
 function addReseller(e){e.preventDefault();const f=e.target;
  const user=f.user.value.trim();
  if(user===db.master.user||db.resellers.some(r=>r.user===user)){toast('Esse usuário já existe.');return}
+ if(FBMODE&&!fbPwOk(user,f.pass.value)){toast(FB_PW_MSG);return}
  const nid=uid(),sendAcc=f.sendacc.checked;db.resellers.push({id:nid,name:f.name.value.trim(),user,pass:f.pass.value,phone:f.phone.value.trim(),unlimited:f.unl.checked,fee:f.unl.checked?null:+f.fee.value,due:f.unl.checked?'':f.due.value,paid:false,active:true,created:today()});
  save();render();if(sendAcc)waAcesso(nid)}
 function toggleRes(id){const r=db.resellers.find(r=>r.id===id);r.active=!r.active;save();render()}
-function delRes(id){ask('Excluir revenda e todos os clientes dela?',0,()=>{db.resellers=db.resellers.filter(r=>r.id!==id);db.clients=db.clients.filter(c=>c.rid!==id);save();render()})}
-function resetPass(id){ask('Nova senha da revenda:',1,p=>{if(!p)return;db.resellers.find(r=>r.id===id).pass=p;save();render();toast('Senha alterada.')})}
-function changeMaster(){ask('Nova senha do usuário master:',1,p=>{if(!p)return;db.master.pass=p;save();toast('Senha alterada.')})}
+function delRes(id){ask('Excluir revenda e todos os clientes dela?',0,()=>{if(FBMODE){fbDelRes(id);return}db.resellers=db.resellers.filter(r=>r.id!==id);db.clients=db.clients.filter(c=>c.rid!==id);save();render()})}
+function resetPass(id){ask('Nova senha da revenda:',1,async p=>{if(!p)return;const r=db.resellers.find(r=>r.id===id);
+ if(FBMODE){if(!fbPwOk(r.user,p)){toast(FB_PW_MSG);return}try{await fbChg(r,null,p)}catch(x){toast('Não foi possível trocar a senha ('+(x.code||x.message)+').');return}}
+ r.pass=p;save();render();toast('Senha alterada.')})}
+function changeMaster(){ask('Nova senha do usuário master:',1,async p=>{if(!p)return;
+ if(FBMODE){if(p.length<6){toast('A senha precisa ter pelo menos 6 caracteres.');return}try{await itCall('update',{idToken:await tok(),password:p,returnSecureToken:false});toast('Senha alterada.')}catch(x){toast(x.code==='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'?'Por segurança, saia, entre de novo e repita a troca.':'Não foi possível trocar a senha ('+(x.code||x.message)+').')}return}
+ db.master.pass=p;save();toast('Senha alterada.')})}
 
 function addClient(e){e.preventDefault();const f=e.target;
  if(f.phone.value.replace(/\D/g,'').length<10){toast('Informe o WhatsApp com DDD.');return}
@@ -1521,7 +1673,7 @@ const closeM=()=>{$('#modal').innerHTML=''};
 function copyQR(){const t=$('#qrtxt');t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}toast('Código Pix copiado.')}
 
 function reqRenew(cid){const m=+$('#rm').value,c=db.clients.find(c=>c.id===cid);
- db.renewals.push({id:uid(),cid,rid:c.rid,months:m,value:c.value*m,date:today(),status:'pend'});save();render();showQR(cid,m);toast('Pedido enviado. A revenda confirma após o pagamento.')}
+ const nr={id:uid(),cid,rid:c.rid,months:m,value:c.value*m,date:today(),status:'pend'};db.renewals.push(nr);if(FBMODE)rt('POST','req/'+kid(c.rid),{id:nr.id,cid,months:m},false).catch(()=>toast('Não foi possível enviar o pedido. Avise a revenda.'));save();render();showQR(cid,m);toast('Pedido enviado. A revenda confirma após o pagamento.')}
 function okRenew(id){const r=db.renewals.find(r=>r.id===id),c=db.clients.find(c=>c.id===r.cid);
  if(c){const base=c.due>today()?c.due:today();c.due=addDays(base,30*r.months);c.paid=true}r.status='ok';save();render()}
 function noRenew(id){db.renewals.find(r=>r.id===id).status='no';save();render()}
@@ -1540,8 +1692,9 @@ function cliHtml(){const c=db.clients.find(c=>c.id===ses.id);
 
 function editRes(id){const r=db.resellers.find(r=>r.id===id);
  $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Editar revenda</h2><form id="ef" style="grid-template-columns:1fr"><div><label>Nome</label><input name="name" value="${esc(r.name)}" required></div><div><label>Usuário</label><input name="user" value="${esc(r.user)}" required></div><div><label>Senha</label><input name="pass" value="${esc(r.pass)}" required></div><div><label>WhatsApp</label><input name="phone" value="${esc(r.phone)}"></div><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--tx);grid-column:1/-1"><input type="checkbox" name="unl" ${r.unlimited?'checked':''} onchange="unlTog(this.form)" style="width:auto"> Acesso ilimitado (sem data de expiração)</label><div><label>Valor mensal (R$)</label><input name="fee" type="number" step="0.01" min="0" value="${r.fee??''}" ${r.unlimited?'disabled':''}></div><div><label>Vencimento</label><input name="due" type="date" value="${r.due||''}" ${r.unlimited?'disabled':''}></div><div style="display:flex;gap:8px"><button>Salvar</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
- $('#ef').onsubmit=e=>{e.preventDefault();const f=e.target,u=f.user.value.trim();
+ $('#ef').onsubmit=async e=>{e.preventDefault();const f=e.target,u=f.user.value.trim();
   if(u===db.master.user||db.resellers.some(x=>x.id!==id&&x.user===u)){toast('Esse usuário já existe.');return}
+  if(FBMODE){if(!fbPwOk(u,f.pass.value)){toast(FB_PW_MSG);return}if(u!==r.user||f.pass.value!==r.pass){try{await fbChg(r,u,f.pass.value)}catch(x){toast('Não foi possível atualizar o acesso ('+(x.code||x.message)+').');return}}}
   r.name=f.name.value.trim();r.user=u;r.pass=f.pass.value;r.phone=f.phone.value.trim();r.unlimited=f.unl.checked;if(r.unlimited){r.fee=null;r.due='';r.paid=false}else{r.fee=f.fee.value===''?null:+f.fee.value;r.due=f.due.value}save();closeM();render();toast('Revenda atualizada.')}}
 
 const stR=r=>r.unlimited?'pago':!r.due?'pend':(r.paid&&r.due>today())?'pago':(r.due<today()?'atr':'pend');
@@ -1602,7 +1755,7 @@ function clientRows(list,showRes){
  return `<tr class="${selC.has(c.id)?'sel':''}">${showRes?'':`<td class="ckc"><input type="checkbox" class="ck" aria-label="Selecionar ${esc(c.name)}" ${selC.has(c.id)?'checked':''} onchange="selTog('${c.id}',this.checked)"></td>`}<td>${esc(c.name)}${sitChips(c)}<br><small style="color:var(--mut)">${esc(c.phone)}</small></td>${showRes?`<td>${esc(r?.name)}</td>`:''}<td>${esc(c.plan)}</td><td>${esc(c.user)}</td><td>${esc(c.app)}</td><td>${brl(c.value)}</td><td>${fmt(c.due)}<small class="dl ${diasAte(c.due)<0?'late':diasAte(c.due)<=DIAS?'soon':''}">${diasLbl(c.due)}</small></td><td><span class="b ${x}" ${x==='atr'?`title="Venceu há ${-diasAte(c.due)} dias"`:''}>${stLabel(c,x)}</span></td>`+
  (showRes?'':`<td>${x==='pago'?`<button class="s" onclick="undoCli('${c.id}')">Desfazer</button>`:`<button class="s" onclick="renewCli('${c.id}')">Renovar</button>`} <button class="s" onclick="editCli('${c.id}')">Editar</button> <button class="s" onclick="showQR('${c.id}')">QR Code</button> <button class="s" onclick="wa('${c.id}')">WhatsApp</button> <button class="s d" onclick="delCli('${c.id}')">Excluir</button></td>`)+'</tr>'}).join('')+'</table></div>'}
 
-function render(){render0();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
+function render(){render0();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud&&!FBMODE)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
 
 const DASHD=7;
 function diasAte(d){return Math.round((new Date(d+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
@@ -1721,11 +1874,11 @@ function genTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim()
  const r=mkTrial(f.name.value,ph);save();render();waAcesso(r.id)}
 let tview=0,tres=null,terr='';
 function tOpen(v){tview=v;terr='';render()}
-function tGen(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph);
+function tGen(e){if(FBMODE)return fbTrial(e);e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph);
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
  if(phUsed(k)){terr='Esse número já foi usado. Cada número tem direito a apenas um teste grátis.';render();return}
  const r=mkTrial(f.name.value,ph);save();tres={id:r.id,user:r.user,pass:r.pass,due:r.due,name:r.name};tview=2;terr='';render()}
-function tEnter(){const r=tres&&db.resellers.find(x=>x.id===tres.id);if(!r)return;ses={role:'rev',id:r.id};err='';tab='dash';tview=0;tres=null;render()}
+function tEnter(){if(FBMODE)return fbEnterTrial();const r=tres&&db.resellers.find(x=>x.id===tres.id);if(!r)return;ses={role:'rev',id:r.id};err='';tab='dash';tview=0;tres=null;render()}
 function tLogin(){if(!tres)return;tview=0;render();const u=document.getElementById('u'),p=document.getElementById('p');if(u)u.value=tres.user;if(p)p.value=tres.pass}
 function trialTab(){const ts=db.resellers.filter(r=>r.trial).sort((a,b)=>(b.created||'').localeCompare(a.created||''));
  return `<div class="card"><h2>Teste grátis</h2><p class="note" style="margin:0 0 12px">Gera um acesso de revenda com usuário e senha automáticos, válido por ${TRIAL_DAYS} dias. Depois disso, o acesso é bloqueado sozinho.</p><form onsubmit="genTrial(event)"><div><label>Nome (opcional)</label><input name="name" placeholder="Ex.: João"></div><div><label>WhatsApp (opcional)</label><input name="phone" inputmode="tel" placeholder="DDD + número"></div><button>Gerar teste de ${TRIAL_DAYS} dias</button></form></div><div class="card"><h2>Testes gerados (${ts.length})</h2>`+(ts.length?`<div class="tw"><table><tr><th>Nome</th><th>Usuário</th><th>Senha</th><th>Válido até</th><th>Situação</th><th>Ações</th></tr>${ts.map(r=>{const n=diasAte(r.due),ex=n<0;return `<tr><td>${esc(r.name)}</td><td>${esc(r.user)}</td><td>${esc(r.pass)}</td><td>${fmt(r.due)}</td><td><span class="b ${ex?'atr':n<=2?'exp':'pago'}">${ex?'Expirado':n===0?'Último dia':n+(n===1?' dia restante':' dias restantes')}</span></td><td><button class="s" onclick="waAcesso('${r.id}')">Acesso</button> <button class="s d" onclick="delRes('${r.id}')">Excluir</button></td></tr>`}).join('')}</table></div>`:'<p class="note">Nenhum teste gerado ainda.</p>')+'</div>'}
@@ -1929,11 +2082,12 @@ function render0(){const a=$('#app');
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
  if(!ses&&tview===1){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Teste grátis</h1></div><p class="note">Receba um usuário e uma senha para testar o painel por ${TRIAL_DAYS} dias. Cada número de WhatsApp tem direito a 1 teste.</p><form onsubmit="tGen(event)"><div><label>Seu nome (opcional)</label><input name="name" autocomplete="name" placeholder="Ex.: João"></div><div><label>WhatsApp</label><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="DDD + número" required></div><button>Gerar meu teste</button>${terr?`<div class="err">${esc(terr)}</div>`:''}</form><p style="text-align:center;margin:14px 0 0"><button type="button" class="s" onclick="tOpen(0)" style="width:auto">Voltar ao login</button></p></div>`;return}
  if(!ses&&tview===2&&tres){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Seu teste está pronto</h1></div><p class="note">Guarde estes dados. O teste vale por ${TRIAL_DAYS} dias, até <b>${fmt(tres.due)}</b>.</p><div class="bkr" style="border:1px solid var(--bd);border-radius:10px;margin-bottom:8px"><span><small>Usuário</small><b style="font-size:18px">${esc(tres.user)}</b></span><button type="button" class="s" onclick="copyTxt('${esc(tres.user)}')">Copiar</button></div><div class="bkr" style="border:1px solid var(--bd);border-radius:10px;margin-bottom:12px"><span><small>Senha</small><b style="font-size:18px">${esc(tres.pass)}</b></span><button type="button" class="s" onclick="copyTxt('${esc(tres.pass)}')">Copiar</button></div><button type="button" onclick="tEnter()" style="width:100%">Entrar agora</button><p style="text-align:center;margin:10px 0 0"><button type="button" class="s" onclick="tLogin()" style="width:auto">Ir para a tela de login</button></p></div>`;return}
+ if(!ses&&FBMODE&&fbSetup===true){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Primeiro acesso</h1></div><p class="note">Crie o usuário e a senha do <b>administrador</b>. Faça isso agora: quem abrir esta tela primeiro vira o administrador.</p><form onsubmit="fbSetupGo(event)"><div><label>Usuário</label><input name="user" autocomplete="username" required></div><div><label>Senha (mínimo 6 caracteres)</label><input name="pass" type="password" autocomplete="new-password" required></div><div><label>Repita a senha</label><input name="pass2" type="password" autocomplete="new-password" required></div><button>Criar administrador</button>${err?`<div class="err">${esc(err)}</div>`:''}</form></div>`;return}
  if(!ses){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Painel de Cobrança</h1></div><p class="note">Entre com seu usuário e senha.</p><form onsubmit="login(event)"><div><label>Usuário</label><input id="u" autocomplete="username" required></div><div><label>Senha</label><div class="pw"><input id="p" type="password" autocomplete="current-password" required><button type="button" class="eye" onclick="togglePw(this)" aria-label="Mostrar senha">Mostrar</button></div></div><button>Entrar</button>${err?`<div class="err">${esc(err)}</div>`:''}</form><div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd);text-align:center"><p class="note" style="margin:0 0 8px">Quer conhecer o painel?</p><button type="button" class="s" onclick="tOpen(1)" style="width:100%">Teste grátis por ${TRIAL_DAYS} dias</button></div><p class="note">Acesso restrito ao administrador e às revendas.</p></div>`;return}
  if(ses.role==='cli'){a.innerHTML=cliHtml();return}
  if(ses.role==='master'){
   const rows=realRes().map(r=>{const n=db.clients.filter(c=>c.rid===r.id).length,px=r.unlimited?null:r.due?stR(r):null;
-   return `<tr><td>${r.logo?`<img src="${r.logo}" alt="" style="height:22px;vertical-align:middle;border-radius:4px;margin-right:6px">`:''}${esc(r.name)}</td><td>${esc(r.user)}</td><td>${n}</td><td>${r.fee!=null?brl(r.fee):'—'}</td><td>${r.unlimited?'Sem expiração':r.due?fmt(r.due):'—'}</td><td>${r.unlimited?'<span class="b pago">Ilimitado</span>':px?`<span class="b ${px}">${lb[px]}</span> <button class="s" onclick="${px==='pago'?'undoRes':'payRes'}('${r.id}')">${px==='pago'?'Desfazer':'Marcar pago'}</button>`:'—'}</td><td><span class="b ${r.active?'ativo':'inativo'}">${r.active?'Ativa':'Inativa'}</span></td><td><button class="s" onclick="toggleRes('${r.id}')">${r.active?'Desativar':'Ativar'}</button> <button class="s" onclick="waRes('${r.id}')">WhatsApp</button> <button class="s" onclick="waAcesso('${r.id}')">Enviar acesso</button> <button class="s" onclick="editRes('${r.id}')">Editar</button> <button class="s d" onclick="delRes('${r.id}')">Excluir</button></td></tr>`}).join('');
+   return `<tr><td>${r.logo?`<img src="${r.logo}" alt="" style="height:22px;vertical-align:middle;border-radius:4px;margin-right:6px">`:''}${esc(r.name)}</td><td>${esc(r.user)}${FBMODE&&authErr[r.id]?`<br><small style="color:var(--bad,#c0392b)">⚠ ${esc(authErr[r.id])}</small>`:''}</td><td>${n}</td><td>${r.fee!=null?brl(r.fee):'—'}</td><td>${r.unlimited?'Sem expiração':r.due?fmt(r.due):'—'}</td><td>${r.unlimited?'<span class="b pago">Ilimitado</span>':px?`<span class="b ${px}">${lb[px]}</span> <button class="s" onclick="${px==='pago'?'undoRes':'payRes'}('${r.id}')">${px==='pago'?'Desfazer':'Marcar pago'}</button>`:'—'}</td><td><span class="b ${r.active?'ativo':'inativo'}">${r.active?'Ativa':'Inativa'}</span></td><td><button class="s" onclick="toggleRes('${r.id}')">${r.active?'Desativar':'Ativar'}</button> <button class="s" onclick="waRes('${r.id}')">WhatsApp</button> <button class="s" onclick="waAcesso('${r.id}')">Enviar acesso</button> <button class="s" onclick="editRes('${r.id}')">Editar</button> <button class="s d" onclick="delRes('${r.id}')">Excluir</button></td></tr>`}).join('');
   a.innerHTML=`<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Painel de Cobrança<small>Administrador</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="changeMaster()">Trocar senha</button> <button class="s" onclick="logout()">Sair</button></div></header>
   <div class="shell">${mTabs()}<div class="mainc">`+
   (tab==='dash'?`${masterDash()}`
@@ -1949,6 +2103,6 @@ function render0(){const a=$('#app');
   <div class="card"><h2>Cupons de desconto</h2><form onsubmit="saveCoupons(event)" style="grid-template-columns:1fr">${getCoupons(me).map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="min-width:70px">${brl(k.v)}</b><input name="code${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="on${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}<div><button>Salvar cupons</button></div></form><p class="note">Ao enviar a cobrança, escolha um cupom (opcional): o desconto entra na mensagem e no valor do Pix.</p></div>
   `:tab==='new'?`<div class="card"><h2>Novo cliente</h2><form onsubmit="addClient(event)" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" required></div><div><label>WhatsApp (com DDD)</label><input name="phone" placeholder="81999999999" inputmode="tel" pattern="[0-9 ()+\-]{10,20}" title="Digite o número com DDD, só números" required></div>${telaSel(null)}${usersBlock([])}${appsBlock([])}${sitSel(null)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div>${stField(today(),false)}<div><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" name="send" checked style="width:auto"> Enviar cobrança ao cadastrar</label></div><button>Adicionar</button></form></div>
   `:tab==='cli'?`<div class="card"><h2>Meus clientes</h2><div class="cbar"><button class="s" onclick="bulkOpen(false)" style="width:auto">Mensagem em massa</button><button onclick="cbOpen()" style="width:auto">Cobrança em massa${cbBadge()}</button><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" type="search" placeholder="Pesquisar por nome, WhatsApp, plano, aplicativo..." value="${esc(cliQ)}" oninput="cliSearch(this.value)" autocomplete="off"></div><label>Ordenar <select onchange="cliSort(this.value)">${[['','Padrão'],['az','Nome A–Z'],['za','Nome Z–A']].map(([v,l])=>`<option value="${v}" ${v===cliO?'selected':''}>${l}</option>`).join('')}</select></label><label>Mostrar <select onchange="cliSize(this.value)">${[10,20,30,40,50,100,200,500,0].map(n=>`<option value="${n}" ${n===cliN?'selected':''}>${n||'Todos'}</option>`).join('')}</select> por página</label></div><div class="sits" id="sits">${sitsHtml()}</div><div id="cliList">${cliListHtml()}</div></div>`:tab==='ren'?renCard(ses.id):resellerDash(list)}</div></div>`}}
-render();cloudInit();
+render();if(!FBMODE)cloudInit();else fbCheckSetup();
 let lastDay=today();const chkDay=()=>{if(today()!==lastDay){lastDay=today();if(ses)softRender()}};setInterval(chkDay,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chkDay()});
-</script></body></html>
+</script><script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script></body></html>
