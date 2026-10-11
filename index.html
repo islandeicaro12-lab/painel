@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel de Cobrança</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0f2a3d"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Cobrança"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f5f7;--card:#fff;--tx:#101828;--mut:#667085;--bd:#e4e7ec;--bg2:#e8ecf0;--pri:#0f766e;--onpri:#fff;--ink:#0f2a3d;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;--slate:#475569;--sh:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1218;--card:#121b24;--tx:#e6edf3;--mut:#8b98a7;--bd:#223040;--bg2:#1a2531;--pri:#2dd4bf;--onpri:#04211e;--ink:#0f2231;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--slate:#94a3b8;--sh:none}}
+:root[data-theme="dark"]{--bg:#0b1218;--card:#121b24;--tx:#e6edf3;--mut:#8b98a7;--bd:#223040;--bg2:#1a2531;--pri:#2dd4bf;--onpri:#04211e;--ink:#0f2231;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--slate:#94a3b8;--sh:none}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14.5px/1.5 'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:18px}
+h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
+header h1{font-size:17px;color:#fff}
+header h1 small{font-weight:400;opacity:.65;font-size:13px;margin-left:8px}
+header button.s{color:#fff;border-color:rgba(255,255,255,.28)}header button.s:hover{background:rgba(255,255,255,.1)}
+h2{font-size:15px;font-weight:600;margin:0 0 14px;letter-spacing:-.005em}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:var(--sh)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:var(--sh)}
+.stat{background:var(--card);padding:14px 16px;display:flex;flex-direction:column-reverse;gap:2px}
+.stat b{font-size:22px;font-weight:600;letter-spacing:-.02em}.stat span{color:var(--mut);font-size:13px}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
+label{font-size:12.5px;font-weight:500;color:var(--mut);display:block;margin-bottom:4px}
+input,select{width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:-1px;border-color:var(--pri)}
+button{padding:9px 16px;border:1px solid var(--pri);border-radius:8px;background:var(--pri);color:var(--onpri);font:inherit;font-weight:500;cursor:pointer;transition:filter .15s}
+button:hover{filter:brightness(1.08)}button:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+button.s{background:transparent;color:var(--tx);border-color:var(--bd);padding:5px 10px;font-size:13px;font-weight:500}
+button.s:hover{background:var(--bg2);filter:none}button.d{color:var(--bad)}
+.tabs{display:inline-flex;gap:2px;background:var(--bg2);padding:4px;border-radius:10px;margin-bottom:16px}
+.tabs button{background:transparent;color:var(--mut);border:0;padding:7px 16px}.tabs button:hover{filter:none;color:var(--tx)}
+.tabs button.on{background:var(--card);color:var(--tx);box-shadow:var(--sh)}
+.tw{overflow-x:auto;margin:0 -18px -18px}table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--bd);font-size:14px;white-space:nowrap}
+th{color:var(--mut);font-weight:500;font-size:12.5px;background:var(--bg);border-top:1px solid var(--bd)}
+td:first-child,th:first-child{padding-left:18px}tbody tr:last-child td,tr:last-child>td{border-bottom:0}
+tr:hover>td{background:color-mix(in srgb,var(--bg2) 45%,transparent)}
+td small{font-size:12.5px}
+.b{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:99px;font-size:12.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+.b::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c)}
+.pago,.ativo{--c:var(--ok)}.pend{--c:var(--slate)}.exp{--c:var(--warn)}.atr,.inativo{--c:var(--bad)}
+.login{max-width:380px;margin:10vh auto;padding:28px;border-top:4px solid var(--pri)}.login form{grid-template-columns:1fr}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:10px}.brand h1{font-size:20px;line-height:1.2}
+.mark{width:42px;height:42px;border-radius:10px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;margin-bottom:14px}
+.note{color:var(--mut);font-size:12.5px;margin-top:8px}.err{color:var(--bad);font-size:13px}
+.ov{position:fixed;inset:0;background:rgba(10,18,26,.55);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.md{background:var(--card);border-radius:16px;padding:22px;max-width:360px;width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.qr{background:#fff;padding:12px;border-radius:10px;display:inline-block;margin:10px 0;border:1px solid var(--bd)}
+textarea{width:100%;height:70px;font:12px monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px}
+@media (max-width:560px){.wrap{padding:12px 10px 32px}header{padding:12px 14px}}
+#tt{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:5}#tt svg{width:20px;height:20px}
+.tg{padding:5px 8px!important}.tg svg{width:16px;height:16px;display:block}
+a.btn{display:inline-block;padding:9px 16px;border-radius:8px;background:var(--pri);color:var(--onpri);text-decoration:none;font-weight:500;border:1px solid var(--pri);font-size:14px}a.btn.s{background:transparent;color:var(--tx);border-color:var(--bd)}
+.grid.m{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.sl{font-size:12.5px;color:var(--mut);max-height:96px;overflow:auto;margin-top:8px;border-top:1px solid var(--bd);padding-top:6px}.sl div{display:flex;justify-content:space-between;gap:10px}
+.dh{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px;margin:4px 0 14px}.dh h2{margin:0;font-size:20px;letter-spacing:-.02em}.dh span{color:var(--mut);font-size:13px;display:block}.dh span::first-letter{text-transform:uppercase}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
+.kp{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.kp .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex:none;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.kp .ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kt{display:flex;flex-direction:column;min-width:0}.kp .kl{color:var(--mut);font-size:12.5px}.kp b{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.25}.kp small{color:var(--mut);font-size:12px}
+.t-pri{--c:var(--pri)}.t-ok{--c:var(--ok)}.t-info{--c:#3b82f6}.t-warn{--c:var(--warn)}.t-bad{--c:var(--bad)}
+.dc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.dc>.card,.dp{margin:0}
+@media(max-width:760px){.dc{grid-template-columns:1fr}}
+.dp h3{font-size:14px;font-weight:600;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center}.dp h3 small{color:var(--mut);font-weight:400;font-size:12px}
+.seg{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--bg2);margin-bottom:12px;gap:2px}.seg i{display:block;height:100%}
+.lg{display:flex;flex-direction:column;gap:8px}.lg div{display:flex;align-items:center;gap:8px;font-size:13px}.lg em{width:9px;height:9px;border-radius:50%;flex:none;background:var(--c)}.lg span{flex:1;color:var(--mut)}.lg b{font-weight:600}.lg small{color:var(--mut);min-width:78px;text-align:right}
+.up{display:flex;flex-direction:column}.up .it{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd)}.up .it:first-child{border-top:0;padding-top:0}
+.av{width:34px;height:34px;border-radius:50%;background:var(--bg2);color:var(--tx);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.up .m{flex:1;min-width:0}.up .m b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.up .m small{color:var(--mut);font-size:12px}
+.up .r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.up .r b{font-weight:600}
+.chip{font-size:11.5px;padding:2px 8px;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
+.emp{color:var(--mut);font-size:13px;padding:14px 0;text-align:center}
+.pw{position:relative}.pw input{padding-right:86px}.pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;padding:5px 9px;background:transparent;border:0;box-shadow:none;color:var(--mut);font-size:12.5px;cursor:pointer;border-radius:6px}.pw .eye:hover{color:var(--tx);background:var(--bg2)}
+.al{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}.ar{display:flex;gap:6px}.ar .appi{flex:1;min-width:0}.ar .rm{width:38px;flex:none;padding:0;font-size:18px;line-height:1;background:var(--bg2);color:var(--tx);border:1px solid var(--bd)}.addapp{width:auto;padding:6px 12px;background:transparent;color:var(--pri);border:1px dashed var(--bd);font-size:13px}.addapp:hover{border-color:var(--pri)}
+body:has(.login){background:radial-gradient(900px 520px at 12% -8%,color-mix(in srgb,var(--pri) 30%,transparent),transparent 62%),radial-gradient(800px 480px at 100% 105%,color-mix(in srgb,#3b82f6 22%,transparent),transparent 60%),var(--ink);min-height:100vh}
+.login{position:relative;overflow:hidden;max-width:400px;margin:9vh auto;padding:36px 32px 26px;border:1px solid color-mix(in srgb,var(--bd) 70%,transparent);border-radius:18px;box-shadow:0 30px 70px -18px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.12)}
+.login::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--pri),#3b82f6)}
+.login .brand{flex-direction:column;text-align:center;gap:14px;margin-bottom:8px}.login .brand h1{font-size:22px;letter-spacing:-.02em;margin:0}
+.login>.note{text-align:center;margin:0 0 22px}
+.login form{gap:16px}.login label{font-weight:500;font-size:13px;margin-bottom:6px;display:block}
+.login input{padding:12px 14px;border-radius:10px;font-size:15px;background:var(--bg)}.login .pw input{padding-right:88px}
+.login form>button:not(.eye){padding:13px;border-radius:10px;font-size:15px;font-weight:600;border:0;background:linear-gradient(180deg,var(--pri),color-mix(in srgb,var(--pri) 82%,#000));box-shadow:0 8px 18px -8px var(--pri);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.login form>button:not(.eye):hover{transform:translateY(-1px);box-shadow:0 12px 22px -8px var(--pri)}.login form>button:not(.eye):active{transform:none}
+.login form+.note{text-align:center;border-top:1px solid var(--bd);padding-top:16px;margin:24px 0 0}
+@media(max-width:480px){.login{margin:7vh 4px;padding:30px 22px 22px}}
+.cbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.srch{position:relative;flex:1;min-width:210px}.srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--mut);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none}.srch input{padding-left:36px}.cbar label{display:flex;gap:6px;align-items:center;margin:0;color:var(--mut);font-size:13px;white-space:nowrap}.cbar select{width:auto}.pgr{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--mut);font-size:13px}.pgr div{display:flex;gap:8px;align-items:center}.pgr button{padding:5px 12px}.pgr button:disabled{opacity:.45;cursor:default}
+.stl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:42px}.stw{display:flex;align-items:center;gap:8px}.stx{color:var(--mut);font-size:12.5px}.paidck{display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--tx)}.paidck input{width:auto}
+.addapp:disabled{opacity:.5;cursor:default;border-color:var(--bd);color:var(--mut)}
+.ckc{width:34px;padding-right:0!important}.ck{width:18px;height:18px;margin:0;accent-color:var(--pri);cursor:pointer;vertical-align:middle}tr.sel>td{background:color-mix(in srgb,var(--pri) 8%,transparent)}.selbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;margin-bottom:10px;border-radius:10px;background:color-mix(in srgb,var(--pri) 10%,transparent);border:1px solid color-mix(in srgb,var(--pri) 30%,transparent)}.selbar b{margin-right:auto;font-weight:600}
+.rhd{display:flex;align-items:center;gap:16px;margin:4px 0 16px;padding:16px 18px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}.rhd img{max-height:72px;max-width:min(180px,40%);object-fit:contain;border-radius:10px;flex:none}.rhd h2{margin:0;font-size:20px;letter-spacing:-.02em}.rhd span{color:var(--mut);font-size:13px;display:block;margin-top:2px}.rhd span::first-letter{text-transform:uppercase}.av.lg{width:64px;height:64px;font-size:22px;border-radius:14px}
+.rhd>div:not(.rdue):not(.av){flex:1;min-width:0}.rdue{margin-left:auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}.rdue b{font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.2}.rdue small{color:var(--mut);font-size:12px}.rhd .rdue .chip{display:inline-block;margin:0;color:var(--c);font-size:11.5px}@media(max-width:560px){.rhd{flex-wrap:wrap}.rdue{margin-left:0;width:100%;align-items:flex-start;text-align:left;border-top:1px solid var(--bd);padding-top:12px}}
+.sits{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.sits button{padding:5px 12px;border-radius:99px;background:transparent;border:1px solid var(--bd);color:var(--tx);font-size:13px;cursor:pointer}.sits button.on{background:var(--pri);color:var(--onpri);border-color:var(--pri)}.sits small{opacity:.75;margin-left:6px}.sc2{font-size:11.5px;padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}.sc2.n{background:color-mix(in srgb,#3b82f6 15%,transparent);color:#2563eb}.sc2.g{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}.mainc{min-width:0}
+.side{position:sticky;top:12px;display:flex;flex-direction:column;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:8px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.side button{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:9px;background:transparent;color:var(--mut);font-size:14px;cursor:pointer;box-shadow:none}
+.side button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.side button:hover{background:var(--bg2);color:var(--tx)}.side button.on{background:var(--pri);color:var(--onpri);font-weight:600}
+.side em{font-style:normal;margin-left:6px;background:var(--bad);color:#fff;border-radius:99px;padding:0 7px;font-size:11px}
+@media(max-width:640px){.shell{grid-template-columns:52px minmax(0,1fr);gap:10px}.side{padding:5px;top:8px}.side button{justify-content:center;padding:11px 0}.side button span{display:none}.side button.hasn::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--bad)}}
+.acat{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.achip{display:inline-flex;border:1px solid var(--bd);border-radius:99px;overflow:hidden;background:var(--card)}.achip button{border:0;background:transparent;color:var(--tx);padding:5px 10px;font-size:13px;cursor:pointer;width:auto;box-shadow:none}.achip .ca:hover{background:color-mix(in srgb,var(--pri) 12%,transparent);color:var(--pri)}.achip .cx{color:var(--mut);padding:5px 9px;border-left:1px solid var(--bd)}.achip .cx:hover{color:var(--bad)}
+.apt{display:flex;width:100%;box-sizing:border-box;margin:6px 0 10px}.apt button{flex:1;width:auto}.appp[hidden]{display:none}.asel{border-top:1px dashed var(--bd);margin-top:10px}.aem[hidden]{display:none}
+.dl{display:block;font-size:12px;color:var(--mut);white-space:nowrap}.dl.soon{color:var(--warn);font-weight:600}.dl.late{color:var(--bad);font-weight:600}
+.bkh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 6px;flex-wrap:wrap}.bkh button{padding:4px 10px}.bkl{max-height:230px;overflow-y:auto;border:1px solid var(--bd);border-radius:10px}.bkr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-top:1px solid var(--bd)}.bkr:first-child{border-top:0}.bkr label{display:flex;align-items:center;gap:10px;margin:0;color:var(--tx);flex:1;min-width:0;cursor:pointer}.bkr label input{width:auto;margin:0}.bkr small{display:block;color:var(--mut);font-size:12px}.bkr .btn{padding:5px 12px;flex:none;cursor:pointer}.bkr.ok{background:color-mix(in srgb,var(--ok) 8%,transparent)}
+</style></head><body><div class="wrap" id="app"></div><div id="modal"></div><button id="tt" class="s" onclick="toggleTheme()"></button>
+<script>
+(function(){var mods={},defs={};function req(n){n=n.replace('./','');if(!mods[n]){var m={exports:{}};defs[n](m,m.exports,req);mods[n]=m.exports}return mods[n]}
+defs['QR8bitByte']=function(module,exports,require){var QRMode = require('./QRMode');
+
+function QR8bitByte(data) {
+	this.mode = QRMode.MODE_8BIT_BYTE;
+	this.data = data;
+}
+
+QR8bitByte.prototype = {
+
+	getLength : function() {
+		return this.data.length;
+	},
+	
+	write : function(buffer) {
+		for (var i = 0; i < this.data.length; i++) {
+			// not JIS ...
+			buffer.put(this.data.charCodeAt(i), 8);
+		}
+	}
+};
+
+module.exports = QR8bitByte;
+
+};
+defs['QRBitBuffer']=function(module,exports,require){function QRBitBuffer() {
+	this.buffer = [];
+	this.length = 0;
+}
+
+QRBitBuffer.prototype = {
+
+	get : function(index) {
+		var bufIndex = Math.floor(index / 8);
+		return ( (this.buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+	},
+	
+	put : function(num, length) {
+		for (var i = 0; i < length; i++) {
+			this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+		}
+	},
+	
+	getLengthInBits : function() {
+		return this.length;
+	},
+	
+	putBit : function(bit) {
+	
+		var bufIndex = Math.floor(this.length / 8);
+		if (this.buffer.length <= bufIndex) {
+			this.buffer.push(0);
+		}
+	
+		if (bit) {
+			this.buffer[bufIndex] |= (0x80 >>> (this.length % 8) );
+		}
+	
+		this.length++;
+	}
+};
+
+module.exports = QRBitBuffer;
+
+};
+defs['QRErrorCorrectLevel']=function(module,exports,require){module.exports = {
+	L : 1,
+	M : 0,
+	Q : 3,
+	H : 2
+};
+
+
+};
+defs['QRMaskPattern']=function(module,exports,require){module.exports = {
+	PATTERN000 : 0,
+	PATTERN001 : 1,
+	PATTERN010 : 2,
+	PATTERN011 : 3,
+	PATTERN100 : 4,
+	PATTERN101 : 5,
+	PATTERN110 : 6,
+	PATTERN111 : 7
+};
+
+};
+defs['QRMath']=function(module,exports,require){var QRMath = {
+
+	glog : function(n) {
+	
+		if (n < 1) {
+			throw new Error("glog(" + n + ")");
+		}
+		
+		return QRMath.LOG_TABLE[n];
+	},
+	
+	gexp : function(n) {
+	
+		while (n < 0) {
+			n += 255;
+		}
+	
+		while (n >= 256) {
+			n -= 255;
+		}
+	
+		return QRMath.EXP_TABLE[n];
+	},
+	
+	EXP_TABLE : new Array(256),
+	
+	LOG_TABLE : new Array(256)
+
+};
+	
+for (var i = 0; i < 8; i++) {
+	QRMath.EXP_TABLE[i] = 1 << i;
+}
+for (var i = 8; i < 256; i++) {
+	QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4]
+		^ QRMath.EXP_TABLE[i - 5]
+		^ QRMath.EXP_TABLE[i - 6]
+		^ QRMath.EXP_TABLE[i - 8];
+}
+for (var i = 0; i < 255; i++) {
+	QRMath.LOG_TABLE[QRMath.EXP_TABLE[i] ] = i;
+}
+
+module.exports = QRMath;
+
+};
+defs['QRMode']=function(module,exports,require){module.exports = {
+    MODE_NUMBER :       1 << 0,
+    MODE_ALPHA_NUM :    1 << 1,
+    MODE_8BIT_BYTE :    1 << 2,
+    MODE_KANJI :        1 << 3
+};
+
+};
+defs['QRPolynomial']=function(module,exports,require){var QRMath = require('./QRMath');
+
+function QRPolynomial(num, shift) {
+	if (num.length === undefined) {
+		throw new Error(num.length + "/" + shift);
+	}
+
+	var offset = 0;
+
+	while (offset < num.length && num[offset] === 0) {
+		offset++;
+	}
+
+	this.num = new Array(num.length - offset + shift);
+	for (var i = 0; i < num.length - offset; i++) {
+		this.num[i] = num[i + offset];
+	}
+}
+
+QRPolynomial.prototype = {
+
+	get : function(index) {
+		return this.num[index];
+	},
+	
+	getLength : function() {
+		return this.num.length;
+	},
+	
+	multiply : function(e) {
+	
+		var num = new Array(this.getLength() + e.getLength() - 1);
+	
+		for (var i = 0; i < this.getLength(); i++) {
+			for (var j = 0; j < e.getLength(); j++) {
+				num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i) ) + QRMath.glog(e.get(j) ) );
+			}
+		}
+	
+		return new QRPolynomial(num, 0);
+	},
+	
+	mod : function(e) {
+	
+		if (this.getLength() - e.getLength() < 0) {
+			return this;
+		}
+	
+		var ratio = QRMath.glog(this.get(0) ) - QRMath.glog(e.get(0) );
+	
+		var num = new Array(this.getLength() );
+		
+		for (var i = 0; i < this.getLength(); i++) {
+			num[i] = this.get(i);
+		}
+		
+		for (var x = 0; x < e.getLength(); x++) {
+			num[x] ^= QRMath.gexp(QRMath.glog(e.get(x) ) + ratio);
+		}
+	
+		// recursive call
+		return new QRPolynomial(num, 0).mod(e);
+	}
+};
+
+module.exports = QRPolynomial;
+
+};
+defs['QRRSBlock']=function(module,exports,require){var QRErrorCorrectLevel = require('./QRErrorCorrectLevel');
+
+function QRRSBlock(totalCount, dataCount) {
+	this.totalCount = totalCount;
+	this.dataCount  = dataCount;
+}
+
+QRRSBlock.RS_BLOCK_TABLE = [
+
+	// L
+	// M
+	// Q
+	// H
+
+	// 1
+	[1, 26, 19],
+	[1, 26, 16],
+	[1, 26, 13],
+	[1, 26, 9],
+	
+	// 2
+	[1, 44, 34],
+	[1, 44, 28],
+	[1, 44, 22],
+	[1, 44, 16],
+
+	// 3
+	[1, 70, 55],
+	[1, 70, 44],
+	[2, 35, 17],
+	[2, 35, 13],
+
+	// 4		
+	[1, 100, 80],
+	[2, 50, 32],
+	[2, 50, 24],
+	[4, 25, 9],
+	
+	// 5
+	[1, 134, 108],
+	[2, 67, 43],
+	[2, 33, 15, 2, 34, 16],
+	[2, 33, 11, 2, 34, 12],
+	
+	// 6
+	[2, 86, 68],
+	[4, 43, 27],
+	[4, 43, 19],
+	[4, 43, 15],
+	
+	// 7		
+	[2, 98, 78],
+	[4, 49, 31],
+	[2, 32, 14, 4, 33, 15],
+	[4, 39, 13, 1, 40, 14],
+	
+	// 8
+	[2, 121, 97],
+	[2, 60, 38, 2, 61, 39],
+	[4, 40, 18, 2, 41, 19],
+	[4, 40, 14, 2, 41, 15],
+	
+	// 9
+	[2, 146, 116],
+	[3, 58, 36, 2, 59, 37],
+	[4, 36, 16, 4, 37, 17],
+	[4, 36, 12, 4, 37, 13],
+	
+	// 10		
+	[2, 86, 68, 2, 87, 69],
+	[4, 69, 43, 1, 70, 44],
+	[6, 43, 19, 2, 44, 20],
+	[6, 43, 15, 2, 44, 16],
+
+	// 11
+	[4, 101, 81],
+	[1, 80, 50, 4, 81, 51],
+	[4, 50, 22, 4, 51, 23],
+	[3, 36, 12, 8, 37, 13],
+
+	// 12
+	[2, 116, 92, 2, 117, 93],
+	[6, 58, 36, 2, 59, 37],
+	[4, 46, 20, 6, 47, 21],
+	[7, 42, 14, 4, 43, 15],
+
+	// 13
+	[4, 133, 107],
+	[8, 59, 37, 1, 60, 38],
+	[8, 44, 20, 4, 45, 21],
+	[12, 33, 11, 4, 34, 12],
+
+	// 14
+	[3, 145, 115, 1, 146, 116],
+	[4, 64, 40, 5, 65, 41],
+	[11, 36, 16, 5, 37, 17],
+	[11, 36, 12, 5, 37, 13],
+
+	// 15
+	[5, 109, 87, 1, 110, 88],
+	[5, 65, 41, 5, 66, 42],
+	[5, 54, 24, 7, 55, 25],
+	[11, 36, 12],
+
+	// 16
+	[5, 122, 98, 1, 123, 99],
+	[7, 73, 45, 3, 74, 46],
+	[15, 43, 19, 2, 44, 20],
+	[3, 45, 15, 13, 46, 16],
+
+	// 17
+	[1, 135, 107, 5, 136, 108],
+	[10, 74, 46, 1, 75, 47],
+	[1, 50, 22, 15, 51, 23],
+	[2, 42, 14, 17, 43, 15],
+
+	// 18
+	[5, 150, 120, 1, 151, 121],
+	[9, 69, 43, 4, 70, 44],
+	[17, 50, 22, 1, 51, 23],
+	[2, 42, 14, 19, 43, 15],
+
+	// 19
+	[3, 141, 113, 4, 142, 114],
+	[3, 70, 44, 11, 71, 45],
+	[17, 47, 21, 4, 48, 22],
+	[9, 39, 13, 16, 40, 14],
+
+	// 20
+	[3, 135, 107, 5, 136, 108],
+	[3, 67, 41, 13, 68, 42],
+	[15, 54, 24, 5, 55, 25],
+	[15, 43, 15, 10, 44, 16],
+
+	// 21
+	[4, 144, 116, 4, 145, 117],
+	[17, 68, 42],
+	[17, 50, 22, 6, 51, 23],
+	[19, 46, 16, 6, 47, 17],
+
+	// 22
+	[2, 139, 111, 7, 140, 112],
+	[17, 74, 46],
+	[7, 54, 24, 16, 55, 25],
+	[34, 37, 13],
+
+	// 23
+	[4, 151, 121, 5, 152, 122],
+	[4, 75, 47, 14, 76, 48],
+	[11, 54, 24, 14, 55, 25],
+	[16, 45, 15, 14, 46, 16],
+
+	// 24
+	[6, 147, 117, 4, 148, 118],
+	[6, 73, 45, 14, 74, 46],
+	[11, 54, 24, 16, 55, 25],
+	[30, 46, 16, 2, 47, 17],
+
+	// 25
+	[8, 132, 106, 4, 133, 107],
+	[8, 75, 47, 13, 76, 48],
+	[7, 54, 24, 22, 55, 25],
+	[22, 45, 15, 13, 46, 16],
+
+	// 26
+	[10, 142, 114, 2, 143, 115],
+	[19, 74, 46, 4, 75, 47],
+	[28, 50, 22, 6, 51, 23],
+	[33, 46, 16, 4, 47, 17],
+
+	// 27
+	[8, 152, 122, 4, 153, 123],
+	[22, 73, 45, 3, 74, 46],
+	[8, 53, 23, 26, 54, 24],
+	[12, 45, 15, 28, 46, 16],
+
+	// 28
+	[3, 147, 117, 10, 148, 118],
+	[3, 73, 45, 23, 74, 46],
+	[4, 54, 24, 31, 55, 25],
+	[11, 45, 15, 31, 46, 16],
+
+	// 29
+	[7, 146, 116, 7, 147, 117],
+	[21, 73, 45, 7, 74, 46],
+	[1, 53, 23, 37, 54, 24],
+	[19, 45, 15, 26, 46, 16],
+
+	// 30
+	[5, 145, 115, 10, 146, 116],
+	[19, 75, 47, 10, 76, 48],
+	[15, 54, 24, 25, 55, 25],
+	[23, 45, 15, 25, 46, 16],
+
+	// 31
+	[13, 145, 115, 3, 146, 116],
+	[2, 74, 46, 29, 75, 47],
+	[42, 54, 24, 1, 55, 25],
+	[23, 45, 15, 28, 46, 16],
+
+	// 32
+	[17, 145, 115],
+	[10, 74, 46, 23, 75, 47],
+	[10, 54, 24, 35, 55, 25],
+	[19, 45, 15, 35, 46, 16],
+
+	// 33
+	[17, 145, 115, 1, 146, 116],
+	[14, 74, 46, 21, 75, 47],
+	[29, 54, 24, 19, 55, 25],
+	[11, 45, 15, 46, 46, 16],
+
+	// 34
+	[13, 145, 115, 6, 146, 116],
+	[14, 74, 46, 23, 75, 47],
+	[44, 54, 24, 7, 55, 25],
+	[59, 46, 16, 1, 47, 17],
+
+	// 35
+	[12, 151, 121, 7, 152, 122],
+	[12, 75, 47, 26, 76, 48],
+	[39, 54, 24, 14, 55, 25],
+	[22, 45, 15, 41, 46, 16],
+
+	// 36
+	[6, 151, 121, 14, 152, 122],
+	[6, 75, 47, 34, 76, 48],
+	[46, 54, 24, 10, 55, 25],
+	[2, 45, 15, 64, 46, 16],
+
+	// 37
+	[17, 152, 122, 4, 153, 123],
+	[29, 74, 46, 14, 75, 47],
+	[49, 54, 24, 10, 55, 25],
+	[24, 45, 15, 46, 46, 16],
+
+	// 38
+	[4, 152, 122, 18, 153, 123],
+	[13, 74, 46, 32, 75, 47],
+	[48, 54, 24, 14, 55, 25],
+	[42, 45, 15, 32, 46, 16],
+
+	// 39
+	[20, 147, 117, 4, 148, 118],
+	[40, 75, 47, 7, 76, 48],
+	[43, 54, 24, 22, 55, 25],
+	[10, 45, 15, 67, 46, 16],
+
+	// 40
+	[19, 148, 118, 6, 149, 119],
+	[18, 75, 47, 31, 76, 48],
+	[34, 54, 24, 34, 55, 25],
+	[20, 45, 15, 61, 46, 16]
+];
+
+QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+	
+	var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+	
+	if (rsBlock === undefined) {
+		throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel);
+	}
+
+	var length = rsBlock.length / 3;
+	
+	var list = [];
+	
+	for (var i = 0; i < length; i++) {
+
+		var count = rsBlock[i * 3 + 0];
+		var totalCount = rsBlock[i * 3 + 1];
+		var dataCount  = rsBlock[i * 3 + 2];
+
+		for (var j = 0; j < count; j++) {
+			list.push(new QRRSBlock(totalCount, dataCount) );	
+		}
+	}
+	
+	return list;
+};
+
+QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+
+	switch(errorCorrectLevel) {
+	case QRErrorCorrectLevel.L :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+	case QRErrorCorrectLevel.M :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+	case QRErrorCorrectLevel.Q :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+	case QRErrorCorrectLevel.H :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+	default :
+		return undefined;
+	}
+};
+
+module.exports = QRRSBlock;
+
+};
+defs['QRUtil']=function(module,exports,require){var QRMode = require('./QRMode');
+var QRPolynomial = require('./QRPolynomial');
+var QRMath = require('./QRMath');
+var QRMaskPattern = require('./QRMaskPattern');
+
+var QRUtil = {
+
+    PATTERN_POSITION_TABLE : [
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50],
+        [6, 30, 54],        
+        [6, 32, 58],
+        [6, 34, 62],
+        [6, 26, 46, 66],
+        [6, 26, 48, 70],
+        [6, 26, 50, 74],
+        [6, 30, 54, 78],
+        [6, 30, 56, 82],
+        [6, 30, 58, 86],
+        [6, 34, 62, 90],
+        [6, 28, 50, 72, 94],
+        [6, 26, 50, 74, 98],
+        [6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],
+        [6, 32, 58, 84, 110],
+        [6, 30, 58, 86, 114],
+        [6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],
+        [6, 30, 54, 78, 102, 126],
+        [6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],
+        [6, 34, 60, 86, 112, 138],
+        [6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],
+        [6, 30, 54, 78, 102, 126, 150],
+        [6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],
+        [6, 32, 58, 84, 110, 136, 162],
+        [6, 26, 54, 82, 110, 138, 166],
+        [6, 30, 58, 86, 114, 142, 170]
+    ],
+
+    G15 : (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18 : (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK : (1 << 14) | (1 << 12) | (1 << 10)    | (1 << 4) | (1 << 1),
+
+    getBCHTypeInfo : function(data) {
+        var d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+            d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) ) );    
+        }
+        return ( (data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+
+    getBCHTypeNumber : function(data) {
+        var d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+            d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) ) );    
+        }
+        return (data << 12) | d;
+    },
+
+    getBCHDigit : function(data) {
+
+        var digit = 0;
+
+        while (data !== 0) {
+            digit++;
+            data >>>= 1;
+        }
+
+        return digit;
+    },
+
+    getPatternPosition : function(typeNumber) {
+        return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+
+    getMask : function(maskPattern, i, j) {
+        
+        switch (maskPattern) {
+            
+        case QRMaskPattern.PATTERN000 : return (i + j) % 2 === 0;
+        case QRMaskPattern.PATTERN001 : return i % 2 === 0;
+        case QRMaskPattern.PATTERN010 : return j % 3 === 0;
+        case QRMaskPattern.PATTERN011 : return (i + j) % 3 === 0;
+        case QRMaskPattern.PATTERN100 : return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 === 0;
+        case QRMaskPattern.PATTERN101 : return (i * j) % 2 + (i * j) % 3 === 0;
+        case QRMaskPattern.PATTERN110 : return ( (i * j) % 2 + (i * j) % 3) % 2 === 0;
+        case QRMaskPattern.PATTERN111 : return ( (i * j) % 3 + (i + j) % 2) % 2 === 0;
+
+        default :
+            throw new Error("bad maskPattern:" + maskPattern);
+        }
+    },
+
+    getErrorCorrectPolynomial : function(errorCorrectLength) {
+
+        var a = new QRPolynomial([1], 0);
+
+        for (var i = 0; i < errorCorrectLength; i++) {
+            a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0) );
+        }
+
+        return a;
+    },
+
+    getLengthInBits : function(mode, type) {
+
+        if (1 <= type && type < 10) {
+
+            // 1 - 9
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 10;
+            case QRMode.MODE_ALPHA_NUM  : return 9;
+            case QRMode.MODE_8BIT_BYTE  : return 8;
+            case QRMode.MODE_KANJI      : return 8;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 27) {
+
+            // 10 - 26
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 12;
+            case QRMode.MODE_ALPHA_NUM  : return 11;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 10;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 41) {
+
+            // 27 - 40
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 14;
+            case QRMode.MODE_ALPHA_NUM  : return 13;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 12;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else {
+            throw new Error("type:" + type);
+        }
+    },
+
+    getLostPoint : function(qrCode) {
+        
+        var moduleCount = qrCode.getModuleCount();
+        var lostPoint = 0;
+        var row = 0; 
+        var col = 0;
+
+        
+        // LEVEL1
+        
+        for (row = 0; row < moduleCount; row++) {
+
+            for (col = 0; col < moduleCount; col++) {
+
+                var sameCount = 0;
+                var dark = qrCode.isDark(row, col);
+
+                for (var r = -1; r <= 1; r++) {
+
+                    if (row + r < 0 || moduleCount <= row + r) {
+                        continue;
+                    }
+
+                    for (var c = -1; c <= 1; c++) {
+
+                        if (col + c < 0 || moduleCount <= col + c) {
+                            continue;
+                        }
+
+                        if (r === 0 && c === 0) {
+                            continue;
+                        }
+
+                        if (dark === qrCode.isDark(row + r, col + c) ) {
+                            sameCount++;
+                        }
+                    }
+                }
+
+                if (sameCount > 5) {
+                    lostPoint += (3 + sameCount - 5);
+                }
+            }
+        }
+
+        // LEVEL2
+
+        for (row = 0; row < moduleCount - 1; row++) {
+            for (col = 0; col < moduleCount - 1; col++) {
+                var count = 0;
+                if (qrCode.isDark(row,     col    ) ) count++;
+                if (qrCode.isDark(row + 1, col    ) ) count++;
+                if (qrCode.isDark(row,     col + 1) ) count++;
+                if (qrCode.isDark(row + 1, col + 1) ) count++;
+                if (count === 0 || count === 4) {
+                    lostPoint += 3;
+                }
+            }
+        }
+
+        // LEVEL3
+
+        for (row = 0; row < moduleCount; row++) {
+            for (col = 0; col < moduleCount - 6; col++) {
+                if (qrCode.isDark(row, col) && 
+                        !qrCode.isDark(row, col + 1) && 
+                         qrCode.isDark(row, col + 2) && 
+                         qrCode.isDark(row, col + 3) && 
+                         qrCode.isDark(row, col + 4) && 
+                        !qrCode.isDark(row, col + 5) && 
+                         qrCode.isDark(row, col + 6) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount - 6; row++) {
+                if (qrCode.isDark(row, col) &&
+                        !qrCode.isDark(row + 1, col) &&
+                         qrCode.isDark(row + 2, col) &&
+                         qrCode.isDark(row + 3, col) &&
+                         qrCode.isDark(row + 4, col) &&
+                        !qrCode.isDark(row + 5, col) &&
+                         qrCode.isDark(row + 6, col) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        // LEVEL4
+        
+        var darkCount = 0;
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount; row++) {
+                if (qrCode.isDark(row, col) ) {
+                    darkCount++;
+                }
+            }
+        }
+        
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+
+        return lostPoint;       
+    }
+
+};
+
+module.exports = QRUtil;
+
+};
+defs['index']=function(module,exports,require){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var QR8bitByte = require('./QR8bitByte');
+var QRUtil = require('./QRUtil');
+var QRPolynomial = require('./QRPolynomial');
+var QRRSBlock = require('./QRRSBlock');
+var QRBitBuffer = require('./QRBitBuffer');
+
+function QRCode(typeNumber, errorCorrectLevel) {
+	this.typeNumber = typeNumber;
+	this.errorCorrectLevel = errorCorrectLevel;
+	this.modules = null;
+	this.moduleCount = 0;
+	this.dataCache = null;
+	this.dataList = [];
+}
+
+QRCode.prototype = {
+	
+	addData : function(data) {
+		var newData = new QR8bitByte(data);
+		this.dataList.push(newData);
+		this.dataCache = null;
+	},
+	
+	isDark : function(row, col) {
+		if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+			throw new Error(row + "," + col);
+		}
+		return this.modules[row][col];
+	},
+
+	getModuleCount : function() {
+		return this.moduleCount;
+	},
+	
+	make : function() {
+		// Calculate automatically typeNumber if provided is < 1
+		if (this.typeNumber < 1 ){
+			var typeNumber = 1;
+			for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+				var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+
+				var buffer = new QRBitBuffer();
+				var totalDataCount = 0;
+				for (var i = 0; i < rsBlocks.length; i++) {
+					totalDataCount += rsBlocks[i].dataCount;
+				}
+
+				for (var x = 0; x < this.dataList.length; x++) {
+					var data = this.dataList[x];
+					buffer.put(data.mode, 4);
+					buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+					data.write(buffer);
+				}
+				if (buffer.getLengthInBits() <= totalDataCount * 8)
+					break;
+			}
+			this.typeNumber = typeNumber;
+		}
+		this.makeImpl(false, this.getBestMaskPattern() );
+	},
+	
+	makeImpl : function(test, maskPattern) {
+		
+		this.moduleCount = this.typeNumber * 4 + 17;
+		this.modules = new Array(this.moduleCount);
+		
+		for (var row = 0; row < this.moduleCount; row++) {
+			
+			this.modules[row] = new Array(this.moduleCount);
+			
+			for (var col = 0; col < this.moduleCount; col++) {
+				this.modules[row][col] = null;//(col + row) % 3;
+			}
+		}
+	
+		this.setupPositionProbePattern(0, 0);
+		this.setupPositionProbePattern(this.moduleCount - 7, 0);
+		this.setupPositionProbePattern(0, this.moduleCount - 7);
+		this.setupPositionAdjustPattern();
+		this.setupTimingPattern();
+		this.setupTypeInfo(test, maskPattern);
+		
+		if (this.typeNumber >= 7) {
+			this.setupTypeNumber(test);
+		}
+	
+		if (this.dataCache === null) {
+			this.dataCache = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+		}
+	
+		this.mapData(this.dataCache, maskPattern);
+	},
+
+	setupPositionProbePattern : function(row, col)  {
+		
+		for (var r = -1; r <= 7; r++) {
+			
+			if (row + r <= -1 || this.moduleCount <= row + r) continue;
+			
+			for (var c = -1; c <= 7; c++) {
+				
+				if (col + c <= -1 || this.moduleCount <= col + c) continue;
+				
+				if ( (0 <= r && r <= 6 && (c === 0 || c === 6) ) || 
+                     (0 <= c && c <= 6 && (r === 0 || r === 6) ) || 
+                     (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+					this.modules[row + r][col + c] = true;
+				} else {
+					this.modules[row + r][col + c] = false;
+				}
+			}		
+		}		
+	},
+	
+	getBestMaskPattern : function() {
+	
+		var minLostPoint = 0;
+		var pattern = 0;
+	
+		for (var i = 0; i < 8; i++) {
+			
+			this.makeImpl(true, i);
+	
+			var lostPoint = QRUtil.getLostPoint(this);
+	
+			if (i === 0 || minLostPoint >  lostPoint) {
+				minLostPoint = lostPoint;
+				pattern = i;
+			}
+		}
+	
+		return pattern;
+	},
+	
+	createMovieClip : function(target_mc, instance_name, depth) {
+	
+		var qr_mc = target_mc.createEmptyMovieClip(instance_name, depth);
+		var cs = 1;
+	
+		this.make();
+
+		for (var row = 0; row < this.modules.length; row++) {
+			
+			var y = row * cs;
+			
+			for (var col = 0; col < this.modules[row].length; col++) {
+	
+				var x = col * cs;
+				var dark = this.modules[row][col];
+			
+				if (dark) {
+					qr_mc.beginFill(0, 100);
+					qr_mc.moveTo(x, y);
+					qr_mc.lineTo(x + cs, y);
+					qr_mc.lineTo(x + cs, y + cs);
+					qr_mc.lineTo(x, y + cs);
+					qr_mc.endFill();
+				}
+			}
+		}
+		
+		return qr_mc;
+	},
+
+	setupTimingPattern : function() {
+		
+		for (var r = 8; r < this.moduleCount - 8; r++) {
+			if (this.modules[r][6] !== null) {
+				continue;
+			}
+			this.modules[r][6] = (r % 2 === 0);
+		}
+	
+		for (var c = 8; c < this.moduleCount - 8; c++) {
+			if (this.modules[6][c] !== null) {
+				continue;
+			}
+			this.modules[6][c] = (c % 2 === 0);
+		}
+	},
+	
+	setupPositionAdjustPattern : function() {
+	
+		var pos = QRUtil.getPatternPosition(this.typeNumber);
+		
+		for (var i = 0; i < pos.length; i++) {
+		
+			for (var j = 0; j < pos.length; j++) {
+			
+				var row = pos[i];
+				var col = pos[j];
+				
+				if (this.modules[row][col] !== null) {
+					continue;
+				}
+				
+				for (var r = -2; r <= 2; r++) {
+				
+					for (var c = -2; c <= 2; c++) {
+					
+						if (Math.abs(r) === 2 || 
+                            Math.abs(c) === 2 ||
+                            (r === 0 && c === 0) ) {
+							this.modules[row + r][col + c] = true;
+						} else {
+							this.modules[row + r][col + c] = false;
+						}
+					}
+				}
+			}
+		}
+	},
+	
+	setupTypeNumber : function(test) {
+	
+		var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+        var mod;
+	
+		for (var i = 0; i < 18; i++) {
+			mod = (!test && ( (bits >> i) & 1) === 1);
+			this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+		}
+	
+		for (var x = 0; x < 18; x++) {
+			mod = (!test && ( (bits >> x) & 1) === 1);
+			this.modules[x % 3 + this.moduleCount - 8 - 3][Math.floor(x / 3)] = mod;
+		}
+	},
+	
+	setupTypeInfo : function(test, maskPattern) {
+	
+		var data = (this.errorCorrectLevel << 3) | maskPattern;
+		var bits = QRUtil.getBCHTypeInfo(data);
+        var mod;
+	
+		// vertical		
+		for (var v = 0; v < 15; v++) {
+	
+			mod = (!test && ( (bits >> v) & 1) === 1);
+	
+			if (v < 6) {
+				this.modules[v][8] = mod;
+			} else if (v < 8) {
+				this.modules[v + 1][8] = mod;
+			} else {
+				this.modules[this.moduleCount - 15 + v][8] = mod;
+			}
+		}
+	
+		// horizontal
+		for (var h = 0; h < 15; h++) {
+	
+			mod = (!test && ( (bits >> h) & 1) === 1);
+			
+			if (h < 8) {
+				this.modules[8][this.moduleCount - h - 1] = mod;
+			} else if (h < 9) {
+				this.modules[8][15 - h - 1 + 1] = mod;
+			} else {
+				this.modules[8][15 - h - 1] = mod;
+			}
+		}
+	
+		// fixed module
+		this.modules[this.moduleCount - 8][8] = (!test);
+	
+	},
+	
+	mapData : function(data, maskPattern) {
+		
+		var inc = -1;
+		var row = this.moduleCount - 1;
+		var bitIndex = 7;
+		var byteIndex = 0;
+		
+		for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+	
+			if (col === 6) col--;
+	
+			while (true) {
+	
+				for (var c = 0; c < 2; c++) {
+					
+					if (this.modules[row][col - c] === null) {
+						
+						var dark = false;
+	
+						if (byteIndex < data.length) {
+							dark = ( ( (data[byteIndex] >>> bitIndex) & 1) === 1);
+						}
+	
+						var mask = QRUtil.getMask(maskPattern, row, col - c);
+	
+						if (mask) {
+							dark = !dark;
+						}
+						
+						this.modules[row][col - c] = dark;
+						bitIndex--;
+	
+						if (bitIndex === -1) {
+							byteIndex++;
+							bitIndex = 7;
+						}
+					}
+				}
+								
+				row += inc;
+	
+				if (row < 0 || this.moduleCount <= row) {
+					row -= inc;
+					inc = -inc;
+					break;
+				}
+			}
+		}
+		
+	}
+
+};
+
+QRCode.PAD0 = 0xEC;
+QRCode.PAD1 = 0x11;
+
+QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
+	
+	var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+	
+	var buffer = new QRBitBuffer();
+	
+	for (var i = 0; i < dataList.length; i++) {
+		var data = dataList[i];
+		buffer.put(data.mode, 4);
+		buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+		data.write(buffer);
+	}
+
+	// calc num max data.
+	var totalDataCount = 0;
+	for (var x = 0; x < rsBlocks.length; x++) {
+		totalDataCount += rsBlocks[x].dataCount;
+	}
+
+	if (buffer.getLengthInBits() > totalDataCount * 8) {
+		throw new Error("code length overflow. (" + 
+            buffer.getLengthInBits() + 
+            ">" +  
+            totalDataCount * 8 + 
+            ")");
+	}
+
+	// end code
+	if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+		buffer.put(0, 4);
+	}
+
+	// padding
+	while (buffer.getLengthInBits() % 8 !== 0) {
+		buffer.putBit(false);
+	}
+
+	// padding
+	while (true) {
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD0, 8);
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD1, 8);
+	}
+
+	return QRCode.createBytes(buffer, rsBlocks);
+};
+
+QRCode.createBytes = function(buffer, rsBlocks) {
+
+	var offset = 0;
+	
+	var maxDcCount = 0;
+	var maxEcCount = 0;
+	
+	var dcdata = new Array(rsBlocks.length);
+	var ecdata = new Array(rsBlocks.length);
+	
+	for (var r = 0; r < rsBlocks.length; r++) {
+
+		var dcCount = rsBlocks[r].dataCount;
+		var ecCount = rsBlocks[r].totalCount - dcCount;
+
+		maxDcCount = Math.max(maxDcCount, dcCount);
+		maxEcCount = Math.max(maxEcCount, ecCount);
+		
+		dcdata[r] = new Array(dcCount);
+		
+		for (var i = 0; i < dcdata[r].length; i++) {
+			dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+		}
+		offset += dcCount;
+		
+		var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+		var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+		var modPoly = rawPoly.mod(rsPoly);
+		ecdata[r] = new Array(rsPoly.getLength() - 1);
+		for (var x = 0; x < ecdata[r].length; x++) {
+            var modIndex = x + modPoly.getLength() - ecdata[r].length;
+			ecdata[r][x] = (modIndex >= 0)? modPoly.get(modIndex) : 0;
+		}
+
+	}
+	
+	var totalCodeCount = 0;
+	for (var y = 0; y < rsBlocks.length; y++) {
+		totalCodeCount += rsBlocks[y].totalCount;
+	}
+
+	var data = new Array(totalCodeCount);
+	var index = 0;
+
+	for (var z = 0; z < maxDcCount; z++) {
+		for (var s = 0; s < rsBlocks.length; s++) {
+			if (z < dcdata[s].length) {
+				data[index++] = dcdata[s][z];
+			}
+		}
+	}
+
+	for (var xx = 0; xx < maxEcCount; xx++) {
+		for (var t = 0; t < rsBlocks.length; t++) {
+			if (xx < ecdata[t].length) {
+				data[index++] = ecdata[t][xx];
+			}
+		}
+	}
+
+	return data;
+
+};
+
+module.exports = QRCode;
+
+};
+var QR=req('index'),EC=req('QRErrorCorrectLevel');
+window.qrSvg=function(text){var q=new QR(-1,EC.M);q.addData(text);q.make();var n=q.getModuleCount(),z=4,t=n+z*2,p='';for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))p+='M'+(c+z)+' '+(r+z)+'h1v1h-1z';return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+t+' '+t+'" width="240" height="240" shape-rendering="crispEdges"><rect width="'+t+'" height="'+t+'" fill="#fff"/><path d="'+p+'" fill="#000"/></svg>'}})();
+</script>
+<script>
+const logo=z=>`<svg viewBox="0 0 64 64" width="${z}" height="${z}" role="img" aria-label="Painel de Cobrança" style="flex:none"><rect width="64" height="64" rx="16" fill="#0f2a3d"/><path d="M20 12h17l10 10v26a3 3 0 0 1-3 3H20a3 3 0 0 1-3-3V15a3 3 0 0 1 3-3z" fill="#fff"/><path d="M37 12v7a3 3 0 0 0 3 3h7z" fill="#a7d8d2"/><rect x="23" y="27" width="14" height="2.6" rx="1.3" fill="#0f2a3d"/><rect x="23" y="33" width="9" height="2.6" rx="1.3" fill="#0f2a3d" opacity=".4"/><circle cx="41" cy="43" r="10.5" fill="#0f766e" stroke="#0f2a3d" stroke-width="3"/><path d="M36.5 43.3l3.2 3.2 5.8-6.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+try{const t=localStorage.getItem('cobranca_theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+const effTheme=()=>document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+function paintTT(){const d=effTheme()==='dark';document.querySelectorAll('#tt,.tg').forEach(b=>{b.innerHTML=d?SUN:MOON;b.title=b.ariaLabel=d?'Mudar para tema claro':'Mudar para tema escuro'})}
+function toggleTheme(){const n=effTheme()==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('cobranca_theme',n)}catch(e){}paintTT()}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',paintTT)}catch(e){}
+paintTT();
+const K='cobranca_v1';
+const FBMODE=/^https?:$/.test(location.protocol)&&!/claude|anthropic/i.test(location.hostname);
+const DEFPASS='';
+let db;if(!FBMODE){try{db=JSON.parse(localStorage.getItem(K))}catch(e){}}
+if(!db)db=FBMODE?{master:{},resellers:[],clients:[],renewals:[]}:{master:{user:'admin',pass:DEFPASS},resellers:[],clients:[]};
+db.renewals=db.renewals||[];if(!FBMODE&&db.master.user==='master'&&db.master.pass==='master123')db.master={user:'admin',pass:DEFPASS};let lmode='adm';
+let ses=null,tab='dash',err='';
+const save=()=>{if(FBMODE){fbSave();return}try{localStorage.setItem(K,JSON.stringify(db))}catch(e){storeOk=false}cloudSave()};
+let storeOk=true;try{localStorage.setItem('_t','1');localStorage.removeItem('_t')}catch(e){storeOk=false}
+function toast(m){let t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;border:1px solid rgba(255,255,255,.25);box-shadow:0 6px 20px rgba(0,0,0,.3);padding:10px 16px;border-radius:10px;z-index:99;max-width:90%';document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+function ask(msg,input,cb){$('#modal').innerHTML=`<div class="ov"><div class="md"><p>${esc(msg)}</p>${input?'<input id="askv" type="password" autofocus>':''}<div style="display:flex;gap:8px;margin-top:12px;justify-content:center"><button id="askok">OK</button><button class="s" onclick="closeM()">Cancelar</button></div></div></div>`;
+ $('#askok').onclick=()=>{const v=input?$('#askv').value:true;closeM();cb(v)}}
+
+let cloud=null,timer=null,cloudMsg=false;
+function docsOf(){const d={'app/master':{j:JSON.stringify(db.master)}};
+ db.resellers.forEach(r=>{const o={...r};delete o.logo;d['res/'+r.id]={j:JSON.stringify({r:o,c:db.clients.filter(c=>c.rid===r.id),n:db.renewals.filter(x=>x.rid===r.id)})};if(r.logo)d['logo/'+r.id]={j:r.logo}});return d}
+function cloudSave(){if(!cloud)return;clearTimeout(timer);timer=setTimeout(async()=>{const d=docsOf();
+ try{for(const k in d){if(last[k]!==d[k].j){await cloud.doc(k).set(d[k]);last[k]=d[k].j}}
+  for(const k of Object.keys(last)){if(!d[k]){await cloud.doc(k).delete();delete last[k]}}}
+ catch(e){if(!cloudMsg){cloudMsg=true;toast('Não foi possível salvar na nuvem ('+((e&&e.code)||'erro')+'). Só o administrador logado no Claude consegue gravar.')}}},400)}
+function applyDoc(kind,id,j){
+ if(kind==='res'){const i=db.resellers.findIndex(r=>r.id===id),prev=db.resellers[i];
+  db.clients=db.clients.filter(c=>c.rid!==id);db.renewals=db.renewals.filter(n=>n.rid!==id);
+  if(j==null){if(i>=0)db.resellers.splice(i,1);return}
+  const o=JSON.parse(j),lg=last['logo/'+id]||(prev&&prev.logo);if(lg)o.r.logo=lg;
+  if(i>=0)db.resellers[i]=o.r;else db.resellers.push(o.r);db.clients.push(...o.c);db.renewals.push(...(o.n||[]))}
+ else{const r=db.resellers.find(r=>r.id===id);if(r){if(j!=null)r.logo=j;else delete r.logo}}}
+function softRender(){if(ses&&ses.role==='rev'&&!db.resellers.find(r=>r.id===ses.id))ses=null;
+ if(!FBMODE)try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
+ const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest('#app'))return;render()}
+function onRemote(pre,snap){let ch=false;const cur=docsOf(),seen={},pend=k=>cur[k]&&cur[k].j!==last[k];
+ snap.docs.forEach(x=>{const k=pre+'/'+x.id,j=x.data().j;seen[k]=1;if(j===last[k]||pend(k))return;last[k]=j;applyDoc(pre,x.id,j);ch=true});
+ Object.keys(last).forEach(k=>{if(k.startsWith(pre+'/')&&!seen[k]&&!pend(k)){delete last[k];applyDoc(pre,k.slice(pre.length+1),null);ch=true}});
+ if(ch)softRender()}
+function subRemote(c){const er=()=>{};
+ c.collection('res').onSnapshot(sn=>onRemote('res',sn),er);
+ c.collection('logo').onSnapshot(sn=>onRemote('logo',sn),er);
+ c.doc('app/master').onSnapshot(sn=>{if(!sn.exists)return;const j=sn.data().j,cur=docsOf()['app/master'].j;if(j===last['app/master']||cur!==last['app/master'])return;last['app/master']=j;db.master=JSON.parse(j);softRender()},er)}
+
+async function cloudInit(){try{const c=await claude.use('db');if(!c)return;
+ const m=await c.doc('app/master').get();
+ if(m.exists){const nd={master:JSON.parse(m.data().j),resellers:[],clients:[],renewals:[]};
+  const rs=await c.collection('res').limit(1000).get();
+  rs.docs.forEach(x=>{const o=JSON.parse(x.data().j);nd.resellers.push(o.r);nd.clients.push(...o.c);nd.renewals.push(...(o.n||[]));last['res/'+x.id]=x.data().j});
+  const ls=await c.collection('logo').limit(1000).get();
+  ls.docs.forEach(x=>{const r=nd.resellers.find(r=>r.id===x.id);if(r)r.logo=x.data().j;last['logo/'+x.id]=x.data().j});
+  last['app/master']=m.data().j;db=nd;cloud=c;try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
+  if(ses&&ses.role==='rev'&&!db.resellers.find(r=>r.id===ses.id))ses=null;render();toast('Dados carregados da nuvem.')}
+ else{cloud=c;cloudSave();render()}subRemote(c)}catch(e){}}
+
+/* ===== Firebase (login + dados na nuvem, via REST) — só ativo no site hospedado ===== */
+const FBC={apiKey:'AIzaSyBVYLdQ1lq1mP4rIzl_-JrnKq76gBIEKaE',db:'https://painelcobranca-f8fe5-default-rtdb.firebaseio.com',dom:'u.painelcobranca.online'};
+const kid=s=>String(s).replace(/[^A-Za-z0-9_-]/g,'_');
+const fbEm=u=>{u=String(u).trim().toLowerCase();return u.includes('@')?u:fbEmH(u)};
+const fbEmH=u=>[...new TextEncoder().encode(u)].map(b=>b.toString(16).padStart(2,'0')).join('')+'@'+FBC.dom;
+const ADM_F=['id','name','user','phone','unlimited','fee','due','paid','active','created','trial','uid','prevDue'];
+let fb=null,last={},lastPub={},prevPP=new Set(),fbT=null,fbBusy=false,fbDirty=false,pollT=null,recBusy=false,authErr={},trialKnown=new Set();
+async function itCall(m,body){const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+m+'?key='+FBC.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error((j.error&&j.error.message)||'ERRO');e.code=String(e.message).split(' ')[0];throw e}return j}
+const mkS=j=>({tok:j.idToken,ref:j.refreshToken,uid:j.localId,exp:Date.now()+(+j.expiresIn||3600)*1000});
+const signIn=(u,p)=>itCall('signInWithPassword',{email:fbEm(u),password:p,returnSecureToken:true}).then(mkS);
+async function tok(s){s=s||fb;if(Date.now()>s.exp-60000){const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+FBC.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(s.ref)});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('SESSION');s.tok=j.id_token;s.ref=j.refresh_token;s.exp=Date.now()+(+j.expires_in||3600)*1000}return s.tok}
+async function rt(method,path,body,s){let q='';if(s!==false)q='?auth='+encodeURIComponent(await tok(s));
+ const r=await fetch(FBC.db+'/'+path+'.json'+q,{method,headers:body===undefined?undefined:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ if(!r.ok){const e=new Error('RT'+r.status);e.status=r.status;throw e}return r.json()}
+const netErr=(x,bad)=>{const c=x&&x.code;if(['INVALID_LOGIN_CREDENTIALS','EMAIL_NOT_FOUND','INVALID_PASSWORD','INVALID_EMAIL'].includes(c)||x==='bad')return bad;
+ if(c==='TOO_MANY_ATTEMPTS_TRY_LATER')return 'Muitas tentativas. Aguarde alguns minutos e tente de novo.';
+ if(c==='OPERATION_NOT_ALLOWED'||c==='CONFIGURATION_NOT_FOUND')return 'O login por e-mail/senha ainda não foi ativado no Firebase.';
+ if(x&&x.message==='NOACCESS')return 'Usuário sem acesso liberado. Fale com o administrador.';
+ return 'Não foi possível conectar ao servidor ('+((x&&(x.code||x.status||x.message))||'erro')+'). Tente novamente.'};
+const dOf=ms=>{const d=new Date(ms),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+const splitR=r=>{const a={},o={};for(const k in r){if(k==='pass'||k==='logo')continue;(ADM_F.includes(k)?a:o)[k]=r[k]}return[a,o]};
+const cpass=c=>c.pass||String(c.phone||'').replace(/\D/g,'').slice(-4);
+function pubKey(c){const d=String(c.phone||'').replace(/\D/g,'');return d.length>=10&&d.length<=15?d+'/'+kid(c.id):''}
+const ppOf=(D,rid)=>D.clients.filter(c=>c.rid===rid).map(pubKey).filter(Boolean).sort();
+const pubPlain=(D,c)=>{const r=D.resellers.find(r=>r.id===c.rid)||{};return JSON.stringify({c,r:{id:r.id,name:r.name,phone:r.phone,pix:r.pix},n:D.renewals.filter(x=>x.cid===c.id)})};
+const b64=u=>btoa(String.fromCharCode(...u)),ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function pubKeyOf(pass,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:60000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function pubEnc(plain,c){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),k=await pubKeyOf(cpass(c),salt);
+ const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(plain)));return{rid:kid(c.rid),salt:b64(salt),iv:b64(iv),ct:b64(ct)}}
+function fbDocsOf(D,adm){const d={};
+ if(adm){const m={...D.master};delete m.pass;delete m.trialPhones;d['master']={j:JSON.stringify(m)}}
+ D.resellers.forEach(r=>{const[a,o]=splitR(r),k=kid(r.id);
+  if(adm){const x={j:JSON.stringify(a)};if(r.trial){x.trial=true;x.fee=0;x.dueMs=r.due?Date.parse(r.due+'T12:00:00'):Date.now()}d['resm/'+k]=x;if(r.pass)d['secrets/'+k]=r.pass}
+  d['res/'+k]={j:JSON.stringify({r:o,c:D.clients.filter(c=>c.rid===r.id),n:D.renewals.filter(x=>x.rid===r.id),pp:ppOf(D,r.id)})};
+  if(r.logo)d['logo/'+k]=r.logo});return d}
+const sameDocs=(a,b)=>{const x=Object.keys(a),y=Object.keys(b);return x.length===y.length&&x.every(k=>a[k]===b[k])};
+const fbStr=(D,adm)=>{const d=fbDocsOf(D,adm),o={};for(const k in d)o[k]=JSON.stringify(d[k]);return o};
+function fbSave(){if(!fb||fb.role==='cli')return;clearTimeout(fbT);fbT=setTimeout(fbFlush,500)}
+async function fbFlush(){fbT=null;if(!fb)return;if(fbBusy){fbDirty=true;return}fbBusy=true;
+ try{do{fbDirty=false;await fbPush()}while(fbDirty&&fb)}
+ catch(e){toast('Não foi possível salvar na nuvem ('+(e.status||e.message)+'). Vou tentar de novo.');clearTimeout(fbT);fbT=setTimeout(fbFlush,10000)}
+ fbBusy=false;fbRecon()}
+async function fbPush(){const adm=fb.role==='master';
+ const want={};db.clients.forEach(c=>{const p=pubKey(c);if(p)want[p]=c});
+ for(const p in want){const pl=pubPlain(db,want[p]);if(lastPub[p]!==pl){await rt('PUT','pub/'+p,await pubEnc(pl,want[p]));lastPub[p]=pl}}
+ for(const p of [...prevPP]){if(!want[p]){await rt('DELETE','pub/'+p);delete lastPub[p]}}
+ prevPP=new Set(Object.keys(want));
+ const d=fbDocsOf(db,adm);
+ for(const k in d){const s=JSON.stringify(d[k]);if(last[k]!==s){await rt('PUT',k,d[k]);last[k]=s}}
+ for(const k of Object.keys(last)){if(!(k in d)){await rt('DELETE',k);delete last[k]}}}
+async function fbFetch(withLogo){const adm=fb.role==='master';let nd,pp=[];
+ if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp]=await Promise.all(['master','resm','res','secrets','trialPhones'].map(g));
+  nd={master:{...(m&&m.j?JSON.parse(m.j):{}),user:db.master.user},resellers:[],clients:[],renewals:[]};nd.master.trialPhones=Object.keys(tp||{});
+  const lg=withLogo?await g('logo'):null;
+  for(const k in (rs||{})){const o=JSON.parse(rs[k].j),a=rm&&rm[k]?JSON.parse(rm[k].j):{},r={...o.r,...a};r.id=r.id||k;
+   if(rm&&rm[k]&&rm[k].trial&&rm[k].dueMs)r.due=dOf(rm[k].dueMs);if(sc&&sc[k])r.pass=sc[k];
+   const old=db.resellers.find(x=>x.id===r.id);if(lg&&lg[k])r.logo=lg[k];else if(!withLogo&&old&&old.logo)r.logo=old.logo;
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp.push(...(o.pp||[]))}}
+ else{const k=kid(fb.rid);const [rm,rs,lg]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null]);
+  nd={master:{},resellers:[],clients:[],renewals:[]};
+  if(rm){const o=rs?JSON.parse(rs.j):{r:{},c:[],n:[],pp:[]},a=JSON.parse(rm.j),r={...o.r,...a};r.id=r.id||fb.rid;if(rm.trial&&rm.dueMs)r.due=dOf(rm.dueMs);
+   const old=db.resellers.find(x=>x.id===r.id);if(lg)r.logo=lg;else if(!withLogo&&old&&old.logo)r.logo=old.logo;
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp=o.pp||[]}}
+ return{nd,pp}}
+function fbSeed(nd){lastPub={};nd.clients.forEach(c=>{const p=pubKey(c);if(p)lastPub[p]=pubPlain(nd,c)})}
+async function fbLoad(){const{nd,pp}=await fbFetch(true);db=nd;last=fbStr(db,fb.role==='master');prevPP=new Set(pp);fbSeed(db)}
+async function reqPull(){if(!fb||fb.role!=='rev'||!db.resellers[0])return false;const rid=kid(fb.rid);let m=null;try{m=await rt('GET','req/'+rid)}catch(e){return false}
+ if(!m)return false;let ch=false;
+ for(const k in m){const q=m[k]||{},c=db.clients.find(c=>c.id===q.cid);
+  if(c&&[1,3,6,12].includes(+q.months)&&!db.renewals.some(x=>x.id===String(q.id))){db.renewals.push({id:String(q.id).slice(0,40),cid:c.id,rid:c.rid,months:+q.months,value:c.value*(+q.months),date:today(),status:'pend'});ch=true}
+  try{await rt('DELETE','req/'+rid+'/'+k)}catch(e){}}
+ if(ch){save();softRender();toast('Novo pedido de renovação.')}return ch}
+async function fbPoll(){if(!fb||fb.role==='cli'||document.hidden||fbBusy||fbT)return;
+ const m=$('#modal'),a=document.activeElement;if((m&&m.innerHTML)||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest('#app')))return;
+ try{await reqPull();if(fbBusy||fbT)return;const{nd}=await fbFetch(false),adm=fb.role==='master',rs=fbStr(nd,adm);
+  const loc=fbStr(db,adm);if(sameDocs(rs,loc))return;
+  if(!sameDocs(loc,last)||fbBusy||fbT)return;
+  db=nd;last=fbStr(db,adm);fbSeed(db);softRender()}catch(e){if(e.message==='SESSION'){toast('Sessão expirada. Entre novamente.');fbBye()}}}
+async function fbRecon(){if(!fb||fb.role!=='master'||recBusy)return;recBusy=true;let ch=false;
+ try{for(const r of db.resellers){
+   if(!r.uid&&r.pass&&r.user){if(r.pass.length<6||!fbPwOk(r.user,r.pass)){authErr[r.id]='Senha com 6+ caracteres e usuário válido (até 30 letras ou um e-mail).';continue}
+    try{const s=await itCall('signUp',{email:fbEm(r.user),password:r.pass,returnSecureToken:true}).then(mkS);r.uid=s.uid}
+    catch(e){if(e.code==='EMAIL_EXISTS'){try{r.uid=(await signIn(r.user,r.pass)).uid}catch(_){authErr[r.id]='Usuário já existe no Firebase com outra senha.';continue}}else throw e}
+    await rt('PUT','users/'+r.uid,{rid:kid(r.id)});delete authErr[r.id];ch=true}
+   const k=phKey(r.phone);if(k&&!trialKnown.has(k)){await rt('PUT','trialPhones/'+k,true);trialKnown.add(k)}}}
+ catch(e){}finally{recBusy=false}
+ if(ch){save();render()}}
+async function fbEnter(role,extra){fb={...fb,role,...extra};await fbLoad();clearInterval(pollT);pollT=setInterval(fbPoll,30000);
+ if(role==='rev'){reqPull()}else fbRecon()}
+async function fbLogin(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value,b=e.target.querySelector('button:not([type=button])');
+ if(b)b.disabled=true;err='';
+ try{
+  if(lmode==='cli'){const d=u.replace(/\D/g,'');if(d.length<10)throw 'bad';const m=await rt('GET','pub/'+d,undefined,false);let o=null;
+   for(const id in (m||{})){try{const x=m[id],k=await pubKeyOf(p,ub64(x.salt)),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(x.iv)},k,ub64(x.ct));o=JSON.parse(new TextDecoder().decode(pt));break}catch(_){}}
+   if(!o)throw 'bad';fb={role:'cli'};db={master:{},resellers:[o.r],clients:[o.c],renewals:o.n||[]};ses={role:'cli',id:o.c.id};render();return}
+  const s=await signIn(u,p);fb=s;const adm=await rt('GET','admins/'+s.uid);
+  if(adm===true){db={master:{user:u},resellers:[],clients:[],renewals:[]};await fbEnter('master');ses={role:'master'};tab='dash'}
+  else{const me=await rt('GET','users/'+s.uid);if(!me||!me.rid)throw new Error('NOACCESS');await fbEnter('rev',{rid:me.rid});const r=db.resellers[0];
+   if(!r)throw new Error('NOACCESS');
+   if(!r.active){fbReset();err='Revenda desativada. Fale com o administrador.'}
+   else if(stR(r)==='atr'){fbReset();err=blockMsg(r)}
+   else{ses={role:'rev',id:r.id};tab='dash'}}
+ }catch(x){fbReset();err=netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
+ render()}
+function fbReset(){clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
+async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
+ if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
+ if(b)b.disabled=true;let s=null;
+ try{const pass=rndStr(6,'abcdefghjkmnpqrstuvwxyz23456789');let user,tr=0;
+  for(;;){user='teste'+rndStr(4,'0123456789');try{s=await itCall('signUp',{email:fbEm(user),password:pass,returnSecureToken:true}).then(mkS);break}catch(x){if(x.code!=='EMAIL_EXISTS'||++tr>8)throw x}}
+  try{await rt('PUT','trialPhones/'+k,true,s)}catch(x){if(x.status===401||x.status===403){await itCall('delete',{idToken:s.tok}).catch(()=>{});s=null;terr='Esse número já foi usado. Cada número tem direito a apenas um teste grátis.';render();return}throw x}
+  const nid=uid(),due=addDays(today(),TRIAL_DAYS),r={id:nid,name:(f.name.value||'').trim()||'Teste',user,phone:ph,fee:0,due,paid:false,active:true,trial:true,created:today(),uid:s.uid},[a,o]=splitR(r);
+  await rt('PUT','users/'+s.uid,{rid:nid,trial:true},s);
+  await rt('PUT','resm/'+nid,{j:JSON.stringify(a),trial:true,fee:0,dueMs:Date.parse(due+'T12:00:00')},s);
+  await rt('PUT','secrets/'+nid,pass,s);
+  await rt('PUT','res/'+nid,{j:JSON.stringify({r:o,c:[],n:[],pp:[]})},s);
+  tres={id:nid,user,pass,due,name:r.name,s};tview=2;terr=''
+ }catch(x){if(s)await itCall('delete',{idToken:s.tok}).catch(()=>{});terr='Não foi possível criar o teste agora ('+((x&&(x.code||x.status||x.message))||'erro')+'). Tente novamente.'}
+ render()}
+async function fbEnterTrial(){if(!tres)return;try{fb={...tres.s};await fbEnter('rev',{rid:tres.id});const r=db.resellers[0];if(!r)throw new Error('NOACCESS');ses={role:'rev',id:r.id};err='';tab='dash';tview=0;tres=null}catch(x){fbReset();err=netErr(x,'')}render()}
+async function fbChg(r,nu,np){if(!r.uid)return;const s=await signIn(r.user,r.pass),b={idToken:s.tok,returnSecureToken:false};
+ if(nu&&nu!==r.user)b.email=fbEm(nu);if(np&&np!==r.pass)b.password=np;await itCall('update',b)}
+async function fbDelRes(id){const r=db.resellers.find(r=>r.id===id);if(!r)return;
+ if(r.uid){try{const s=await signIn(r.user,r.pass);await itCall('delete',{idToken:s.tok})}catch(e){}try{await rt('DELETE','users/'+r.uid)}catch(e){}}
+ db.resellers=db.resellers.filter(x=>x.id!==id);db.clients=db.clients.filter(c=>c.rid!==id);db.renewals=db.renewals.filter(x=>x.rid!==id);save();render()}
+let fbSetup=null;
+let fbSetupErr='',rmail='',rmsg='';
+async function fbForgot(e){e.preventDefault();const f=e.target,m=f.email.value.trim().toLowerCase(),b=f.querySelector('button:not([type=button])');rmail=m;if(b)b.disabled=true;rmsg='';
+ try{await itCall('sendOobCode',{requestType:'PASSWORD_RESET',email:m});rmsg='*Pronto! Enviamos o link para '+m+'. Confira também a caixa de spam.'}
+ catch(x){rmsg=x.code==='EMAIL_NOT_FOUND'?'!Não há conta com esse e-mail. Contas antigas criadas só com nome de usuário não recuperam senha por e-mail: peça ao administrador para trocar a senha.':x.code==='INVALID_EMAIL'?'!E-mail inválido.':x.code==='TOO_MANY_ATTEMPTS_TRY_LATER'?'!Muitas tentativas. Aguarde alguns minutos.':x.code==='OPERATION_NOT_ALLOWED'?'!O login por e-mail/senha ainda não foi ativado no Firebase.':'!Não foi possível enviar agora ('+(x.code||x.message)+').'}
+ render()}
+async function fbCheckSetup(){try{const v=await rt('GET','setup',undefined,false);fbSetup=v!==true;fbSetupErr=''}catch(e){fbSetup=false;fbSetupErr=e.status===401||e.status===403?'As regras de segurança do Firebase ainda não foram publicadas (erro '+e.status+'). Publique o arquivo regras-firebase.json em Realtime Database → Regras.':e.status===404?'Banco de dados não encontrado. Confira o endereço do Realtime Database.':'Sem conexão com o servidor. Verifique a internet e recarregue.'}render()}
+async function fbSetupGo(e){e.preventDefault();const f=e.target,u=f.user.value.trim().toLowerCase(),p=f.pass.value,b=f.querySelector('button:not([type=button])');
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)){err='Informe um e-mail válido.';render();return}
+ if(!fbPwOk(u,p)){err=FB_PW_MSG;render();return}
+ if(p!==f.pass2.value){err='As senhas não conferem.';render();return}
+ if(b)b.disabled=true;err='';let s=null;
+ try{try{s=await itCall('signUp',{email:fbEm(u),password:p,returnSecureToken:true}).then(mkS)}catch(x){if(x.code!=='EMAIL_EXISTS')throw x;try{s=await signIn(u,p)}catch(_){throw x}}
+  await rt('PUT','admins/'+s.uid,true,s);await rt('PUT','setup',true,s);
+  fb=s;db={master:{user:u},resellers:[],clients:[],renewals:[]};last={};
+  await rt('PUT','master',{j:JSON.stringify({user:u})},s);last['master']=JSON.stringify({j:JSON.stringify({user:u})});
+  fbSetup=false;await fbEnter('master');ses={role:'master'};tab='dash'}
+ catch(x){fbReset();err=x&&x.code==='EMAIL_EXISTS'?'Esse usuário já existe no Firebase. Escolha outro nome de usuário.':x&&x.status===401||x&&x.status===403?'O administrador já foi criado por outra pessoa.':netErr(x,'Não foi possível criar o administrador.');if(x&&(x.status===401||x.status===403))fbCheckSetup()}
+ render()}
+const fbPwOk=(u,p)=>{u=String(u).trim();return p.length>=6&&(u.includes('@')?/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)&&u.length<=100:new TextEncoder().encode(u.toLowerCase()).length<=30)};
+const FB_PW_MSG='A senha precisa ter pelo menos 6 caracteres. Se o usuário for um e-mail, ele precisa ser válido; senão, até 30 letras.';
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const brl=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const fmt=d=>d.split('-').reverse().join('/');
+const DIAS=3;
+const st=c=>{const t=today();if(c.due<t)return'atr';if(c.due<=addDays(t,DIAS))return'exp';return c.paid?'pago':'pend'};
+const lb={pago:'Pago',pend:'Pendente',atr:'Atrasado'};
+const lbC={pago:'Renovado',pend:'Pendente',exp:'Prestes a expirar',atr:'Devendo'};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function addDays(d,n){const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+
+function login(e){if(FBMODE)return fbLogin(e);e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value;
+ if(lmode==='cli'){const d=u.replace(/\D/g,'');const c=db.clients.find(c=>d&&(c.phone||'').replace(/\D/g,'')===d&&(c.pass||d.slice(-4))===p);
+  if(c){ses={role:'cli',id:c.id};err=''}else err='WhatsApp ou senha inválidos.';render();return}
+ if(u===db.master.user&&p===db.master.pass){ses={role:'master'};err='';tab='dash'}
+ else{const r=db.resellers.find(r=>r.user===u&&r.pass===p);
+  if(!r)err='Usuário ou senha inválidos.';
+  else if(!r.active)err='Revenda desativada. Fale com o administrador.';
+  else if(stR(r)==='atr')err=blockMsg(r);
+  else{ses={role:'rev',id:r.id};err='';tab='dash'}}
+ render()}
+const logout=()=>{if(FBMODE){fbBye();return}ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()};
+
+function addReseller(e){e.preventDefault();const f=e.target;
+ const user=f.user.value.trim();
+ if(user===db.master.user||db.resellers.some(r=>r.user===user)){toast('Esse usuário já existe.');return}
+ if(FBMODE&&!fbPwOk(user,f.pass.value)){toast(FB_PW_MSG);return}
+ const nid=uid(),sendAcc=f.sendacc.checked;db.resellers.push({id:nid,name:f.name.value.trim(),user,pass:f.pass.value,phone:f.phone.value.trim(),unlimited:f.unl.checked,fee:f.unl.checked?null:+f.fee.value,due:f.unl.checked?'':f.due.value,paid:false,active:true,created:today()});
+ save();render();if(sendAcc)waAcesso(nid)}
+function toggleRes(id){const r=db.resellers.find(r=>r.id===id);r.active=!r.active;save();render()}
+function delRes(id){ask('Excluir revenda e todos os clientes dela?',0,()=>{if(FBMODE){fbDelRes(id);return}db.resellers=db.resellers.filter(r=>r.id!==id);db.clients=db.clients.filter(c=>c.rid!==id);save();render()})}
+function resetPass(id){ask('Nova senha da revenda:',1,async p=>{if(!p)return;const r=db.resellers.find(r=>r.id===id);
+ if(FBMODE){if(!fbPwOk(r.user,p)){toast(FB_PW_MSG);return}try{await fbChg(r,null,p)}catch(x){toast('Não foi possível trocar a senha ('+(x.code||x.message)+').');return}}
+ r.pass=p;save();render();toast('Senha alterada.')})}
+function changeMaster(){ask('Nova senha do usuário master:',1,async p=>{if(!p)return;
+ if(FBMODE){if(p.length<6){toast('A senha precisa ter pelo menos 6 caracteres.');return}try{await itCall('update',{idToken:await tok(),password:p,returnSecureToken:false});toast('Senha alterada.')}catch(x){toast(x.code==='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'?'Por segurança, saia, entre de novo e repita a troca.':'Não foi possível trocar a senha ('+(x.code||x.message)+').')}return}
+ db.master.pass=p;save();toast('Senha alterada.')})}
+
+function addClient(e){e.preventDefault();const f=e.target;
+ if(f.phone.value.replace(/\D/g,'').length<10){toast('Informe o WhatsApp com DDD.');return}
+ const nid=uid(),snd=f.send.checked;db.clients.push({id:nid,rid:ses.id,name:f.name.value.trim(),phone:f.phone.value.trim(),screens:+f.tela.value,plan:telaTxt(+f.tela.value),users:usersOf(f),user:usersOf(f).join(", "),apps:appsOf(f),app:appsOf(f).join(", "),value:+f.value.value,due:f.due.value,paid:f.paid.checked,created:today(),sit:sitVal(f)});
+ save();render();if(snd)wa(nid)}
+function renewCli(id){const c=db.clients.find(c=>c.id===id);let n=addDays(c.due,30);while(n<=today())n=addDays(n,30);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Renovar ${esc(c.name)}</h2><form id="rf" style="grid-template-columns:1fr"><div><label>Novo vencimento (padrão: +30 dias)</label><input name="d" type="date" value="${n}" required></div><div style="display:flex;gap:8px"><button>Confirmar renovação</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
+ $('#rf').onsubmit=e=>{e.preventDefault();c.prevDue=c.due;c.prevPaid=!!c.paid;c.due=e.target.d.value;c.paid=true;save();closeM();render();toast('Plano renovado.')}}
+function editCli(id){const c=db.clients.find(c=>c.id===id);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Editar cliente</h2><form id="cf" style="grid-template-columns:1fr" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" value="${esc(c.name)}" required></div><div><label>WhatsApp</label><input name="phone" value="${esc(c.phone)}"></div>${telaSel(c)}${usersBlock(usersList(c))}${appsBlock(appsList(c))}${sitSel(c)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" value="${c.value}" required></div><div><label>Vencimento</label><input name="due" type="date" value="${c.due}" required></div>${stField(c.due,c.paid)}<div style="display:flex;gap:8px"><button>Salvar</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
+ $('#cf').onsubmit=e=>{e.preventDefault();const f=e.target;c.name=f.name.value.trim();c.phone=f.phone.value.trim();if(f.tela.value){c.screens=+f.tela.value;c.plan=telaTxt(c.screens)}c.users=usersOf(f);c.user=c.users.join(", ");c.apps=appsOf(f);c.app=c.apps.join(", ");c.value=+f.value.value;c.due=f.due.value;c.paid=f.paid.checked;c.sit=sitVal(f);save();closeM();render();toast('Cliente atualizado.')}}
+function undoCli(id){const c=db.clients.find(c=>c.id===id);if(c.prevDue)c.due=c.prevDue;c.paid=!!c.prevPaid;save();render()}
+function delCli(id){ask('Excluir cliente?',0,()=>{db.clients=db.clients.filter(c=>c.id!==id);db.renewals=db.renewals.filter(r=>r.cid!==id);save();render()})}
+function qrBlob(code){return new Promise((ok,no)=>{const sv=qrSvg(code).replace('width="240" height="240"','width="640" height="640"'),im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=640;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,640,640);x.drawImage(im,0,0,640,640);c.toBlob(b=>b?ok(b):no(),'image/png')};im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(sv)})}
+async function dlQR(code){try{const b=await qrBlob(code),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='qrcode-pix.png';document.body.appendChild(a);a.click();a.remove();toast('Imagem do QR Code baixada.')}catch(e){toast('Não foi possível baixar. Use Copiar imagem ou tire um print do QR.')}}
+async function copyQR2(code){try{const b=await qrBlob(code);await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Imagem copiada. Cole na conversa do WhatsApp.')}catch(e){toast('Não foi possível copiar a imagem. Use Baixar imagem.')}}
+async function shareQR(code,text){try{const b=await qrBlob(code),f=new File([b],'qrcode-pix.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text});else toast('Seu navegador não permite compartilhar imagem aqui. Use Copiar imagem ou Baixar imagem.')}catch(e){if(!e||e.name!=='AbortError')toast('Não foi possível compartilhar. Use Copiar imagem ou Baixar imagem.')}}
+
+let qrOn=true;const qrUrl=c=>'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data='+encodeURIComponent(c);
+function copyTxt(t){try{navigator.clipboard.writeText(t).then(()=>toast('Copiado.'),()=>fbCopy(t))}catch(e){fbCopy(t)}}
+function fbCopy(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Copiado.')}catch(e){toast('Não foi possível copiar. Selecione o texto e copie manualmente.')}a.remove()}
+const OLD_MSG='Olá {nome}! Sua cobrança de {valor} ({plano}) {situacao} {vencimento}.\n\nPague via Pix:\nChave Pix: {chave}\nCopia e cola:\n{pix}\n\nObrigado!';
+const DEF_MSG='Olá {nome}! Sua assinatura {situacao} {vencimento}.\n\nTelas: {telas}\nUsuário: {usuario}\nValor: {valor}\n\nPague via Pix:\nChave Pix: {chave}\nCopia e cola:\n{pix}\n\nObrigado!';
+function fillMsg(t,v){return t.replace(/\{(\w+)\}/g,(a,k)=>k in v?v[k]:a)}
+function saveMsg(e){e.preventDefault();const r=db.resellers.find(r=>r.id===ses.id);r.msg=e.target.msg.value;save();toast('Mensagem salva.')}
+function resetMsg(){const r=db.resellers.find(r=>r.id===ses.id);delete r.msg;save();render();toast('Mensagem padrão restaurada.')}
+const getCoupons=r=>r.coupons||[5,10,15].map(v=>({v,code:'CUPOM'+v,on:true}));
+function saveCoupons(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
+ r.coupons=getCoupons(r).map((k,i)=>({v:k.v,code:f['code'+i].value.trim()||k.code,on:f['on'+i].checked}));save();toast('Cupons salvos.')}
+function wa(id){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
+ let d=(c.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente com DDD.');return}
+ if(d.length<=11)d='55'+d;
+ const x=st(c),hp=r&&r.pix&&r.pix.key,key=hp?pixKey(r.pix):'',cps=getCoupons(r).filter(k=>k.on);
+ const calc=ci=>{const k=ci===''?null:cps[+ci],tot=k?Math.max(0.01,c.value-k.v):c.value,code=hp?pixPayload(r.pix,tot,'x'):'';
+  let tpl=(r&&r.msg&&r.msg!==OLD_MSG?r.msg:DEF_MSG);if(k&&!tpl.includes('{cupom}'))tpl=tpl.includes('\n\n')?tpl.replace('\n\n','\n\n{cupom}\n\n'):tpl+'\n\n{cupom}';if(qrOn&&code&&!tpl.includes('{qr}'))tpl=tpl.includes('{pix}')?tpl.replace('{pix}','{pix}\n\nQR Code para pagamento:\n{qr}'):tpl+'\n\nQR Code para pagamento:\n{qr}';
+  const m=fillMsg(tpl,{nome:c.name,usuario:c.user||'',operador:c.oper||'',aplicativo:c.app||'',valor:brl(c.value),plano:c.plan||'plano',telas:c.screens?telaTxt(c.screens):(c.plan||''),situacao:x==='atr'?'está vencida desde':'vai vencer em',vencimento:fmt(c.due)+' ('+diasMsg(c.due)+')',dias:diasMsg(c.due),chave:key,pix:code,qr:qrOn&&code?qrUrl(code):'',total:brl(tot),desconto:k?brl(k.v):'',cupom:k?`Cupom ${k.code}: desconto de ${brl(k.v)}. Total a pagar: ${brl(tot)}`:''}).replace(/^(Telas|Usuário): *\n/gm,'').replace(/\n{3,}/g,'\n\n');
+  return{m,tot,code,k}};
+ qrOn=false;let cur=calc('');
+ const u1=t=>'https://wa.me/'+d+'?text='+encodeURIComponent(t),u2=t=>'https://web.whatsapp.com/send?phone='+d+'&text='+encodeURIComponent(t);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>Enviar cobrança</h2><p class="note" style="margin:0 0 10px">Para: ${esc(c.name)} · +${d}</p>
+ ${cps.length?`<div style="margin-bottom:12px"><label>Cupom de desconto (opcional)</label><select id="cp"><option value="">Sem cupom</option>${cps.map((k,i)=>`<option value="${i}">${esc(k.code)} — ${brl(k.v)} de desconto</option>`).join('')}</select></div>`:''}
+ ${hp?`<label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--tx)"><input type="checkbox" id="qron" style="width:auto"> Enviar link do QR Code na mensagem</label>`:''}<div class="tabs" style="margin-bottom:12px"><button id="tb1" class="on">Mensagem</button><button id="tb2">Chave Pix</button><button id="tb3">QR Code</button></div>
+ <div id="wp1"><textarea id="wam" style="height:180px;font-family:inherit;font-size:13px">${esc(cur.m)}</textarea><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><a id="wa1" class="btn" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a><a id="wa2" class="btn s" target="_blank" rel="noopener noreferrer">WhatsApp Web</a></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"><button class="s" id="wc1">Copiar mensagem</button><button class="s" id="wc2">Copiar link</button></div><p class="note">Edite o texto como quiser antes de enviar. Ao trocar o cupom, a mensagem é refeita. Para mudar a mensagem padrão, use o bloco <b>Mensagem de cobrança</b> no painel.</p></div>
+ <div id="wp2" style="display:none">${hp?`<label>Chave Pix (${{cpf:'CPF/CNPJ',cel:'celular',email:'e-mail',evp:'aleatória'}[pixType(r.pix)]})</label><input id="pk" readonly value="${esc(key)}"><div style="margin:8px 0 14px"><button class="s" id="wc3">Copiar chave</button></div><label>Pix copia e cola (valor <span id="pamt">${brl(cur.tot)}</span>)</label><textarea id="pc" readonly>${cur.code}</textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="s" id="wc4">Copiar copia e cola</button><button class="s" id="qrb">Ver QR Code</button></div>`:'<p class="note">A revenda ainda não cadastrou a chave Pix. Cadastre em <b>Dados de recebimento (Pix)</b>.</p>'}</div>
+ <div id="wp3" style="display:none">${hp?`<div style="text-align:center"><div class="qr" id="qrv">${qrSvg(cur.code)}</div></div><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="s" id="qs">Compartilhar com mensagem</button><button class="s" id="qc">Copiar imagem</button><button class="s" id="qd">Baixar imagem</button></div><p class="note">O WhatsApp não anexa imagem por link. No celular, use <b>Compartilhar</b> e escolha o WhatsApp. No computador, copie ou baixe a imagem e cole ou anexe na conversa depois de abrir o WhatsApp.</p>`:'<p class="note">Cadastre a chave Pix para gerar o QR Code.</p>'}</div>
+ <div style="margin-top:12px;text-align:right"><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;
+ const t=$('#wam'),upd=()=>{$('#wa1').href=u1(t.value);$('#wa2').href=u2(t.value)};upd();t.oninput=upd;
+ const tab=n=>{[1,2,3].forEach(i=>{$('#wp'+i).style.display=n===i?'':'none';$('#tb'+i).className=n===i?'on':''})};
+ $('#tb1').onclick=()=>tab(1);$('#tb2').onclick=()=>tab(2);$('#tb3').onclick=()=>tab(3);if(hp){$('#qron').onchange=e=>{qrOn=e.target.checked;cur=calc($('#cp')?$('#cp').value:'');t.value=cur.m;upd()};$('#qs').onclick=()=>shareQR(cur.code,t.value);$('#qc').onclick=()=>copyQR2(cur.code);$('#qd').onclick=()=>dlQR(cur.code)}
+ $('#wc1').onclick=()=>copyTxt(t.value);$('#wc2').onclick=()=>copyTxt(u1(t.value));
+ if($('#cp'))$('#cp').onchange=e=>{cur=calc(e.target.value);t.value=cur.m;upd();if(hp){$('#pc').value=cur.code;$('#pamt').textContent=brl(cur.tot);$('#qrv').innerHTML=qrSvg(cur.code)}};
+ if(hp){$('#wc3').onclick=()=>copyTxt(key);$('#wc4').onclick=()=>copyTxt(cur.code);$('#qrb').onclick=()=>showQR(c.id,1,cur.k?cur.k.v:0)}}
+
+
+function savePix(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
+ r.pix={type:f.ktype.value,key:f.key.value.trim(),name:f.pname.value.trim(),city:f.city.value.trim()};save();render();toast('Pix salvo.')}
+const clean=(t,n)=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 ]/g,'').toUpperCase().slice(0,n)||'NA';
+const tlv=(id,v)=>id+String(v.length).padStart(2,'0')+v;
+function crc16(str){let c=0xFFFF;for(let i=0;i<str.length;i++){c^=str.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function pixType(px){if(px.type)return px.type;const k=px.key.trim();if(k.includes('@'))return'email';if(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(k))return'evp';if(k.startsWith('+')||/[() ]/.test(k))return'cel';return'cpf'}
+function pixKey(px){const k=px.key.trim(),t=pixType(px),dg=k.replace(/\D/g,'');
+ if(t==='email'||t==='evp')return k.toLowerCase();
+ if(t==='cel')return '+'+((dg.length<=11)?'55'+dg:dg);
+ return dg}
+function pixPayload(px,value,txid){txid='***';
+ const body=tlv('00','01')+tlv('26',tlv('00','br.gov.bcb.pix')+tlv('01',pixKey(px)))+tlv('52','0000')+tlv('53','986')+(value>0?tlv('54',value.toFixed(2)):'')+tlv('58','BR')+tlv('59',clean(px.name,25))+tlv('60',clean(px.city,15))+tlv('62',tlv('05',txid))+'6304';
+ return body+crc16(body)}
+function showQR(id,m,desc){m=m||1;const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
+ if(!r.pix||!r.pix.key){toast(ses.role==='cli'?'A revenda ainda não cadastrou o Pix.':'Cadastre primeiro sua chave Pix no bloco "Dados de recebimento".');return}
+ const v=Math.max(0.01,c.value*m-(desc||0)),code=pixPayload(r.pix,v,clean(c.id,25).replace(/ /g,''));
+ $('#modal').innerHTML=`<div class="ov" onclick="if(event.target===this)closeM()"><div class="md">${r.logo?`<img src="${r.logo}" alt="" style="max-height:48px;max-width:140px;margin-bottom:6px">`:''}<h2>${esc(c.name)}</h2><div>${brl(v)}${desc?' (cupom −'+brl(desc)+')':''}${m>1?' · '+m+' meses':''} · vence ${fmt(c.due)}</div><div class="qr" id="qrbox"></div><textarea id="qrtxt" readonly>${code}</textarea><div style="display:flex;gap:8px;margin-top:10px;justify-content:center"><button onclick="copyQR()">Copiar Pix</button><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;
+ try{$('#qrbox').innerHTML=qrSvg(code)}catch(e){$('#qrbox').textContent='Não foi possível gerar o QR. Use o código copia e cola.'}}
+const closeM=()=>{$('#modal').innerHTML=''};
+function copyQR(){const t=$('#qrtxt');t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand('copy')}toast('Código Pix copiado.')}
+
+function reqRenew(cid){const m=+$('#rm').value,c=db.clients.find(c=>c.id===cid);
+ const nr={id:uid(),cid,rid:c.rid,months:m,value:c.value*m,date:today(),status:'pend'};db.renewals.push(nr);if(FBMODE)rt('POST','req/'+kid(c.rid),{id:nr.id,cid,months:m},false).catch(()=>toast('Não foi possível enviar o pedido. Avise a revenda.'));save();render();showQR(cid,m);toast('Pedido enviado. A revenda confirma após o pagamento.')}
+function okRenew(id){const r=db.renewals.find(r=>r.id===id),c=db.clients.find(c=>c.id===r.cid);
+ if(c){const base=c.due>today()?c.due:today();c.due=addDays(base,30*r.months);c.paid=true}r.status='ok';save();render()}
+function noRenew(id){db.renewals.find(r=>r.id===id).status='no';save();render()}
+function renCard(rid){const l=db.renewals.filter(r=>r.rid===rid).sort((a,b)=>b.date.localeCompare(a.date));
+ if(!l.length)return '<div class="card"><h2>Renovações</h2><p class="note">Nenhum pedido de renovação.</p></div>';
+ const sb={pend:['Aguardando','pend'],ok:['Confirmada','pago'],no:['Recusada','atr']};
+ return `<div class="card"><h2>Renovações</h2><div class="tw"><table><tr><th>Cliente</th><th>Período</th><th>Valor</th><th>Data</th><th>Status</th><th>Ações</th></tr>`+l.map(r=>{const c=db.clients.find(c=>c.id===r.cid);return `<tr><td>${esc(c?c.name:'—')}</td><td>${r.months} mês(es)</td><td>${brl(r.value)}</td><td>${fmt(r.date)}</td><td><span class="b ${sb[r.status][1]}">${sb[r.status][0]}</span></td><td>${r.status==='pend'?`<button class="s" onclick="okRenew('${r.id}')">Confirmar pagamento</button> <button class="s d" onclick="noRenew('${r.id}')">Recusar</button>`:''}</td></tr>`}).join('')+'</table></div></div>'}
+function cliHtml(){const c=db.clients.find(c=>c.id===ses.id);
+ if(!c)return '<p>Cadastro não encontrado.</p><button onclick="logout()">Sair</button>';
+ const r=db.resellers.find(r=>r.id===c.rid),x=st(c),h=db.renewals.filter(q=>q.cid===c.id).sort((a,b)=>b.date.localeCompare(a.date));
+ const sb={pend:'Aguardando confirmação',ok:'Confirmada',no:'Recusada'};
+ return `<header><h1>Olá, ${esc(c.name)}</h1><button class="s" onclick="logout()">Sair</button></header>
+ <div class="card"><h2>Meu plano</h2><div class="grid"><div class="stat"><b>${esc(c.plan||'—')}</b><span>Plano</span></div><div class="stat"><b>${brl(c.value)}</b><span>Valor mensal</span></div><div class="stat"><b>${fmt(c.due)}</b><span>Vencimento</span></div><div class="stat"><b><i class="b ${x}" style="font-style:normal;font-size:13px">${lbC[x]}</i></b><span>Situação</span></div></div><p class="note">Revenda: ${esc(r?r.name:'')}</p>${x!=='pago'?`<button onclick="showQR('${c.id}')">Pagar com QR Code Pix</button>`:''}</div>
+ <div class="card"><h2>Renovar plano</h2><form onsubmit="event.preventDefault();reqRenew('${c.id}')"><div><label>Período</label><select id="rm">${[1,3,6,12].map(m=>`<option value="${m}">${m} ${m>1?'meses':'mês'} — ${brl(c.value*m)}</option>`).join('')}</select></div><button>Renovar e gerar QR Code</button></form><p class="note">Após pagar, a revenda confirma e o vencimento é estendido.</p></div>
+ <div class="card"><h2>Minhas renovações</h2>${h.length?`<div class="tw"><table><tr><th>Data</th><th>Período</th><th>Valor</th><th>Status</th></tr>${h.map(q=>`<tr><td>${fmt(q.date)}</td><td>${q.months} mês(es)</td><td>${brl(q.value)}</td><td>${sb[q.status]}</td></tr>`).join('')}</table></div>`:'<p class="note">Nenhuma renovação.</p>'}</div>`}
+
+function editRes(id){const r=db.resellers.find(r=>r.id===id);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Editar revenda</h2><form id="ef" style="grid-template-columns:1fr"><div><label>Nome</label><input name="name" value="${esc(r.name)}" required></div><div><label>Usuário (e-mail para recuperar a senha)</label><input name="user" value="${esc(r.user)}" autocapitalize="none" autocorrect="off" spellcheck="false" required></div><div><label>Senha</label><input name="pass" value="${esc(r.pass)}" required></div><div><label>WhatsApp</label><input name="phone" value="${esc(r.phone)}"></div><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--tx);grid-column:1/-1"><input type="checkbox" name="unl" ${r.unlimited?'checked':''} onchange="unlTog(this.form)" style="width:auto"> Acesso ilimitado (sem data de expiração)</label><div><label>Valor mensal (R$)</label><input name="fee" type="number" step="0.01" min="0" value="${r.fee??''}" ${r.unlimited?'disabled':''}></div><div><label>Vencimento</label><input name="due" type="date" value="${r.due||''}" ${r.unlimited?'disabled':''}></div><div style="display:flex;gap:8px"><button>Salvar</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
+ $('#ef').onsubmit=async e=>{e.preventDefault();const f=e.target,u=f.user.value.trim();
+  if(u===db.master.user||db.resellers.some(x=>x.id!==id&&x.user===u)){toast('Esse usuário já existe.');return}
+  if(FBMODE){if(!fbPwOk(u,f.pass.value)){toast(FB_PW_MSG);return}if(u!==r.user||f.pass.value!==r.pass){try{await fbChg(r,u,f.pass.value)}catch(x){toast('Não foi possível atualizar o acesso ('+(x.code||x.message)+').');return}}}
+  r.name=f.name.value.trim();r.user=u;r.pass=f.pass.value;r.phone=f.phone.value.trim();r.unlimited=f.unl.checked;if(r.unlimited){r.fee=null;r.due='';r.paid=false}else{r.fee=f.fee.value===''?null:+f.fee.value;r.due=f.due.value}save();closeM();render();toast('Revenda atualizada.')}}
+
+const stR=r=>r.unlimited?'pago':!r.due?'pend':(r.paid&&r.due>today())?'pago':(r.due<today()?'atr':'pend');
+function payRes(id){const r=db.resellers.find(r=>r.id===id);r.prevDue=r.due;let n=addDays(r.due,30);while(n<=today())n=addDays(n,30);r.due=n;r.paid=true;save();render()}
+function undoRes(id){const r=db.resellers.find(r=>r.id===id);if(r.prevDue)r.due=r.prevDue;r.paid=false;save();render()}
+function logoCard(r){return `<div class="card"><h2>Logo da revenda</h2><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${r.logo?`<img src="${r.logo}" alt="Logo" style="max-height:80px;max-width:160px;border-radius:8px;background:#fff;padding:4px">`:'<span class="note">Nenhuma logo cadastrada.</span>'}<div style="display:flex;gap:8px"><button onclick="$('#lf').click()">${r.logo?'Trocar logo':'Adicionar logo'}</button>${r.logo?'<button class="s d" onclick="rmLogo()">Remover</button>':''}</div><input id="lf" type="file" accept="image/*" hidden onchange="setLogo(this.files[0])"></div></div>`}
+function setLogo(f){if(!f)return;if(!/^image\//.test(f.type)){toast('Escolha um arquivo de imagem.');return}
+ const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const M=300,k=Math.min(1,M/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+ const r=db.resellers.find(r=>r.id===ses.id);r.logo=cv.toDataURL(f.type==='image/jpeg'?'image/jpeg':'image/png',.85);save();render();toast('Logo salva.')};im.onerror=()=>toast('Não foi possível ler a imagem.');im.src=rd.result};rd.readAsDataURL(f)}
+function rmLogo(){const r=db.resellers.find(r=>r.id===ses.id);delete r.logo;save();render();toast('Logo removida.')}
+
+const DEF_MASTER='Olá {nome}! Sua mensalidade de {valor} {situacao} {vencimento}.\n\nPague via Pix:\nChave Pix: {chave}\nCopia e cola:\n{pix}\n\nObrigado!';
+const getMC=()=>db.master.coupons||[10,20,30,50].map(p=>({p,code:'DESC'+p,on:true}));
+function masterCard(){const mp=db.master.pix||{},ty=mp.key?pixType(mp):'cpf';
+ return `<div class="card"><h2>Cobrança das revendas via WhatsApp</h2><form onsubmit="saveMasterBill(event)"><div><label>Tipo da chave</label><select name="ktype">${[['cpf','CPF / CNPJ'],['cel','Celular'],['email','E-mail'],['evp','Chave aleatória']].map(o=>`<option value="${o[0]}" ${ty===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div><label>Chave Pix</label><input name="key" value="${esc(mp.key)}"></div><div><label>Nome do recebedor</label><input name="pname" value="${esc(mp.name)}" maxlength="25"></div><div><label>Cidade</label><input name="city" value="${esc(mp.city)}" maxlength="15"></div><div style="grid-column:1/-1"><label>Cupons de desconto para revendas (opcionais no envio)</label>${getMC().map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><b style="min-width:50px">${k.p}%</b><input name="mcode${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="mon${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}</div><div style="grid-column:1/-1"><label>Mensagem editável (variáveis: {nome} {valor} {vencimento} {situacao} {chave} {pix} {cupom} {total})</label><textarea name="msg" style="height:140px;font-family:inherit;font-size:13px">${esc(db.master.msg||DEF_MASTER)}</textarea></div><button>Salvar</button><button type="button" class="s" onclick="resetMasterMsg()">Restaurar mensagem</button></form><p class="note">Seu Pix e esta mensagem são usados no botão WhatsApp de cada revenda.</p></div>`}
+function saveMasterBill(e){e.preventDefault();const f=e.target,k=f.key.value.trim();
+ if(k){if(!f.pname.value.trim()||!f.city.value.trim()){toast('Informe nome do recebedor e cidade.');return}db.master.pix={type:f.ktype.value,key:k,name:f.pname.value.trim(),city:f.city.value.trim()}}else delete db.master.pix;
+ db.master.msg=f.msg.value;db.master.coupons=getMC().map((k,i)=>({p:k.p,code:f['mcode'+i].value.trim()||k.code,on:f['mon'+i].checked}));save();toast('Dados salvos.')}
+function resetMasterMsg(){delete db.master.msg;save();render();toast('Mensagem padrão restaurada.')}
+function waRes(id){const r=db.resellers.find(r=>r.id===id),mp=db.master.pix,hp=mp&&mp.key,cps=getMC().filter(k=>k.on);
+ let d=(r.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp da revenda em Editar.');return}
+ if(r.fee==null||!r.due){toast('Defina valor e vencimento da revenda em Editar.');return}
+ if(d.length<=11)d='55'+d;
+ const key=hp?pixKey(mp):'';
+ const calc=ci=>{const k=ci===''?null:cps[+ci],tot=k?Math.max(0.01,Math.round(r.fee*(100-k.p))/100):r.fee,code=hp?pixPayload(mp,tot,'x'):'';
+  let tpl=db.master.msg||DEF_MASTER;if(k&&!tpl.includes('{cupom}'))tpl=tpl.includes('\n\n')?tpl.replace('\n\n','\n\n{cupom}\n\n'):tpl+'\n\n{cupom}';if(qrOn&&code&&!tpl.includes('{qr}'))tpl=tpl.includes('{pix}')?tpl.replace('{pix}','{pix}\n\nQR Code para pagamento:\n{qr}'):tpl+'\n\nQR Code para pagamento:\n{qr}';
+  const m=fillMsg(tpl,{nome:r.name,valor:brl(r.fee),situacao:stR(r)==='atr'?'está vencida desde':'vence em',vencimento:fmt(r.due),chave:key,pix:code,qr:qrOn&&code?qrUrl(code):'',total:brl(tot),desconto:k?k.p+'%':'',cupom:k?`Cupom ${k.code}: ${k.p}% de desconto. Total a pagar: ${brl(tot)}`:''}).replace(/\n{3,}/g,'\n\n');
+  return{m,tot,code}};
+ qrOn=true;let cur=calc('');
+ const u1=t=>'https://wa.me/'+d+'?text='+encodeURIComponent(t),u2=t=>'https://web.whatsapp.com/send?phone='+d+'&text='+encodeURIComponent(t);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>Cobrar revenda</h2><p class="note" style="margin:0 0 10px">Para: ${esc(r.name)} · +${d} · ${brl(r.fee)}</p>
+ ${cps.length?`<div style="margin-bottom:12px"><label>Cupom de desconto (opcional)</label><select id="cp"><option value="">Sem cupom</option>${cps.map((k,i)=>`<option value="${i}">${esc(k.code)} — ${k.p}% de desconto</option>`).join('')}</select></div>`:''}
+ ${hp?`<label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--tx)"><input type="checkbox" id="qron" checked style="width:auto"> Enviar link do QR Code na mensagem</label>`:''}<div class="tabs" style="margin-bottom:12px"><button id="tb1" class="on">Mensagem</button><button id="tb2">Chave Pix</button><button id="tb3">QR Code</button></div>
+ <div id="wp1"><textarea id="wam" style="height:180px;font-family:inherit;font-size:13px">${esc(cur.m)}</textarea><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><a id="wa1" class="btn" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a><a id="wa2" class="btn s" target="_blank" rel="noopener noreferrer">WhatsApp Web</a></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"><button class="s" id="wc1">Copiar mensagem</button><button class="s" id="wc2">Copiar link</button></div><p class="note">Edite o texto antes de enviar. Ao trocar o cupom, a mensagem é refeita. Se o navegador bloquear o WhatsApp, copie a mensagem e cole na conversa.</p></div>
+ <div id="wp2" style="display:none">${hp?`<label>Sua chave Pix</label><input readonly value="${esc(key)}"><div style="margin:8px 0 14px"><button class="s" id="wc3">Copiar chave</button></div><label>Pix copia e cola (<span id="pamt">${brl(cur.tot)}</span>)</label><textarea id="pc" readonly>${cur.code}</textarea><div style="margin-top:8px"><button class="s" id="wc4">Copiar copia e cola</button></div>`:'<p class="note">Cadastre seu Pix no bloco <b>Cobrança das revendas via WhatsApp</b>.</p>'}</div>
+ <div id="wp3" style="display:none">${hp?`<div style="text-align:center"><div class="qr" id="qrv">${qrSvg(cur.code)}</div></div><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="s" id="qs">Compartilhar com mensagem</button><button class="s" id="qc">Copiar imagem</button><button class="s" id="qd">Baixar imagem</button></div><p class="note">O WhatsApp não anexa imagem por link. No celular, use <b>Compartilhar</b> e escolha o WhatsApp. No computador, copie ou baixe a imagem e cole ou anexe na conversa depois de abrir o WhatsApp.</p>`:'<p class="note">Cadastre a chave Pix para gerar o QR Code.</p>'}</div>
+ <div style="margin-top:12px;text-align:right"><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;
+ const t=$('#wam'),upd=()=>{$('#wa1').href=u1(t.value);$('#wa2').href=u2(t.value)};upd();t.oninput=upd;
+ const tab=n=>{[1,2,3].forEach(i=>{$('#wp'+i).style.display=n===i?'':'none';$('#tb'+i).className=n===i?'on':''})};
+ $('#tb1').onclick=()=>tab(1);$('#tb2').onclick=()=>tab(2);$('#tb3').onclick=()=>tab(3);if(hp){$('#qron').onchange=e=>{qrOn=e.target.checked;cur=calc($('#cp')?$('#cp').value:'');t.value=cur.m;upd()};$('#qs').onclick=()=>shareQR(cur.code,t.value);$('#qc').onclick=()=>copyQR2(cur.code);$('#qd').onclick=()=>dlQR(cur.code)}$('#wc1').onclick=()=>copyTxt(t.value);$('#wc2').onclick=()=>copyTxt(u1(t.value));
+ if($('#cp'))$('#cp').onchange=e=>{cur=calc(e.target.value);t.value=cur.m;upd();if(hp){$('#pc').value=cur.code;$('#pamt').textContent=brl(cur.tot);$('#qrv').innerHTML=qrSvg(cur.code)}};
+ if(hp){$('#wc3').onclick=()=>copyTxt(key);$('#wc4').onclick=()=>copyTxt(cur.code)}}
+
+function masterStats(){const g={pago:[],pend:[],atr:[]};db.resellers.forEach(r=>{if(r.fee==null||!r.due)return;g[stR(r)].push(r)});
+ const tot=a=>a.reduce((x,r)=>x+Number(r.fee||0),0);
+ const lst=a=>a.length?a.map(r=>`<div><span>${esc(r.name)}</span><span>${brl(r.fee)}</span></div>`).join(''):'<div>Nenhuma revenda</div>';
+ const cell=(l,a)=>`<div class="stat"><div class="sl">${lst(a)}</div><b>${brl(tot(a))}</b><span>${l} · ${a.length}</span></div>`;
+ return `<div class="grid m"><div class="stat"><b>${db.resellers.length}</b><span>Revendas</span></div>${cell('Recebido',g.pago)}${cell('A receber',g.pend)}${cell('Atrasado',g.atr)}</div>`}
+
+function stats(list){const s={t:0,rec:0,pen:0,atr:0};
+ list.forEach(c=>{const x=st(c);s.t++;if(x==='pago')s.rec+=c.value;else if(x==='pend'||x==='exp')s.pen+=c.value;else s.atr+=c.value});return s}
+function statsHtml(list){const s=stats(list);
+ return `<div class="grid"><div class="stat"><b>${s.t}</b><span>Clientes</span></div><div class="stat"><b>${brl(s.rec)}</b><span>Recebido</span></div><div class="stat"><b>${brl(s.pen)}</b><span>A receber</span></div><div class="stat"><b>${brl(s.atr)}</b><span>Atrasado</span></div></div>`}
+function clientRows(list,showRes){
+ if(!list.length)return '<p class="note">Nenhum cliente ainda.</p>';
+ return `<div class="tw"><table><tr>${showRes?'':`<th class="ckc"><input type="checkbox" class="ck" title="Selecionar todos desta página" ${list.every(c=>selC.has(c.id))?'checked':''} onchange="selPage(this.checked)"></th>`}<th>Cliente</th>${showRes?'<th>Revenda</th>':''}<th>Telas</th><th>Usuário</th><th>Aplicativos</th><th>Valor</th><th>Vence</th><th>Status</th>${showRes?'':'<th>Ações</th>'}</tr>`+
+ list.map(c=>{const x=st(c),r=db.resellers.find(r=>r.id===c.rid);
+ return `<tr class="${selC.has(c.id)?'sel':''}">${showRes?'':`<td class="ckc"><input type="checkbox" class="ck" aria-label="Selecionar ${esc(c.name)}" ${selC.has(c.id)?'checked':''} onchange="selTog('${c.id}',this.checked)"></td>`}<td>${esc(c.name)}${sitChips(c)}<br><small style="color:var(--mut)">${esc(c.phone)}</small></td>${showRes?`<td>${esc(r?.name)}</td>`:''}<td>${esc(c.plan)}</td><td>${esc(c.user)}</td><td>${esc(c.app)}</td><td>${brl(c.value)}</td><td>${fmt(c.due)}<small class="dl ${diasAte(c.due)<0?'late':diasAte(c.due)<=DIAS?'soon':''}">${diasLbl(c.due)}</small></td><td><span class="b ${x}" ${x==='atr'?`title="Venceu há ${-diasAte(c.due)} dias"`:''}>${stLabel(c,x)}</span></td>`+
+ (showRes?'':`<td>${x==='pago'?`<button class="s" onclick="undoCli('${c.id}')">Desfazer</button>`:`<button class="s" onclick="renewCli('${c.id}')">Renovar</button>`} <button class="s" onclick="editCli('${c.id}')">Editar</button> <button class="s" onclick="showQR('${c.id}')">QR Code</button> <button class="s" onclick="wa('${c.id}')">WhatsApp</button> <button class="s d" onclick="delCli('${c.id}')">Excluir</button></td>`)+'</tr>'}).join('')+'</table></div>'}
+
+function render(){render0();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud&&!FBMODE)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
+
+const DASHD=7;
+function diasAte(d){return Math.round((new Date(d+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
+const IC={users:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',store:'<path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/>'};
+function kpi(ic,l,v,sm,tone){return `<div class="kp t-${tone}"><div class="ic"><svg viewBox="0 0 24 24">${IC[ic]}</svg></div><div class="kt"><span class="kl">${l}</span><b>${v}</b><small>${sm||'&nbsp;'}</small></div></div>`}
+function segCard(title,sub,items){
+ const tot=items.reduce((a,x)=>a+x.v,0);
+ return `<div class="card dp"><h3>${title}<small>${sub}</small></h3><div class="seg">${tot?items.filter(x=>x.v>0).map(x=>`<i class="t-${x.t}" style="width:${x.v/tot*100}%;background:var(--c)"></i>`).join(''):''}</div><div class="lg">${items.map(x=>`<div class="t-${x.t}"><em></em><span>${x.l}</span><b>${x.n}</b>${x.s!=null?`<small>${x.s}</small>`:''}</div>`).join('')}</div></div>`}
+function upCard(title,rows,vazio){
+ const chip=n=>n<0?['bad','Atrasado '+(-n)+'d']:n===0?['warn','Hoje']:n===1?['warn','Amanhã']:['info','Em '+n+' dias'];
+ const ini=t=>(String(t||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('')||'?').toUpperCase();
+ return `<div class="card dp"><h3>${title}<small>${rows.length?rows.length+' no período':''}</small></h3>`+(rows.length?'<div class="up">'+rows.slice(0,8).map(x=>{const n=diasAte(x.due),c=chip(n);return `<div class="it"><div class="av">${esc(ini(x.n))}</div><div class="m"><b>${esc(x.n)}</b><small>${esc(x.sub||'')}</small></div><div class="r"><b>${brl(x.val)}</b><span class="chip t-${c[0]}">${fmt(x.due)} · ${c[1]}</span></div></div>`}).join('')+'</div>'+(rows.length>8?`<p class="note">+ ${rows.length-8} outros</p>`:''):`<div class="emp">${vazio}</div>`)+'</div>'}
+function dashHead(){return `<div class="dh"><h2>Visão geral</h2><span>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>`}
+const sumV=a=>a.reduce((x,c)=>x+Number(c.value!=null?c.value:c.fee||0),0);
+function cliRows(list,showRes){const lim=addDays(today(),DASHD);
+ return list.filter(c=>c.due<=lim).sort((a,b)=>a.due.localeCompare(b.due)).map(c=>({n:c.name,sub:(showRes?(db.resellers.find(r=>r.id===c.rid)?.name||'')+' · ':'')+(c.plan||'Sem plano'),val:c.value,due:c.due}))}
+function resHead(){const me=db.resellers.find(r=>r.id===ses.id)||{};return `<div class="rhd">${me.logo?`<img src="${me.logo}" alt="Logo de ${esc(me.name)}">`:`<div class="av lg">${esc((me.name||'?').trim().charAt(0).toUpperCase())}</div>`}<div><h2>${esc(me.name||'')}</h2><span>Visão geral · ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>${rDue(me)}</div>`}
+function rDue(me){if(me.unlimited)return `<div class="rdue"><small>Acesso</small><b>Ilimitado</b><span class="chip t-ok">Sem data de expiração</span></div>`;if(!me.due)return '';const n=diasAte(me.due),c=n<0?['bad','Atrasada']:n===0?['warn','Vence hoje']:n===1?['warn','Vence amanhã']:n<=3?['warn','Em '+n+' dias']:['ok','Em '+n+' dias'];return `<div class="rdue"><small>${me.trial?'Teste grátis válido até':'Vencimento da mensalidade'}</small><b>${fmt(me.due)}</b><span class="chip t-${c[0]}">${c[1]}</span></div>`}
+function resellerDash(list){
+ const t=today(),lim=addDays(t,DASHD),s=stats(list);
+ const soon=list.filter(c=>c.due>=t&&c.due<=lim),late=list.filter(c=>c.due<t),s3=list.filter(c=>c.due>=t&&c.due<=addDays(t,DIAS));
+ const cnt=k=>list.filter(c=>st(c)===k),cv=k=>sumV(cnt(k));
+ return resHead()+`<div class="kg">${kpi('users','Clientes',list.length,'Ativos na carteira','pri')}${kpi('cash','Receita mensal',brl(sumV(list)),'Soma dos planos','ok')}${kpi('alert','Vencem em '+DIAS+' dias',s3.length,brl(sumV(s3)),'warn')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'info')}${kpi('alert','Em atraso',late.length,brl(sumV(late)),'bad')}</div>`+
+ `<div class="dc">${segCard('Situação dos clientes',list.length+' no total',[{l:'Renovado',t:'ok',v:cnt('pago').length,n:cnt('pago').length,s:brl(cv('pago'))},{l:'Pendente',t:'info',v:cnt('pend').length,n:cnt('pend').length,s:brl(cv('pend'))},{l:'Prestes a expirar',t:'warn',v:cnt('exp').length,n:cnt('exp').length,s:brl(cv('exp'))},{l:'Devendo',t:'bad',v:cnt('atr').length,n:cnt('atr').length,s:brl(cv('atr'))}])}`+
+ `${segCard('Financeiro','valores em R$',[{l:'Recebido',t:'ok',v:s.rec,n:brl(s.rec)},{l:'A receber',t:'info',v:s.pen,n:brl(s.pen)},{l:'Atrasado',t:'bad',v:s.atr,n:brl(s.atr)}])}</div>`+
+ upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.')}
+function masterDash(){
+ const t=today(),lim=addDays(t,DASHD),ra=db.resellers.filter(r=>r.fee!=null&&r.due&&!r.trial&&!r.unlimited);
+ const fin={pago:0,pend:0,atr:0},nn={pago:0,pend:0,atr:0};ra.forEach(r=>{const k=stR(r);fin[k]+=Number(r.fee||0);nn[k]++});
+ const act=db.resellers.filter(r=>r.active!==false&&!r.trial).length;
+ const rvAll=ra.filter(r=>r.active!==false&&r.due<=lim).sort((a,b)=>a.due.localeCompare(b.due));
+ const rv=rvAll.map(r=>({n:r.name,sub:'Mensalidade da revenda',val:r.fee,due:r.due}));
+ const soon=rvAll.filter(r=>r.due>=t);
+ return dashHead()+`<div class="kg">${kpi('store','Revendas',act,'de '+realRes().length+' cadastradas','pri')}${kpi('cash','Mensalidades',brl(sumV(ra)),'Previstas das revendas','ok')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'warn')}${kpi('alert','Revendas em atraso',nn.atr,brl(fin.atr),'bad')}</div>`+
+ `<div class="dc">${segCard('Mensalidades das revendas',ra.length+' revendas',[{l:'Recebido',t:'ok',v:fin.pago,n:brl(fin.pago),s:nn.pago+' rev.'},{l:'A receber',t:'info',v:fin.pend,n:brl(fin.pend),s:nn.pend+' rev.'},{l:'Atrasado',t:'bad',v:fin.atr,n:brl(fin.atr),s:nn.atr+' rev.'}])}`+
+ `${upCard('Revendas a vencer',rv,'Nenhuma revenda vence nos próximos '+DASHD+' dias.')}</div>`}
+function togglePw(b){const i=b.parentNode.querySelector('input'),h=i.type==='password';i.type=h?'text':'password';b.textContent=h?'Ocultar':'Mostrar';b.setAttribute('aria-label',h?'Ocultar senha':'Mostrar senha');i.focus()}
+const appsList=c=>c.apps&&c.apps.length?c.apps:(c.app?String(c.app).split(/\s*,\s*/).filter(Boolean):[]);
+const appsOf=f=>[...f.querySelectorAll('.appi')].map(i=>i.value.trim()).filter(Boolean);
+function appRow(v){return `<div class="ar"><input class="appi" placeholder="Nome do aplicativo" value="${esc(v)}"><button type="button" class="rm" onclick="const bx=this.closest('.abox');this.parentNode.remove();appEm(bx)" aria-label="Remover aplicativo">×</button></div>`}
+function myCat(){const r=ses&&db.resellers.find(r=>r.id===ses.id);return r?(r.appCat=r.appCat||[]):[]}
+function catHtml(){const c=myCat();return c.length?c.map((n,i)=>`<span class="achip"><button type="button" class="ca" onclick="catPick(this,${i})" title="Adicionar ao cliente">+ ${esc(n)}</button><button type="button" class="cx" onclick="catDel(${i})" title="Remover da lista" aria-label="Remover ${esc(n)} da lista">×</button></span>`).join(''):'<small class="note" style="margin:0">Nenhum aplicativo cadastrado ainda. Cadastre abaixo e depois é só tocar para adicionar.</small>'}
+function appsBlock(arr){return `<div style="grid-column:1/-1" class="abox"><label>Aplicativos</label><div class="tabs apt" role="tablist"><button type="button" class="on" role="tab" onclick="appTab(this,0)">Escolher da lista</button><button type="button" role="tab" onclick="appTab(this,1)">Digitar / cadastrar</button></div><div class="appp p0"><div class="acat">${catHtml()}</div></div><div class="appp p1" hidden><div class="ar"><input class="acn" placeholder="Nome do aplicativo" onkeydown="if(event.key==='Enter'){event.preventDefault();appTyped(this,0)}"></div><div class="ar" style="margin-top:8px;flex-wrap:wrap"><button type="button" class="s" onclick="appTyped(this,0)" style="width:auto;flex:none">Adicionar ao cliente</button><button type="button" class="s" onclick="appTyped(this,1)" style="width:auto;flex:none">Adicionar e salvar na lista</button></div></div><div class="asel"><small class="note" style="margin:10px 0 6px;display:block">Aplicativos deste cliente</small><div class="al">${arr.map(appRow).join('')}</div><small class="note aem" style="margin:0"${arr.length?' hidden':''}>Nenhum aplicativo adicionado.</small></div></div>`}
+function appTab(b,n){const bx=b.closest('.abox');bx.querySelectorAll('.apt button').forEach((x,i)=>x.classList.toggle('on',i===n));bx.querySelectorAll('.appp').forEach((x,i)=>x.hidden=i!==n);if(n===1){const i=bx.querySelector('.acn');if(i)i.focus()}}
+function appEm(bx){const l=bx.querySelector('.al'),e=bx.querySelector('.aem');if(e)e.hidden=!!l.querySelector('.appi')}
+function appTyped(b,reg){const bx=b.closest('.abox'),inp=bx.querySelector('.acn'),n=inp.value.trim();if(!n){inp.focus();return}const l=bx.querySelector('.al');if([...l.querySelectorAll('.appi')].some(x=>x.value.trim().toLowerCase()===n.toLowerCase())){toast('Esse aplicativo já foi adicionado.');return}if(reg){const c=myCat();if(!c.some(x=>x.toLowerCase()===n.toLowerCase())){c.push(n);save();catRefresh()}}const d=document.createElement('div');d.innerHTML=appRow(n);l.appendChild(d.firstChild);inp.value='';inp.focus();appEm(bx)}
+function catPick(b,i){const n=myCat()[i];if(!n)return;const l=b.closest('.abox').querySelector('.al'),ins=[...l.querySelectorAll('.appi')];if(ins.some(x=>x.value.trim().toLowerCase()===n.toLowerCase())){toast('Esse aplicativo já foi adicionado.');return}const e=ins.find(x=>!x.value.trim());if(e){e.value=n}else{const d=document.createElement('div');d.innerHTML=appRow(n);l.appendChild(d.firstChild)}appEm(b.closest('.abox'))}
+function catAdd(b){const inp=b.parentNode.querySelector('.acn'),n=inp.value.trim();if(!n)return;const c=myCat();if(c.some(x=>x.toLowerCase()===n.toLowerCase())){toast('Esse aplicativo já está cadastrado.');return}c.push(n);save();inp.value='';catRefresh();toast('Aplicativo cadastrado.')}
+function catDel(i){myCat().splice(i,1);save();catRefresh()}
+function catRefresh(){document.querySelectorAll('.acat').forEach(e=>e.innerHTML=catHtml())}
+function addApp(b){const l=b.previousElementSibling,d=document.createElement('div');d.innerHTML=appRow('');l.appendChild(d.firstChild);l.lastChild.querySelector('input').focus()}
+const APP_LINK='https://claude.ai/artifact/SMBU3CLxYNFQNW6hm8SSZP';
+const hostedHere=()=>/^https?:$/.test(location.protocol)&&!/claude|anthropic/i.test(location.hostname);
+function appLink(){const l=(db.master.link||'').trim();if(l)return l;if(hostedHere())return location.origin+location.pathname.replace(/index\.html$/,'');return APP_LINK}
+const linkPrivate=()=>/claude\.ai|claude\.com|anthropic/i.test(appLink());
+const DEF_ACC='Olá! Segue o acesso ao seu painel de cobrança:\nLink: {link}\nUsuário: {usuario}\nSenha: {senha}';
+function accCard(){return `<div class="card"><h2>Mensagem de acesso da revenda</h2><form onsubmit="saveAcc(event)" style="grid-template-columns:1fr"><div><label>Texto enviado quando a revenda é cadastrada (editável)</label><textarea name="acc" style="height:130px;font-family:inherit;font-size:13px">${esc(db.master.accMsg||DEF_ACC)}</textarea></div><div><label>Link do painel enviado às revendas</label><input name="link" type="text" autocapitalize="off" inputmode="url" placeholder="https://www.seusite.com.br/painel" value="${esc(db.master.link||'')}"><p class="note" style="margin:6px 0 0">${linkPrivate()?'<b style="color:var(--warn)">Atenção:</b> o link atual é do Claude e é privado. Quem não tem acesso vê “Página não encontrada”. Hospede o painel (Netlify, GitHub Pages ou seu domínio) e cole o endereço aqui.':'Este é o endereço que vai na mensagem: <b>'+esc(appLink())+'</b>'}</p></div><p class="note" style="margin:0">Variáveis: {nome} {link} {usuario} {senha}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button>Salvar mensagem</button><button type="button" class="s" onclick="this.form.acc.value=DEF_ACC">Restaurar padrão</button></div></form></div>`}
+function saveAcc(e){e.preventDefault();const f=e.target,v=f.acc.value.trim();let l=f.link.value.trim();
+ if(l){if(!/^https?:\/\//i.test(l))l='https://'+l;try{const u=new URL(l);if(!u.hostname.includes('.'))throw 0;l=u.href}catch(x){toast('Link inválido. Exemplo: https://www.seusite.com.br/painel');return}}
+ db.master.accMsg=v&&v!==DEF_ACC?v:'';if(l)db.master.link=l;else delete db.master.link;save();render();toast('Salvo.')}
+function waAcesso(id){const r=db.resellers.find(r=>r.id===id);if(!r)return;bk={img:null};let d=(r.phone||'').replace(/\D/g,'');
+ const okp=d.length>=10;if(!okp&&!r.trial){toast('Cadastre o WhatsApp da revenda em Editar para enviar o acesso.');return}if(okp&&d.length<=11)d='55'+d;
+ const m=fillMsg(db.master.accMsg||DEF_ACC,{nome:r.name,link:appLink(),usuario:r.user,senha:r.pass})+(r.trial?'\n\nTeste grátis válido por '+TRIAL_DAYS+' dias, até '+fmt(r.due)+'.':'');
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>${r.trial?'Acesso do teste grátis':'Enviar acesso'}</h2><p class="note" style="margin:0 0 10px">${r.trial?'Teste':'Para'}: ${esc(r.name)}${okp?' · +'+d:''}</p><textarea id="acm" style="height:150px;font-family:inherit;font-size:13px">${esc(m)}</textarea><label style="margin-top:10px">Imagem (opcional)</label>${imgPicker()}<div id="bkimgb" style="display:none;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="s" onclick="bkCopyImg()">Copiar imagem</button><button type="button" class="s" onclick="imgShare(document.getElementById('acm').value)">Compartilhar imagem + texto</button></div>${okp?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><a id="ac1" class="btn" target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a><a id="ac2" class="btn s" target="_blank" rel="noopener noreferrer">WhatsApp Web</a></div>`:''}<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"><button class="s" id="ac3">Copiar mensagem</button></div>${linkPrivate()?'<p class="note" style="color:var(--warn)"><b>Atenção:</b> o link desta mensagem é do Claude e só abre para quem tem acesso. Para a revenda conseguir entrar, cadastre o endereço do painel hospedado em <b>Pix e mensagens → Link do painel</b>.</p>':''}<p class="note">Edite o texto antes de enviar. Se o navegador bloquear o WhatsApp, copie a mensagem e cole na conversa.</p><div style="margin-top:12px;text-align:right"><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;
+ const t=$('#acm'),upd=()=>{if(!okp)return;$('#ac1').href='https://wa.me/'+d+'?text='+encodeURIComponent(t.value);$('#ac2').href='https://web.whatsapp.com/send?phone='+d+'&text='+encodeURIComponent(t.value)};upd();t.oninput=upd;$('#ac3').onclick=()=>copyTxt(t.value)}
+function clientsByRes(){const rows=realRes().map(r=>({r,n:db.clients.filter(c=>c.rid===r.id).length})),tot=rows.reduce((a,x)=>a+x.n,0);
+ return `<div class="grid m"><div class="stat"><b>${realRes().length}</b><span>Revendas</span></div><div class="stat"><b>${tot}</b><span>Clientes cadastrados</span></div></div><div class="card"><h2>Clientes por revenda</h2>`+(rows.length?`<div class="tw"><table><tr><th>Revenda</th><th>Clientes cadastrados</th></tr>${rows.map(x=>`<tr><td>${esc(x.r.name)}${x.r.active===false?' <small style="color:var(--mut)">(inativa)</small>':''}</td><td><b>${x.n}</b></td></tr>`).join('')}<tr><td><b>Total</b></td><td><b>${tot}</b></td></tr></table></div>`:'<p class="note">Nenhuma revenda criada.</p>')+'</div>'}
+let cliQ='',cliS='',cliO='',cliN=10,cliP=1,selC=new Set(),pageIds=[],filtIds=[];
+const nz=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function cliUpd(){const e=document.getElementById('cliList');if(e)e.innerHTML=cliListHtml()}
+function cliSearch(v){cliQ=v;cliP=1;cliUpd()}
+function cliSort(v){cliO=v;cliP=1;cliUpd()}
+function cliSize(v){cliN=+v;cliP=1;cliUpd()}
+function cliPage(n){cliP=n;cliUpd();const e=document.getElementById('cliList');if(e)e.scrollIntoView({block:'nearest'})}
+function cliListHtml(){
+ const all=db.clients.filter(c=>c.rid===ses.id&&(!cliS||sitHas(c,cliS))),q=nz(cliQ).trim(),qd=q.replace(/\D/g,'');
+ const f=q?all.filter(c=>nz([c.name,c.plan,c.user,c.oper,appsList(c).join(' ')].join(' ')).includes(q)||(qd.length>=3&&(c.phone||'').replace(/\D/g,'').includes(qd))):all;
+ if(cliO){const k=cliO==='za'?-1:1;f.sort((x,y)=>k*String(x.name||'').localeCompare(String(y.name||''),'pt-BR',{sensitivity:'base'}))}
+ if(q&&!f.length)return `<p class="note">Nenhum cliente encontrado para "${esc(cliQ.trim())}".</p>`;
+ const pages=cliN?Math.max(1,Math.ceil(f.length/cliN)):1;if(cliP>pages)cliP=pages;
+ const a=cliN?(cliP-1)*cliN:0,b=cliN?a+cliN:f.length;
+ pageIds=f.slice(a,b).map(c=>c.id);filtIds=f.map(c=>c.id);
+ return selBar()+clientRows(f.slice(a,b),false)+(f.length?`<div class="pgr"><span>Mostrando ${a+1}–${Math.min(b,f.length)} de ${f.length}${q?' (filtrado)':''}</span>${pages>1?`<div><button class="s" onclick="cliPage(${cliP-1})" ${cliP<=1?'disabled':''}>Anterior</button><span>Página ${cliP} de ${pages}</span><button class="s" onclick="cliPage(${cliP+1})" ${cliP>=pages?'disabled':''}>Próxima</button></div>`:''}</div>`:'')}
+const telaTxt=n=>n+(n===1?' tela':' telas');
+function telaSel(c){const m=c&&String(c.plan||'').match(/^(\d+)\s*tela/i),cur=c?String(c.screens||(m?m[1]:'')):'1';
+ return `<div><label>Telas</label><select name="tela">${!cur&&c&&c.plan?`<option value="" selected>${esc(c.plan)} (atual)</option>`:''}${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}" ${String(n)===cur?'selected':''}>${telaTxt(n)}</option>`).join('')}</select></div>`}
+function stBadge(due,paid){if(!due)return '';const k=st({due,paid}),n=diasAte(due);return `<span class="b ${k}">${lbC[k]}</span><small class="stx">${n<0?'venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'vence hoje':n===1?'vence amanhã':'vence em '+n+' dias'}</small>`}
+function stField(due,paid){return `<div><label>Status (automático)</label><div class="stl"><span class="stw">${stBadge(due,paid)}</span><label class="paidck"><input type="checkbox" name="paid" ${paid?'checked':''}> Já pagou</label></div></div>`}
+function stUpd(f){const w=f.querySelector('.stw');if(w&&f.due&&f.paid)w.innerHTML=stBadge(f.due.value,f.paid.checked)}
+const MAXU=5;
+const usersList=c=>c.users&&c.users.length?c.users:(c.user?String(c.user).split(/\s*,\s*/).filter(Boolean):[]);
+const usersOf=f=>[...f.querySelectorAll('.useri')].map(i=>i.value.trim()).filter(Boolean);
+function userRow(v){return `<div class="ar"><input class="useri" placeholder="Usuário" value="${esc(v)}" autocomplete="off"><button type="button" class="rm" onclick="rmUser(this)" aria-label="Remover usuário">×</button></div>`}
+function usersBlock(arr){const l=(arr.length?arr:['']).slice(0,MAXU);return `<div style="grid-column:1/-1" class="ubox"><label>Usuários <small style="color:var(--mut);font-weight:400">(até ${MAXU})</small></label><div class="al">${l.map(userRow).join('')}</div><button type="button" class="addapp" onclick="addUser(this)" ${l.length>=MAXU?'disabled':''}>+ Adicionar usuário</button></div>`}
+function uSync(box){const n=box.querySelectorAll('.useri').length,b=box.querySelector('.addapp');b.disabled=n>=MAXU;b.textContent=n>=MAXU?'Limite de '+MAXU+' usuários':'+ Adicionar usuário'}
+function addUser(b){const box=b.closest('.ubox'),l=box.querySelector('.al');if(l.children.length>=MAXU)return;const d=document.createElement('div');d.innerHTML=userRow('');l.appendChild(d.firstChild);l.lastChild.querySelector('input').focus();uSync(box)}
+function rmUser(b){const box=b.closest('.ubox');b.parentNode.remove();uSync(box)}
+function selBar(){const n=selC.size;if(!n)return '';return `<div class="selbar"><b>${n} selecionado${n>1?'s':''}</b><button class="s" onclick="selAll()">Selecionar todos (${filtIds.length})</button><button class="s" onclick="bulkOpen(true)">Enviar mensagem</button><button class="s" onclick="selClear()">Limpar seleção</button><button class="s d" onclick="selDel()">Excluir selecionados</button></div>`}
+function selTog(id,on){on?selC.add(id):selC.delete(id);cliUpd()}
+function selPage(on){pageIds.forEach(id=>on?selC.add(id):selC.delete(id));cliUpd()}
+function selAll(){filtIds.forEach(id=>selC.add(id));cliUpd()}
+function selClear(){selC.clear();cliUpd()}
+function selDel(){const ids=[...selC];ask('Excluir '+ids.length+' cliente'+(ids.length>1?'s':'')+' selecionado'+(ids.length>1?'s':'')+'?',0,()=>{db.clients=db.clients.filter(c=>!selC.has(c.id));db.renewals=db.renewals.filter(r=>!selC.has(r.cid));selC.clear();save();render()})}
+const TRIAL_DAYS=7;
+const realRes=()=>db.resellers.filter(r=>!r.trial);
+function rndStr(n,al){const a=new Uint32Array(n);(window.crypto||{getRandomValues:x=>x.forEach((_,i)=>x[i]=Math.random()*4294967296)}).getRandomValues(a);return [...a].map(v=>al[v%al.length]).join('')}
+const phKey=p=>{let d=String(p||'').replace(/\D/g,'');if(d.length>=12&&d.startsWith('55'))d=d.slice(2);return d.length>=10&&d.length<=11?d.slice(0,2)+d.slice(-8):''};
+function phUsed(key){return !!key&&((db.master.trialPhones||[]).includes(key)||db.resellers.some(r=>phKey(r.phone)===key))}
+function mkTrial(name,phone){const n=db.resellers.filter(r=>r.trial).length+1;let user;
+ do{user='teste'+rndStr(4,'0123456789')}while(user===db.master.user||db.resellers.some(r=>r.user===user));
+ const nid=uid(),r={id:nid,name:(name||'').trim()||'Teste '+String(n).padStart(3,'0'),user,pass:rndStr(6,'abcdefghjkmnpqrstuvwxyz23456789'),phone:(phone||'').trim(),fee:0,due:addDays(today(),TRIAL_DAYS),paid:false,active:true,trial:true,created:today()};
+ db.resellers.push(r);const k=phKey(phone);if(k){const l=db.master.trialPhones=db.master.trialPhones||[];if(!l.includes(k))l.push(k)}return r}
+function genTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim();
+ if(ph&&!phKey(ph)){toast('Informe o WhatsApp com DDD.');return}
+ if(ph&&phUsed(phKey(ph))){toast('Esse número já foi usado em um teste grátis.');return}
+ const r=mkTrial(f.name.value,ph);save();render();waAcesso(r.id)}
+let tview=0,tres=null,terr='';
+function tOpen(v){tview=v;terr='';rmsg='';render()}
+function tGen(e){if(FBMODE)return fbTrial(e);e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph);
+ if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
+ if(phUsed(k)){terr='Esse número já foi usado. Cada número tem direito a apenas um teste grátis.';render();return}
+ const r=mkTrial(f.name.value,ph);save();tres={id:r.id,user:r.user,pass:r.pass,due:r.due,name:r.name};tview=2;terr='';render()}
+function tEnter(){if(FBMODE)return fbEnterTrial();const r=tres&&db.resellers.find(x=>x.id===tres.id);if(!r)return;ses={role:'rev',id:r.id};err='';tab='dash';tview=0;tres=null;render()}
+function tLogin(){if(!tres)return;tview=0;render();const u=document.getElementById('u'),p=document.getElementById('p');if(u)u.value=tres.user;if(p)p.value=tres.pass}
+function trialTab(){const ts=db.resellers.filter(r=>r.trial).sort((a,b)=>(b.created||'').localeCompare(a.created||''));
+ return `<div class="card"><h2>Teste grátis</h2><p class="note" style="margin:0 0 12px">Gera um acesso de revenda com usuário e senha automáticos, válido por ${TRIAL_DAYS} dias. Depois disso, o acesso é bloqueado sozinho.</p><form onsubmit="genTrial(event)"><div><label>Nome (opcional)</label><input name="name" placeholder="Ex.: João"></div><div><label>WhatsApp (opcional)</label><input name="phone" inputmode="tel" placeholder="DDD + número"></div><button>Gerar teste de ${TRIAL_DAYS} dias</button></form></div><div class="card"><h2>Testes gerados (${ts.length})</h2>`+(ts.length?`<div class="tw"><table><tr><th>Nome</th><th>Usuário</th><th>Senha</th><th>Válido até</th><th>Situação</th><th>Ações</th></tr>${ts.map(r=>{const n=diasAte(r.due),ex=n<0;return `<tr><td>${esc(r.name)}</td><td>${esc(r.user)}</td><td>${esc(r.pass)}</td><td>${fmt(r.due)}</td><td><span class="b ${ex?'atr':n<=2?'exp':'pago'}">${ex?'Expirado':n===0?'Último dia':n+(n===1?' dia restante':' dias restantes')}</span></td><td><button class="s" onclick="waAcesso('${r.id}')">Acesso</button> <button class="s d" onclick="delRes('${r.id}')">Excluir</button></td></tr>`}).join('')}</table></div>`:'<p class="note">Nenhum teste gerado ainda.</p>')+'</div>'}
+function unlTog(f){f.fee.disabled=f.due.disabled=f.unl.checked}
+const SITS=[['novo','Novo'],['gratis','Grátis'],['renov','Renovado'],['v3','Vence em '+DIAS+' dias'],['d1','Devendo 1 mês'],['d2','Devendo 2 meses'],['d3','Devendo 3 meses']];
+function mesesDev(c){const n=-diasAte(c.due);return n>0?Math.min(3,Math.ceil(n/30)):0}
+const isNovo=c=>c.sit!==undefined?c.sit==='novo':(!!c.created&&-diasAte(c.created)<=7);
+const isGratis=c=>c.sit==='gratis'||Number(c.value)===0;
+function sitHas(c,k){return k==='novo'?isNovo(c):k==='gratis'?isGratis(c):k==='renov'?st(c)==='pago':k==='v3'?(c.due>=today()&&c.due<=addDays(today(),DIAS)):k==='d1'?mesesDev(c)===1:k==='d2'?mesesDev(c)===2:k==='d3'?mesesDev(c)>=3:true}
+function stLabel(c,x){if(x==='atr'){const m=mesesDev(c);return 'Devendo '+m+(m>1?' meses':' mês')}return lbC[x]}
+function sitChips(c){return (isNovo(c)?'<span class="sc2 n">Novo</span>':'')+(isGratis(c)?'<span class="sc2 g">Grátis</span>':'')}
+function sitsHtml(){const mine=db.clients.filter(c=>c.rid===ses.id);return [['','Todos']].concat(SITS).map(([k,l])=>`<button class="${cliS===k?'on':''}" onclick="cliSit('${k}')">${l}<small>${k?mine.filter(c=>sitHas(c,k)).length:mine.length}</small></button>`).join('')}
+function cliSit(k){cliS=k;cliP=1;const e=document.getElementById('sits');if(e)e.innerHTML=sitsHtml();cliUpd()}
+const SITOPTS=[['','Automática'],['novo','Novo'],['gratis','Grátis'],['renovado','Renovado'],['d1','Devendo 1 mês'],['d2','Devendo 2 meses'],['d3','Devendo 3 meses']];
+function sitSel(c){const cur=c?(c.sit||(st(c)==='pago'?'renovado':mesesDev(c)>0?'d'+mesesDev(c):'')):'novo';return `<div><label>Situação</label><select name="sit">${SITOPTS.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l}</option>`).join('')}</select></div>`}
+const sitVal=f=>['novo','gratis'].includes(f.sit.value)?f.sit.value:'';
+function fSync(ev,f){const n=ev.target.name,D=/^d[123]$/,fut=()=>f.due.value>today(),mm=()=>Math.min(3,Math.max(0,Math.ceil(-diasAte(f.due.value)/30)));
+ if(n==='sit'){const v=f.sit.value;
+  if(D.test(v)){f.due.value=addDays(today(),-30*(+v[1]));f.paid.checked=false}
+  else if(v==='gratis')f.value.value=0;
+  else if(v==='renovado'){f.paid.checked=true;if(!f.due.value||!fut())f.due.value=addDays(today(),30)}}
+ else if(n==='due'&&f.due.value){const m=mm();
+  if(f.sit.value==='renovado'&&!fut()){f.sit.value=m>0?'d'+m:'';f.paid.checked=false}
+  else if(D.test(f.sit.value)||f.sit.value==='')f.sit.value=m>0?'d'+m:(f.paid.checked&&fut()?'renovado':'')}
+ else if(n==='paid'){
+  if(f.paid.checked){if(f.sit.value===''||D.test(f.sit.value)){f.sit.value='renovado';if(!fut())f.due.value=addDays(today(),30)}}
+  else if(f.sit.value==='renovado'){const m=f.due.value?mm():0;f.sit.value=m>0?'d'+m:''}}
+ stUpd(f)}
+function diasMsg(due){const n=diasAte(due);return n<0?'venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'vence hoje':n===1?'falta 1 dia':'faltam '+n+' dias'}
+function diasLbl(d){const n=diasAte(d);return n<0?'venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'hoje':n===1?'falta 1 dia':'faltam '+n+' dias'}
+let cb=null;
+function cbBase(){const n=cb?cb.n:DIAS,lim=addDays(today(),n),inc=cb?cb.late:true;return bkMine().filter(c=>c.due&&c.due<=lim&&(inc||c.due>=today())).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:a.name.localeCompare(b.name,'pt-BR'))}
+function cbBadge(){const sv=cb;cb=null;const n=cbBase().length;cb=sv;return n?` (${n})`:''}
+function billMsg(c){const r=db.resellers.find(r=>r.id===c.rid),x=st(c),hp=r&&r.pix&&r.pix.key,key=hp?pixKey(r.pix):'',code=hp?pixPayload(r.pix,c.value,'x'):'';
+ const tpl=(r&&r.msg&&r.msg!==OLD_MSG?r.msg:DEF_MSG);
+ return fillMsg(tpl,{nome:c.name,usuario:c.user||'',operador:c.oper||'',aplicativo:c.app||'',valor:brl(c.value),plano:c.plan||'plano',telas:c.screens?telaTxt(c.screens):(c.plan||''),situacao:x==='atr'?'está vencida desde':'vai vencer em',vencimento:fmt(c.due)+' ('+diasMsg(c.due)+')',dias:diasMsg(c.due),chave:key,pix:code,qr:'',total:brl(c.value),desconto:'',cupom:''}).replace(/^(Telas|Usuário): *\n/gm,'').replace(/\n{3,}/g,'\n\n')}
+function cbOpen(){cb={n:DIAS,late:true,ids:new Set(),sent:new Set()};cb.ids=new Set(cbBase().map(c=>c.id));
+ const r=db.resellers.find(r=>r.id===ses.id),semTel=db.clients.filter(c=>c.rid===ses.id&&!bkPhone(c)).length;
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:560px"><h2>Cobrança em massa</h2>
+ <p class="note" style="margin:0 0 10px">Clientes que vencem de hoje até o prazo escolhido. A mensagem é a sua mensagem de cobrança padrão, com valor, vencimento, dias e Pix de cada cliente.</p>
+ <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end"><div><label>Vencem em até</label><select onchange="cbSet(this.value)">${[1,2,3,5,7,10,15,30].map(n=>`<option value="${n}" ${n===DIAS?'selected':''}>${n} dia${n>1?'s':''}</option>`).join('')}</select></div><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--tx)"><input type="checkbox" checked onchange="cbLate(this.checked)" style="width:auto"> Incluir atrasados</label></div>
+ ${r&&r.pix&&r.pix.key?'':'<p class="note" style="color:var(--warn)">Você ainda não cadastrou sua chave Pix. Cadastre em Configurações para ela ir na mensagem.</p>'}
+ <div class="bkh"><b id="cbcount"></b><span><button type="button" class="s" onclick="cbAll(true)">Marcar todos</button> <button type="button" class="s" onclick="cbAll(false)">Limpar</button></span></div>
+ <div id="cbList" class="bkl"></div>
+ ${semTel?`<p class="note">${semTel} cliente${semTel>1?'s':''} sem WhatsApp válido não aparece${semTel>1?'m':''} aqui.</p>`:''}
+ <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--mut);font-size:13px">Ver prévia da mensagem</summary><pre id="cbprev" style="white-space:pre-wrap;font-family:inherit;font-size:13px;background:var(--bg2);border-radius:10px;padding:10px;margin:8px 0 0"></pre></details>
+ <p class="note">O WhatsApp não permite envio automático: toque em <b>Enviar próximo</b> para abrir a conversa do próximo cliente já com o texto pronto, envie e volte para continuar. Quem já foi aberto fica marcado como enviado.</p>
+ <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><button type="button" id="cbnext" onclick="cbNext()" style="width:auto">Enviar próximo</button><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;cbList()}
+function cbSet(v){cb.n=+v;cb.ids=new Set(cbBase().map(c=>c.id));cbList()}
+function cbLate(on){cb.late=on;cb.ids=new Set(cbBase().map(c=>c.id));cbList()}
+function cbAll(on){cbBase().forEach(c=>on?cb.ids.add(c.id):cb.ids.delete(c.id));cbList()}
+function cbTog(id,on){on?cb.ids.add(id):cb.ids.delete(id);cbCount()}
+function cbPend(){return cbBase().filter(c=>cb.ids.has(c.id)&&!cb.sent.has(c.id))}
+function cbCount(){const e=document.getElementById('cbcount');if(!e)return;const sel=cbBase().filter(c=>cb.ids.has(c.id)).length,f=cbPend().length;e.textContent=sel+' selecionado'+(sel===1?'':'s')+(cb.sent.size?' · faltam '+f:'');const b=document.getElementById('cbnext');if(b)b.disabled=!f}
+function cbUrl(c){return 'https://wa.me/'+bkPhone(c)+'?text='+encodeURIComponent(billMsg(c))}
+function cbList(){const l=cbBase();document.getElementById('cbList').innerHTML=l.length?l.map(c=>{const late=c.due<today();return `<div class="bkr ${cb.sent.has(c.id)?'ok':''}" data-id="${c.id}"><label><input type="checkbox" ${cb.ids.has(c.id)?'checked':''} onchange="cbTog('${c.id}',this.checked)"><span>${esc(c.name)}<small style="${late?'color:var(--bad)':''}">${fmt(c.due)} · ${diasLbl(c.due)} · ${brl(c.value)}</small></span></label><a class="btn s" href="${cbUrl(c)}" target="_blank" rel="noopener noreferrer" onclick="cbSent('${c.id}',this)">${cb.sent.has(c.id)?'✓ Enviado':'Enviar'}</a></div>`}).join(''):'<p class="note" style="padding:10px">Nenhum cliente vence neste prazo.</p>';
+ const f=l.find(c=>cb.ids.has(c.id)),pv=document.getElementById('cbprev');if(pv)pv.textContent=f?billMsg(f):'—';cbCount()}
+function cbSent(id,a){cb.sent.add(id);a.textContent='✓ Enviado';a.closest('.bkr').classList.add('ok');cbCount()}
+function cbNext(){const c=cbPend()[0];if(!c){toast('Todas as cobranças selecionadas já foram abertas.');return}cb.sent.add(c.id);window.open(cbUrl(c),'_blank','noopener');cbList();const n=cbPend().length;toast(n?'Aberto: '+c.name+'. Faltam '+n+'.':'Última cobrança aberta: '+c.name+'.')}
+let bk=null;
+const hasApp=(c,a)=>appsList(c).some(x=>x.toLowerCase()===a.toLowerCase());
+const bkPhone=c=>{const d=(c.phone||'').replace(/\D/g,'');return d.length<10?'':(d.length<=11?'55'+d:d)};
+const bkMine=()=>db.clients.filter(c=>c.rid===ses.id&&bkPhone(c));
+function bkApps(){const m=new Map();myCat().forEach(n=>m.set(n.toLowerCase(),n));db.clients.filter(c=>c.rid===ses.id).forEach(c=>appsList(c).forEach(n=>{if(!m.has(n.toLowerCase()))m.set(n.toLowerCase(),n)}));return [...m.values()].sort((a,b)=>a.localeCompare(b,'pt-BR'))}
+function bulkOpen(useSel){const mine=bkMine();bk={app:'',ids:new Set(useSel&&selC.size?[...selC].filter(id=>mine.some(c=>c.id===id)):[]),sent:new Set(),img:null};
+ const apps=bkApps();
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:560px"><h2>Mensagem em massa</h2>
+ <label>Escolher clientes por aplicativo</label><select id="bkapp" onchange="bkApp(this.value)"><option value="">Todos os aplicativos (${mine.length})</option>${apps.map(a=>`<option value="${esc(a)}">${esc(a)} (${mine.filter(c=>hasApp(c,a)).length})</option>`).join('')}</select>
+ <div class="bkh"><b id="bkcount"></b><span><button type="button" class="s" onclick="bkAll(true)">Marcar todos</button> <button type="button" class="s" onclick="bkAll(false)">Limpar</button></span></div>
+ <div id="bkList" class="bkl"></div>
+ <label style="margin-top:12px">Mensagem <small style="color:var(--mut);font-weight:400">({nome} {vencimento} {dias} {valor} {usuario} {telas} {aplicativo})</small></label>
+ <textarea id="bkmsg" style="height:120px;font-family:inherit;font-size:13px" oninput="bkUpd()">Olá {nome}! </textarea>
+ <label style="margin-top:10px">Imagem (opcional)</label>
+ ${imgPicker()}
+ <div id="bkimgb" style="display:none;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="s" onclick="bkCopyImg()">Copiar imagem</button><button type="button" class="s" onclick="bkShare()">Compartilhar imagem + texto</button></div>
+ <p class="note">O WhatsApp abre a conversa de cada cliente com o texto pronto, e você toca em enviar. Imagem não vai pelo link: escolha-a da galeria do celular ou de uma pasta do computador, toque em <b>Copiar imagem</b> e cole na conversa. No celular, <b>Compartilhar</b> abre o WhatsApp para escolher o contato. Se o botão não funcionar, use o botão direito (computador) ou segure a imagem (celular) para copiar ou salvar.</p>
+ <div style="text-align:right"><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;bkList()}
+function bkApp(v){bk.app=v;const l=bkMine().filter(c=>!v||hasApp(c,v));bk.ids=new Set(l.map(c=>c.id));bkList()}
+function bkVis(){return bkMine().filter(c=>!bk.app||hasApp(c,bk.app))}
+function bkAll(on){bkVis().forEach(c=>on?bk.ids.add(c.id):bk.ids.delete(c.id));bkList()}
+function bkTog(id,on){on?bk.ids.add(id):bk.ids.delete(id);bkCount()}
+function bkCount(){const e=document.getElementById('bkcount');if(e)e.textContent=bk.ids.size+' selecionado'+(bk.ids.size===1?'':'s')}
+function bkText(c){return fillMsg(document.getElementById('bkmsg').value,{nome:c.name,usuario:usersList(c).join(', '),aplicativo:appsList(c).join(', '),valor:brl(c.value),telas:c.screens?telaTxt(c.screens):(c.plan||''),plano:c.plan||'',vencimento:fmt(c.due),dias:diasMsg(c.due)})}
+function bkList(){const l=bkVis();document.getElementById('bkList').innerHTML=l.length?l.map(c=>`<div class="bkr ${bk.sent.has(c.id)?'ok':''}" data-id="${c.id}"><label><input type="checkbox" ${bk.ids.has(c.id)?'checked':''} onchange="bkTog('${c.id}',this.checked)"><span>${esc(c.name)}<small>${esc(appsList(c).join(', ')||'sem aplicativo')}</small></span></label><a class="btn s" target="_blank" rel="noopener noreferrer" onclick="bkSent('${c.id}',this)">${bk.sent.has(c.id)?'✓ Enviado':'Enviar'}</a></div>`).join(''):'<p class="note" style="padding:10px">Nenhum cliente com WhatsApp válido neste filtro.</p>';bkCount();bkUpd()}
+function bkUpd(){document.querySelectorAll('#bkList .bkr').forEach(r=>{const c=db.clients.find(x=>x.id===r.dataset.id);if(c)r.querySelector('a').href='https://wa.me/'+bkPhone(c)+'?text='+encodeURIComponent(bkText(c))})}
+function bkSent(id,a){bk.sent.add(id);a.textContent='✓ Enviado';a.closest('.bkr').classList.add('ok')}
+function imgPicker(){return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn s" style="width:auto;cursor:pointer;display:inline-flex;align-items:center;position:relative;overflow:hidden;padding:9px 14px;border:1px solid var(--pri);border-radius:8px;background:var(--pri);color:var(--onpri);font-weight:600;font-size:14px">Escolher imagem da galeria<input id="bkimg" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" onchange="bkImg(this)" aria-label="Escolher imagem" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0"></label><button type="button" class="s" onclick="bkPaste()" style="width:auto">Colar imagem</button><span id="bkprev"></span></div><small class="note" id="bkimgst" style="display:block;margin:6px 0 0">Se a galeria não abrir aqui, abra o painel pelo navegador do celular (Chrome) ou pelo app instalado. Outra saída: envie só o texto e anexe a foto direto na conversa do WhatsApp.</small>`}
+function bkStat(t){const e=document.getElementById('bkimgst');if(e)e.textContent=t||'Se a galeria não abrir aqui, abra o painel pelo navegador do celular (Chrome) ou pelo app instalado. Outra saída: envie só o texto e anexe a foto direto na conversa do WhatsApp.'}
+function bkFile(){const t=bk.img.type||'image/png';return new File([bk.img],'imagem.'+(t.split('/')[1]||'png').replace('jpeg','jpg').replace('svg+xml','svg'),{type:t})}
+function bkSetImg(blob,note){if(bk.url)URL.revokeObjectURL(bk.url);bk.img=blob;bk.url=URL.createObjectURL(blob);const pv=document.getElementById('bkprev');if(!pv)return;pv.innerHTML=`<img src="${bk.url}" alt="Imagem escolhida" title="Computador: botão direito para copiar ou salvar. Celular: segure a imagem." style="max-height:140px;max-width:100%;border-radius:8px;border:1px solid var(--bd)">`;pv.firstChild.onerror=()=>{pv.innerHTML=''};document.getElementById('bkimgb').style.display='flex';bkStat(note||'Imagem pronta.')}
+async function bkLoad(f){bk.img=null;const pv=document.getElementById('bkprev');if(pv)pv.innerHTML='';document.getElementById('bkimgb').style.display='none';if(!f)return;bkStat('Carregando imagem...');
+ let src=null,w=0,h=0;
+ try{src=await createImageBitmap(f,{imageOrientation:'from-image'});w=src.width;h=src.height}catch(e){src=null}
+ if(!src){try{src=await new Promise((ok,no)=>{const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{URL.revokeObjectURL(u);ok(im)};im.onerror=()=>{URL.revokeObjectURL(u);no()};im.src=u});w=src.naturalWidth||src.width;h=src.naturalHeight||src.height}catch(e){src=null}}
+ if(src&&w&&h){try{const k=Math.min(1,1280/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext('2d').drawImage(src,0,0,c.width,c.height);const b=await new Promise(r=>c.toBlob(r,'image/png'));if(b){bkSetImg(b,'Imagem pronta: '+(f.name||'imagem'));return}}catch(e){}}
+ if((f.type||'').startsWith('image/')||/\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name||'')){bkSetImg(f.type?f:new Blob([f],{type:'image/jpeg'}),'Imagem selecionada ('+(f.name||'arquivo')+'). Use Compartilhar imagem + texto.');return}
+ bkStat('Não foi possível ler esse arquivo. Escolha uma foto JPG ou PNG.');toast('Não foi possível ler essa imagem.')}
+function bkImg(inp){const f=inp.files&&inp.files[0];if(!f)return;bkLoad(f);try{inp.value=''}catch(e){}}
+async function bkPaste(){try{const it=await navigator.clipboard.read();for(const x of it){const t=x.types.find(t=>t.startsWith('image/'));if(t){bkLoad(new File([await x.getType(t)],'colada.png',{type:t}));return}}toast('Não há imagem copiada. Copie a imagem da galeria primeiro.')}catch(e){toast('Não foi possível colar aqui. Use Escolher imagem da galeria.')}}
+addEventListener('paste',e=>{if(!bk||!document.getElementById('bkimg'))return;const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type&&i.type.startsWith('image/'));if(it){e.preventDefault();bkLoad(it.getAsFile())}});
+function imgShare(txt){if(!bk||!bk.img){toast('Escolha uma imagem primeiro.');return}const f=bkFile();if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:txt}).catch(()=>{});else toast('Compartilhar não está disponível aqui. Use Copiar imagem, ou botão direito / segurar na imagem.')}
+function bkCopyImg(){if(!bk.img)return;try{navigator.clipboard.write([new ClipboardItem({'image/png':bk.img})]).then(()=>toast('Imagem copiada. Cole na conversa do WhatsApp.'),()=>toast('Seu navegador não permitiu copiar. Use Compartilhar.'))}catch(e){toast('Seu navegador não permite copiar imagem. Use Compartilhar.')}}
+function bkShare(){if(!bk.img)return;const f=bkFile(),first=bkVis().find(c=>bk.ids.has(c.id)),txt=first?bkText(first):document.getElementById('bkmsg').value;
+ if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:txt}).catch(()=>{});else toast('Compartilhar não está disponível aqui. Use Copiar imagem.')}
+let bm=null;
+const bmAll=()=>db.resellers.filter(r=>!r.trial&&bkPhone(r));
+function bmVis(){const q=nz(bm.q).trim();return bmAll().filter(r=>!q||nz(r.name+' '+r.user).includes(q)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR',{sensitivity:'base'}))}
+function bmOpen(){bm={ids:new Set(),sent:new Set(),q:''};bk={img:null};const sem=db.resellers.filter(r=>!r.trial&&!bkPhone(r)).length;
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:560px"><h2>Mensagem em massa</h2>
+ <label>Buscar revenda por nome</label><input id="bmq" type="search" placeholder="Digite o nome..." oninput="bmSearch(this.value)" autocomplete="off">
+ <div class="bkh"><b id="bmcount"></b><span><button type="button" class="s" onclick="bmAllSel(true)">Marcar todos</button> <button type="button" class="s" onclick="bmAllSel(false)">Limpar</button></span></div>
+ <div id="bmList" class="bkl"></div>${sem?`<p class="note" style="margin:6px 0 0">${sem} revenda${sem>1?'s':''} sem WhatsApp válido não aparece${sem>1?'m':''} na lista.</p>`:''}
+ <label style="margin-top:12px">Mensagem <small style="color:var(--mut);font-weight:400">({nome} {usuario} {vencimento} {dias} {valor})</small></label>
+ <textarea id="bmmsg" style="height:120px;font-family:inherit;font-size:13px" oninput="bmUpd()">Olá {nome}! </textarea>
+ <label style="margin-top:10px">Imagem (opcional)</label>
+ ${imgPicker()}
+ <div id="bkimgb" style="display:none;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" class="s" onclick="bkCopyImg()">Copiar imagem</button><button type="button" class="s" onclick="bmShare()">Compartilhar imagem + texto</button></div>
+ <p class="note">O WhatsApp abre a conversa de cada revenda com o texto pronto, e você toca em enviar. Imagem não vai pelo link: escolha-a da galeria do celular ou de uma pasta do computador, toque em <b>Copiar imagem</b> e cole na conversa. No celular, <b>Compartilhar</b> abre o WhatsApp para escolher o contato. Se o botão não funcionar, use o botão direito (computador) ou segure a imagem (celular) para copiar ou salvar.</p>
+ <div style="text-align:right"><button class="s" onclick="closeM()">Fechar</button></div></div></div>`;bmList()}
+function bmSearch(v){bm.q=v;bmList()}
+function bmAllSel(on){bmVis().forEach(r=>on?bm.ids.add(r.id):bm.ids.delete(r.id));bmList()}
+function bmTog(id,on){on?bm.ids.add(id):bm.ids.delete(id);bmCount()}
+function bmCount(){const e=document.getElementById('bmcount');if(e)e.textContent=bm.ids.size+' selecionada'+(bm.ids.size===1?'':'s')}
+function bmText(r){return fillMsg(document.getElementById('bmmsg').value,{nome:r.name,usuario:r.user,valor:r.fee!=null&&!r.unlimited?brl(r.fee):'',vencimento:r.unlimited||!r.due?'sem data de expiração':fmt(r.due),dias:r.unlimited||!r.due?'':diasMsg(r.due)})}
+function bmList(){const l=bmVis();document.getElementById('bmList').innerHTML=l.length?l.map(r=>`<div class="bkr ${bm.sent.has(r.id)?'ok':''}" data-id="${r.id}"><label><input type="checkbox" ${bm.ids.has(r.id)?'checked':''} onchange="bmTog('${r.id}',this.checked)"><span>${esc(r.name)}<small>${esc(r.user)}${r.unlimited?' · ilimitado':r.due?' · vence '+fmt(r.due):''}</small></span></label><a class="btn s" target="_blank" rel="noopener noreferrer" onclick="bmSent('${r.id}',this)">${bm.sent.has(r.id)?'✓ Enviado':'Enviar'}</a></div>`).join(''):'<p class="note" style="padding:10px">Nenhuma revenda encontrada.</p>';bmCount();bmUpd()}
+function bmUpd(){document.querySelectorAll('#bmList .bkr').forEach(el=>{const r=db.resellers.find(x=>x.id===el.dataset.id);if(r)el.querySelector('a').href='https://wa.me/'+bkPhone(r)+'?text='+encodeURIComponent(bmText(r))})}
+function bmSent(id,a){bm.sent.add(id);a.textContent='✓ Enviado';a.closest('.bkr').classList.add('ok')}
+function bmShare(){if(!bk||!bk.img)return;const f=bkFile(),first=bmVis().find(r=>bm.ids.has(r.id)),txt=first?bmText(first):document.getElementById('bmmsg').value;if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],text:txt}).catch(()=>{});else toast('Compartilhar não está disponível aqui. Use Copiar imagem.')}
+const BK_APP='cobranca-backup';
+const S_=(v,n=200)=>typeof v==='string'?v.slice(0,n):(typeof v==='number'&&isFinite(v)?String(v):'');
+const N_=v=>{v=Number(v);return isFinite(v)&&v>=0&&v<1e9?v:null};
+const D_=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(new Date(v+'T12:00:00'))?v:null;
+const A_=(v,n=20)=>Array.isArray(v)?v.map(x=>S_(x,80)).filter(Boolean).slice(0,n):[];
+function cleanClient(c,rid){if(!c||typeof c!=='object')return null;const name=S_(c.name,120).trim(),due=D_(c.due),val=N_(c.value);if(!name||!due||val===null)return null;
+ const o={id:S_(c.id,40)||uid(),rid,name,phone:S_(c.phone,30),plan:S_(c.plan,60),value:val,due,paid:!!c.paid};
+ const sc=Math.round(Number(c.screens));if(sc>=1&&sc<=10)o.screens=sc;
+ const us=A_(c.users,5);if(us.length){o.users=us;o.user=us.join(', ')}else if(c.user)o.user=S_(c.user,200);
+ const ap=A_(c.apps,30);if(ap.length){o.apps=ap;o.app=ap.join(', ')}else if(c.app)o.app=S_(c.app,300);
+ if(D_(c.created))o.created=c.created;if(c.sit==='novo'||c.sit==='gratis')o.sit=c.sit;if(c.oper)o.oper=S_(c.oper,80);if(D_(c.prevDue))o.prevDue=c.prevDue;if(c.prevPaid!==undefined)o.prevPaid=!!c.prevPaid;if(c.pass)o.pass=S_(c.pass,60);return o}
+function cleanRenewal(r,rid){if(!r||typeof r!=='object')return null;const date=D_(r.date),val=N_(r.value),m=Math.round(Number(r.months));if(!date||val===null||!(m>=1&&m<=120)||!r.cid)return null;return{id:S_(r.id,40)||uid(),cid:S_(r.cid,40),rid,months:m,value:val,date,status:['pend','ok','no'].includes(r.status)?r.status:'pend'}}
+function cleanRes(r){if(!r||typeof r!=='object')return null;const name=S_(r.name,120).trim(),user=S_(r.user,60).trim(),pass=S_(r.pass,80);if(!name||!user||!pass)return null;
+ const o={id:S_(r.id,40)||uid(),name,user,pass,phone:S_(r.phone,30),active:r.active!==false,paid:!!r.paid,created:D_(r.created)||today()};
+ if(r.unlimited){o.unlimited=true;o.fee=null;o.due=''}else{o.fee=r.fee==null?null:N_(r.fee);o.due=D_(r.due)||''}
+ if(r.trial)o.trial=true;if(D_(r.prevDue))o.prevDue=r.prevDue;if(typeof r.msg==='string')o.msg=r.msg.slice(0,3000);
+ const ac=A_(r.appCat,100);if(ac.length)o.appCat=ac;
+ if(typeof r.logo==='string'&&/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(r.logo)&&r.logo.length<400000)o.logo=r.logo;
+ if(r.pix&&typeof r.pix==='object'){const k=S_(r.pix.key,120);if(k)o.pix={type:S_(r.pix.type,10),key:k,name:S_(r.pix.name,60),city:S_(r.pix.city,40)}}
+ if(Array.isArray(r.coupons))o.coupons=r.coupons.slice(0,10).map(k=>({v:N_(k&&k.v)||0,code:S_(k&&k.code,30),on:!!(k&&k.on)}));return o}
+function backupCard(kind){const adm=kind==='admin',n=adm?db.clients.length:db.clients.filter(c=>c.rid===ses.id).length;
+ return `<div class="card"><h2>Backup dos meus clientes</h2><p class="note" style="margin:0 0 12px">${adm?'Salva em um arquivo as revendas, os clientes e as renovações ('+realRes().length+' revendas, '+n+' clientes).':'Salva em um arquivo todos os seus clientes e renovações ('+n+' clientes).'} Guarde o arquivo em local seguro e use <b>Adicionar arquivo</b> para restaurar.${adm?' O arquivo inclui os logins das revendas.':''}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="bkpDown('${kind}')" style="width:auto">Baixar backup</button><label class="btn s" style="width:auto;position:relative;overflow:hidden;cursor:pointer;display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font-size:14px">Adicionar arquivo<input id="bkpf" type="file" aria-label="Adicionar arquivo de backup" onchange="bkpPick(this,'${kind}')" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0"></label></div><p class="note" id="bkpst" style="margin:8px 0 0"></p><details style="margin-top:10px"><summary style="cursor:pointer;color:var(--mut);font-size:13px">O arquivo não abre? Cole o conteúdo do backup</summary><p class="note" style="margin:8px 0">Abra o arquivo de backup em um app de texto, copie tudo e cole abaixo.</p><textarea id="bkpt" placeholder="Cole aqui o conteúdo do backup" style="height:90px;font-family:monospace;font-size:12px"></textarea><div style="margin-top:8px"><button class="s" type="button" onclick="bkpText(document.getElementById('bkpt').value,'${kind}')" style="width:auto">Restaurar do texto</button></div></details></div>`}
+async function saveFile(name,text){let d=null;try{if(window.claude&&claude.use)d=await claude.use('downloads')}catch(e){}
+ if(d){try{await d.save({filename:name,data:text});toast('Backup pronto.')}catch(e){if(e&&e.code==='declined')return;toast('Não foi possível salvar o arquivo ('+((e&&e.code)||'erro')+').')}return}
+ try{const u=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Backup baixado.')}catch(e){toast('Seu navegador não permitiu baixar o arquivo.')}}
+function bkpDown(kind){const stamp=today(),meta={app:BK_APP,v:1,gerado:new Date().toISOString()};let o,fn;
+ if(kind==='admin'){const cfg={...db.master};delete cfg.user;delete cfg.pass;o={...meta,tipo:'admin',config:cfg,revendas:db.resellers,clientes:db.clients,renovacoes:db.renewals};fn='backup-admin-'+stamp+'.json'}
+ else{const me=db.resellers.find(r=>r.id===ses.id)||{};o={...meta,tipo:'revenda',revenda:me.name||'',appCat:me.appCat||[],clientes:db.clients.filter(c=>c.rid===ses.id),renovacoes:db.renewals.filter(r=>r.rid===ses.id)};fn='backup-clientes-'+stamp+'.json'}
+ saveFile(fn,JSON.stringify(o,null,1))}
+function bkpMsg(t){const e=document.getElementById('bkpst');if(e)e.textContent=t||'';if(t)toast(t)}
+function bkpPick(inp,kind){const f=inp.files&&inp.files[0];if(!f)return;try{inp.value=''}catch(e){}
+ if(f.size>30*1048576){bkpMsg('Arquivo grande demais.');return}
+ bkpMsg('Lendo '+(f.name||'arquivo')+'...');
+ const rd=new FileReader();rd.onerror=()=>bkpMsg('Não foi possível ler o arquivo. Use a opção de colar o conteúdo.');rd.onload=()=>{bkpMsg('');bkpText(String(rd.result||''),kind)};rd.readAsText(f)}
+function bkpText(txt,kind){txt=String(txt||'').replace(/^\uFEFF/,'').trim();if(!txt){toast('Cole o conteúdo do backup primeiro.');return}
+ let o;try{o=JSON.parse(txt)}catch(e){toast('Arquivo inválido: não é um backup.');return}
+ if(!o||o.app!==BK_APP||!Array.isArray(o.clientes)){toast('Esse arquivo não é um backup deste painel.');return}
+ if(kind==='admin'&&o.tipo!=='admin'){toast('Esse backup é de uma revenda. Use-o no painel da revenda.');return}
+ if(kind!=='admin'&&o.tipo!=='revenda'){toast('Esse backup é do administrador. Use-o no painel do administrador.');return}
+ bkpAsk(o,kind)}
+function bkpAsk(o,kind){const adm=kind==='admin',nr=adm?(o.revendas||[]).length:0,when=o.gerado?new Date(o.gerado).toLocaleString('pt-BR'):'';
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>Restaurar backup</h2><p class="note" style="margin:0 0 10px">${adm?nr+' revendas, ':''}${o.clientes.length} clientes${when?' · gerado em '+esc(when):''}</p><label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 8px;color:var(--tx)"><input type="radio" name="bmode" value="merge" checked style="width:auto;margin-top:3px"><span><b>Mesclar</b><br><small style="color:var(--mut)">Adiciona o que falta e atualiza o que já existe. Nada é apagado.</small></span></label><label style="display:flex;gap:8px;align-items:flex-start;margin:0 0 12px;color:var(--tx)"><input type="radio" name="bmode" value="replace" style="width:auto;margin-top:3px"><span><b>Substituir tudo</b><br><small style="color:var(--mut)">Apaga ${adm?'todas as revendas e clientes':'todos os seus clientes'} atuais e fica só com o arquivo.</small></span></label><div style="display:flex;gap:8px"><button id="bkok">Restaurar</button><button class="s" onclick="closeM()">Cancelar</button></div></div></div>`;
+ $('#bkok').onclick=()=>{const mode=document.querySelector('input[name=bmode]:checked').value;closeM();if(mode==='replace')ask('Tem certeza? Os dados atuais serão apagados.',0,()=>bkpApply(o,kind,mode));else bkpApply(o,kind,mode)}}
+function bkpApply(o,kind,mode){let skipped=0,add=0,upd=0;
+ if(kind==='admin'){
+  if(mode==='replace'){db.resellers=[];db.clients=[];db.renewals=[]}
+  const idmap={};
+  (o.revendas||[]).forEach(r0=>{const r=cleanRes(r0);if(!r){skipped++;return}
+   if(r.user===db.master.user||db.resellers.some(x=>x.id!==r.id&&x.user===r.user)){skipped++;return}
+   const i=db.resellers.findIndex(x=>x.id===r.id);if(i>=0){const keep=db.resellers[i];db.resellers[i]={...r,logo:r.logo||keep.logo};upd++}else{db.resellers.push(r);add++}});
+  const cm=o.config&&typeof o.config==='object'?o.config:null;
+  if(cm){if(cm.pix&&typeof cm.pix==='object'&&S_(cm.pix.key))db.master.pix={type:S_(cm.pix.type,10),key:S_(cm.pix.key,120),name:S_(cm.pix.name,60),city:S_(cm.pix.city,40)};if(typeof cm.msg==='string')db.master.msg=cm.msg.slice(0,3000);if(typeof cm.accMsg==='string')db.master.accMsg=cm.accMsg.slice(0,3000);if(Array.isArray(cm.coupons))db.master.coupons=cm.coupons.slice(0,10).map(k=>({p:N_(k&&k.p)||0,code:S_(k&&k.code,30),on:!!(k&&k.on)}))}
+  o.clientes.forEach(c0=>{const rid=S_(c0&&c0.rid,40),c=db.resellers.some(r=>r.id===rid)?cleanClient(c0,rid):null;if(!c){skipped++;return}
+   const i=db.clients.findIndex(x=>x.id===c.id);if(i>=0&&db.clients[i].rid===rid){db.clients[i]=c;upd++}else{if(i>=0){idmap[c.id]=uid();c.id=idmap[S_(c0.id,40)]}db.clients.push(c);add++}});
+  (o.renovacoes||[]).forEach(r0=>{const rid=S_(r0&&r0.rid,40),r=db.resellers.some(x=>x.id===rid)?cleanRenewal(r0,rid):null;if(!r||!db.clients.some(c=>c.id===(idmap[r.cid]||r.cid))){return}r.cid=idmap[r.cid]||r.cid;const i=db.renewals.findIndex(x=>x.id===r.id);if(i>=0&&db.renewals[i].rid===rid)db.renewals[i]=r;else{if(i>=0)r.id=uid();db.renewals.push(r)}})
+ }else{const rid=ses.id,me=db.resellers.find(r=>r.id===rid);
+  if(mode==='replace'){db.clients=db.clients.filter(c=>c.rid!==rid);db.renewals=db.renewals.filter(r=>r.rid!==rid)}
+  const idmap={};
+  o.clientes.forEach(c0=>{const c=cleanClient(c0,rid);if(!c){skipped++;return}const old=c.id,i=db.clients.findIndex(x=>x.id===c.id);
+   if(i>=0&&db.clients[i].rid===rid){db.clients[i]=c;upd++}else{if(i>=0){c.id=uid();idmap[old]=c.id}db.clients.push(c);add++}});
+  (Array.isArray(o.renovacoes)?o.renovacoes:[]).forEach(r0=>{const r=cleanRenewal(r0,rid);if(!r)return;r.cid=idmap[r.cid]||r.cid;if(!db.clients.some(c=>c.id===r.cid&&c.rid===rid))return;const i=db.renewals.findIndex(x=>x.id===r.id);if(i>=0&&db.renewals[i].rid===rid)db.renewals[i]=r;else{if(i>=0)r.id=uid();db.renewals.push(r)}});
+  if(me&&Array.isArray(o.appCat)){const m=new Map((me.appCat||[]).map(x=>[x.toLowerCase(),x]));A_(o.appCat,100).forEach(x=>{if(!m.has(x.toLowerCase()))m.set(x.toLowerCase(),x)});me.appCat=[...m.values()]}
+ }
+ save();render();toast('Backup restaurado: '+add+' adicionados, '+upd+' atualizados'+(skipped?', '+skipped+' ignorados':'')+'.')}
+function tabBar(items){return '<div class="tabs">'+items.map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="tab='${k}';render();window.scrollTo(0,0)">${l}</button>`).join('')+'</div>'}
+function sideNav(it){return `<nav class="side">${it.map(([k,l,ic])=>`<button class="${tab===k?'on':''}" title="${l}" aria-label="${l}" onclick="tab='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${ic}</svg><span>${l}</span></button>`).join('')}</nav>`}
+function mTabs(){return sideNav([['dash','Dashboard',RIC.dash],['rev','Revendas',IC.store],['trial','Teste grátis','<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>'],['all','Clientes por revenda',RIC.cli],['cfg','Pix e mensagens',RIC.cfg]])}
+const RIC={dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',new:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',cli:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',ren:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',cfg:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'};
+function rTabs(n){const it=[['dash','Dashboard'],['new','Novo cliente'],['cli','Meus clientes'],['ren','Renovações'],['cfg','Configurações']];
+ return `<nav class="side">${it.map(([k,l])=>`<button class="${tab===k?'on':''}${k==='ren'&&n?' hasn':''}" title="${l}" aria-label="${l}" onclick="tab='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${RIC[k]}</svg><span>${l}${k==='ren'&&n?`<em>${n}</em>`:''}</span></button>`).join('')}</nav>`}
+function blockMsg(r){if(r.trial)return 'Seu teste grátis expirou em '+fmt(r.due)+'. Fale com o administrador para contratar.';return 'Acesso bloqueado: a mensalidade venceu em '+fmt(r.due)+'. Fale com o administrador para regularizar.'}
+function render0(){const a=$('#app');
+ if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
+ if(!ses&&FBMODE&&tview===3){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Recuperar senha</h1></div><p class="note">Digite o <b>e-mail</b> que você usa como usuário. Enviaremos um link para criar uma nova senha.</p><form onsubmit="fbForgot(event)"><div><label>E-mail</label><input name="email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(rmail)}" required></div><button>Enviar link por e-mail</button>${rmsg?`<div class="${rmsg[0]==='!'?'err':'note'}" style="${rmsg[0]==='!'?'':'margin-top:12px;color:var(--ok,#0f766e)'}">${esc(rmsg.slice(1))}</div>`:''}</form><p style="text-align:center;margin:14px 0 0"><button type="button" class="s" onclick="tOpen(0)" style="width:auto">Voltar ao login</button></p></div>`;return}
+ if(!ses&&tview===1){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Teste grátis</h1></div><p class="note">Receba um usuário e uma senha para testar o painel por ${TRIAL_DAYS} dias. Cada número de WhatsApp tem direito a 1 teste.</p><form onsubmit="tGen(event)"><div><label>Seu nome (opcional)</label><input name="name" autocomplete="name" placeholder="Ex.: João"></div><div><label>WhatsApp</label><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="DDD + número" required></div><button>Gerar meu teste</button>${terr?`<div class="err">${esc(terr)}</div>`:''}</form><p style="text-align:center;margin:14px 0 0"><button type="button" class="s" onclick="tOpen(0)" style="width:auto">Voltar ao login</button></p></div>`;return}
+ if(!ses&&tview===2&&tres){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Seu teste está pronto</h1></div><p class="note">Guarde estes dados. O teste vale por ${TRIAL_DAYS} dias, até <b>${fmt(tres.due)}</b>.</p><div class="bkr" style="border:1px solid var(--bd);border-radius:10px;margin-bottom:8px"><span><small>Usuário</small><b style="font-size:18px">${esc(tres.user)}</b></span><button type="button" class="s" onclick="copyTxt('${esc(tres.user)}')">Copiar</button></div><div class="bkr" style="border:1px solid var(--bd);border-radius:10px;margin-bottom:12px"><span><small>Senha</small><b style="font-size:18px">${esc(tres.pass)}</b></span><button type="button" class="s" onclick="copyTxt('${esc(tres.pass)}')">Copiar</button></div><button type="button" onclick="tEnter()" style="width:100%">Entrar agora</button><p style="text-align:center;margin:10px 0 0"><button type="button" class="s" onclick="tLogin()" style="width:auto">Ir para a tela de login</button></p></div>`;return}
+ if(!ses&&FBMODE&&fbSetup===true){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Primeiro acesso</h1></div><p class="note">Crie o acesso do <b>administrador</b>. Use um e-mail seu: ele será o seu usuário e serve para recuperar a senha. Faça isso agora: quem abrir esta tela primeiro vira o administrador.</p><form onsubmit="fbSetupGo(event)"><div><label>E-mail (será seu usuário)</label><input name="user" type="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></div><div><label>Senha (mínimo 6 caracteres)</label><input name="pass" type="password" autocomplete="new-password" required></div><div><label>Repita a senha</label><input name="pass2" type="password" autocomplete="new-password" required></div><button>Criar administrador</button>${err?`<div class="err">${esc(err)}</div>`:''}</form></div>`;return}
+ if(!ses){a.innerHTML=`<div class="login card"><div class="brand">${logo(56)}<h1>Painel de Cobrança</h1></div><p class="note">Entre com seu usuário e senha.</p><form onsubmit="login(event)"><div><label>Usuário</label><input id="u" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></div><div><label>Senha</label><div class="pw"><input id="p" type="password" autocomplete="current-password" required><button type="button" class="eye" onclick="togglePw(this)" aria-label="Mostrar senha">Mostrar</button></div></div><button>Entrar</button>${FBMODE?'<p style="text-align:center;margin:10px 0 0"><a href="#" onclick="tOpen(3);return false" style="color:var(--pri);font-size:13px">Esqueci minha senha</a></p>':''}${err?`<div class="err">${esc(err)}</div>`:''}${FBMODE&&fbSetupErr?`<div class="err">⚠ ${esc(fbSetupErr)}</div>`:''}</form><div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bd);text-align:center"><p class="note" style="margin:0 0 8px">Quer conhecer o painel?</p><button type="button" class="s" onclick="tOpen(1)" style="width:100%">Teste grátis por ${TRIAL_DAYS} dias</button></div><p class="note">Acesso restrito ao administrador e às revendas.</p></div>`;return}
+ if(ses.role==='cli'){a.innerHTML=cliHtml();return}
+ if(ses.role==='master'){
+  const rows=realRes().map(r=>{const n=db.clients.filter(c=>c.rid===r.id).length,px=r.unlimited?null:r.due?stR(r):null;
+   return `<tr><td>${r.logo?`<img src="${r.logo}" alt="" style="height:22px;vertical-align:middle;border-radius:4px;margin-right:6px">`:''}${esc(r.name)}</td><td>${esc(r.user)}${FBMODE&&authErr[r.id]?`<br><small style="color:var(--bad,#c0392b)">⚠ ${esc(authErr[r.id])}</small>`:''}</td><td>${n}</td><td>${r.fee!=null?brl(r.fee):'—'}</td><td>${r.unlimited?'Sem expiração':r.due?fmt(r.due):'—'}</td><td>${r.unlimited?'<span class="b pago">Ilimitado</span>':px?`<span class="b ${px}">${lb[px]}</span> <button class="s" onclick="${px==='pago'?'undoRes':'payRes'}('${r.id}')">${px==='pago'?'Desfazer':'Marcar pago'}</button>`:'—'}</td><td><span class="b ${r.active?'ativo':'inativo'}">${r.active?'Ativa':'Inativa'}</span></td><td><button class="s" onclick="toggleRes('${r.id}')">${r.active?'Desativar':'Ativar'}</button> <button class="s" onclick="waRes('${r.id}')">WhatsApp</button> <button class="s" onclick="waAcesso('${r.id}')">Enviar acesso</button> <button class="s" onclick="editRes('${r.id}')">Editar</button> <button class="s d" onclick="delRes('${r.id}')">Excluir</button></td></tr>`}).join('');
+  a.innerHTML=`<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Painel de Cobrança<small>Administrador</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="changeMaster()">Trocar senha</button> <button class="s" onclick="logout()">Sair</button></div></header>
+  <div class="shell">${mTabs()}<div class="mainc">`+
+  (tab==='dash'?`${masterDash()}`
+  :tab==='rev'?`<div class="card"><h2>Nova revenda</h2><form onsubmit="addReseller(event)"><div><label>Nome</label><input name="name" required></div><div><label>Usuário (use o e-mail da revenda para ela poder recuperar a senha)</label><input name="user" autocapitalize="none" autocorrect="off" spellcheck="false" required></div><div><label>Senha</label><input name="pass" required></div><div><label>WhatsApp</label><input name="phone" placeholder="5581999999999"></div><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--tx);grid-column:1/-1"><input type="checkbox" name="unl"  onchange="unlTog(this.form)" style="width:auto"> Acesso ilimitado (sem data de expiração)</label><div><label>Valor mensal (R$)</label><input name="fee" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--tx)"><input type="checkbox" name="sendacc" checked style="width:auto"> Enviar acesso ao cadastrar</label><button>Criar revenda</button></form></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Revendas (${realRes().length})</h2><button class="s" onclick="bmOpen()" style="width:auto">Mensagem em massa</button></div>${realRes().length?`<div class="tw"><table><tr><th>Nome</th><th>Usuário</th><th>Clientes</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr>${rows}</table></div>`:'<p class="note">Nenhuma revenda criada.</p>'}</div>`
+  :tab==='trial'?trialTab()
+  :tab==='all'?clientsByRes()
+  :`${masterCard()}${accCard()}${backupCard('admin')}`)+'</div></div>';
+ } else {
+  const me=db.resellers.find(r=>r.id===ses.id),list=db.clients.filter(c=>c.rid===ses.id).sort((x,y)=>x.due.localeCompare(y.due));const npend=db.renewals.filter(r=>r.rid===ses.id&&r.status==='pend').length;
+  a.innerHTML=`<header><h1 style="display:flex;align-items:center;gap:10px">${me.logo?`<img src="${me.logo}" alt="" style="height:40px;border-radius:6px">`:''}${esc(me.name)}</h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell">${rTabs(npend)}<div class="mainc">${tab==='cfg'?`${logoCard(me)}${backupCard('rev')}<div class="card"><h2>Dados de recebimento (Pix)</h2><form onsubmit="savePix(event)"><div><label>Tipo da chave</label><select name="ktype">${[['cpf','CPF / CNPJ'],['cel','Celular'],['email','E-mail'],['evp','Chave aleatória']].map(o=>`<option value="${o[0]}" ${(me.pix?pixType(me.pix):'cpf')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div><label>Chave Pix</label><input name="key" value="${esc(me.pix?.key)}" required></div><div><label>Nome do recebedor</label><input name="pname" value="${esc(me.pix?.name)}" maxlength="25" required></div><div><label>Cidade</label><input name="city" value="${esc(me.pix?.city)}" maxlength="15" required></div><button>Salvar</button></form><p class="note">Usado para gerar o QR Code Pix de cada cobrança.</p></div>
+  <div class="card"><h2>Mensagem de cobrança</h2><form onsubmit="saveMsg(event)" style="grid-template-columns:1fr"><div><label>Texto padrão (editável)</label><textarea name="msg" style="height:170px;font-family:inherit;font-size:13px">${esc(me.msg&&me.msg!==OLD_MSG?me.msg:DEF_MSG)}</textarea></div><div style="display:flex;gap:8px"><button>Salvar mensagem</button><button type="button" class="s" onclick="resetMsg()">Restaurar padrão</button></div></form><p class="note">Variáveis: {nome} {valor} {plano} {telas} {dias} {usuario} {operador} {aplicativo} {vencimento} {situacao} {chave} {pix} {cupom} {total}. A chave Pix e o copia e cola entram automaticamente quando você cadastra o Pix.</p></div>
+  <div class="card"><h2>Cupons de desconto</h2><form onsubmit="saveCoupons(event)" style="grid-template-columns:1fr">${getCoupons(me).map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="min-width:70px">${brl(k.v)}</b><input name="code${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="on${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}<div><button>Salvar cupons</button></div></form><p class="note">Ao enviar a cobrança, escolha um cupom (opcional): o desconto entra na mensagem e no valor do Pix.</p></div>
+  `:tab==='new'?`<div class="card"><h2>Novo cliente</h2><form onsubmit="addClient(event)" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" required></div><div><label>WhatsApp (com DDD)</label><input name="phone" placeholder="81999999999" inputmode="tel" pattern="[0-9 ()+\-]{10,20}" title="Digite o número com DDD, só números" required></div>${telaSel(null)}${usersBlock([])}${appsBlock([])}${sitSel(null)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div>${stField(today(),false)}<div><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" name="send" checked style="width:auto"> Enviar cobrança ao cadastrar</label></div><button>Adicionar</button></form></div>
+  `:tab==='cli'?`<div class="card"><h2>Meus clientes</h2><div class="cbar"><button class="s" onclick="bulkOpen(false)" style="width:auto">Mensagem em massa</button><button onclick="cbOpen()" style="width:auto">Cobrança em massa${cbBadge()}</button><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" type="search" placeholder="Pesquisar por nome, WhatsApp, plano, aplicativo..." value="${esc(cliQ)}" oninput="cliSearch(this.value)" autocomplete="off"></div><label>Ordenar <select onchange="cliSort(this.value)">${[['','Padrão'],['az','Nome A–Z'],['za','Nome Z–A']].map(([v,l])=>`<option value="${v}" ${v===cliO?'selected':''}>${l}</option>`).join('')}</select></label><label>Mostrar <select onchange="cliSize(this.value)">${[10,20,30,40,50,100,200,500,0].map(n=>`<option value="${n}" ${n===cliN?'selected':''}>${n||'Todos'}</option>`).join('')}</select> por página</label></div><div class="sits" id="sits">${sitsHtml()}</div><div id="cliList">${cliListHtml()}</div></div>`:tab==='ren'?renCard(ses.id):resellerDash(list)}</div></div>`}}
+render();if(!FBMODE)cloudInit();else fbCheckSetup();
+let lastDay=today();const chkDay=()=>{if(today()!==lastDay){lastDay=today();if(ses)softRender()}};setInterval(chkDay,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chkDay()});
+</script><script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script></body></html>
