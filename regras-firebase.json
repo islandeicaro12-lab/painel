@@ -82,7 +82,7 @@
       ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
       "$rid": {
         ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
-        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (!root.child('resm/'+$rid+'/trial').val() || root.child('resm/'+$rid+'/dueMs').val() > now)))",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (root.child('resm/'+$rid+'/trial').val() !== true || root.child('resm/'+$rid+'/dueMs').val() > now)))",
         ".validate": "newData.hasChild('j')",
         "j": {
           ".validate": "newData.isString() && newData.val().length <= 8000000"
@@ -96,8 +96,34 @@
       ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
       "$rid": {
         ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
-        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (!root.child('resm/'+$rid+'/trial').val() || root.child('resm/'+$rid+'/dueMs').val() > now)))",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && (root.child('resm/'+$rid+'/trial').val() !== true || root.child('resm/'+$rid+'/dueMs').val() > now)))",
         ".validate": "newData.isString() && newData.val().length <= 450000"
+      }
+    },
+    "notif": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$rid": {
+        ".read": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid",
+        "$nid": {
+          ".write": "auth != null && root.child('admins/'+auth.uid).val() === true",
+          ".validate": "newData.hasChildren(['t','m','d'])",
+          "t": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "m": {
+            ".validate": "newData.isString() && newData.val().length <= 3000"
+          },
+          "d": {
+            ".validate": "newData.isNumber()"
+          },
+          "r": {
+            ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || ((auth != null && root.child('users/'+auth.uid+'/rid').val() === $rid) && !data.exists() && newData.isNumber() && root.child('notif/'+$rid+'/'+$nid+'/t').exists()))",
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
       }
     },
     "pub": {

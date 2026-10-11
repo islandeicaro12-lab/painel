@@ -1379,17 +1379,17 @@ function ask(msg,input,cb){$('#modal').innerHTML=`<div class="ov"><div class="md
 
 let cloud=null,timer=null,cloudMsg=false;
 function docsOf(){const d={'app/master':{j:JSON.stringify(db.master)}};
- db.resellers.forEach(r=>{const o={...r};delete o.logo;d['res/'+r.id]={j:JSON.stringify({r:o,c:db.clients.filter(c=>c.rid===r.id),n:db.renewals.filter(x=>x.rid===r.id)})};if(r.logo)d['logo/'+r.id]={j:r.logo}});return d}
+ db.resellers.forEach(r=>{const o={...r};delete o.logo;d['res/'+r.id]={j:JSON.stringify({r:o,c:db.clients.filter(c=>c.rid===r.id),n:db.renewals.filter(x=>x.rid===r.id),nt:NT().filter(x=>x.rid===r.id)})};if(r.logo)d['logo/'+r.id]={j:r.logo}});return d}
 function cloudSave(){if(!cloud)return;clearTimeout(timer);timer=setTimeout(async()=>{const d=docsOf();
  try{for(const k in d){if(last[k]!==d[k].j){await cloud.doc(k).set(d[k]);last[k]=d[k].j}}
   for(const k of Object.keys(last)){if(!d[k]){await cloud.doc(k).delete();delete last[k]}}}
  catch(e){if(!cloudMsg){cloudMsg=true;toast('Não foi possível salvar na nuvem ('+((e&&e.code)||'erro')+'). Só o administrador logado no Claude consegue gravar.')}}},400)}
 function applyDoc(kind,id,j){
  if(kind==='res'){const i=db.resellers.findIndex(r=>r.id===id),prev=db.resellers[i];
-  db.clients=db.clients.filter(c=>c.rid!==id);db.renewals=db.renewals.filter(n=>n.rid!==id);
+  db.clients=db.clients.filter(c=>c.rid!==id);db.renewals=db.renewals.filter(n=>n.rid!==id);db.notifs=NT().filter(n=>n.rid!==id);
   if(j==null){if(i>=0)db.resellers.splice(i,1);return}
   const o=JSON.parse(j),lg=last['logo/'+id]||(prev&&prev.logo);if(lg)o.r.logo=lg;
-  if(i>=0)db.resellers[i]=o.r;else db.resellers.push(o.r);db.clients.push(...o.c);db.renewals.push(...(o.n||[]))}
+  if(i>=0)db.resellers[i]=o.r;else db.resellers.push(o.r);db.clients.push(...o.c);db.renewals.push(...(o.n||[]));NT().push(...(o.nt||[]))}
  else{const r=db.resellers.find(r=>r.id===id);if(r){if(j!=null)r.logo=j;else delete r.logo}}}
 function softRender(){if(ses&&ses.role==='rev'&&!db.resellers.find(r=>r.id===ses.id))ses=null;
  if(!FBMODE)try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
@@ -1407,7 +1407,7 @@ async function cloudInit(){try{const c=await claude.use('db');if(!c)return;
  const m=await c.doc('app/master').get();
  if(m.exists){const nd={master:JSON.parse(m.data().j),resellers:[],clients:[],renewals:[]};
   const rs=await c.collection('res').limit(1000).get();
-  rs.docs.forEach(x=>{const o=JSON.parse(x.data().j);nd.resellers.push(o.r);nd.clients.push(...o.c);nd.renewals.push(...(o.n||[]));last['res/'+x.id]=x.data().j});
+  rs.docs.forEach(x=>{const o=JSON.parse(x.data().j);nd.resellers.push(o.r);nd.clients.push(...o.c);nd.renewals.push(...(o.n||[]));(nd.notifs=nd.notifs||[]).push(...(o.nt||[]));last['res/'+x.id]=x.data().j});
   const ls=await c.collection('logo').limit(1000).get();
   ls.docs.forEach(x=>{const r=nd.resellers.find(r=>r.id===x.id);if(r)r.logo=x.data().j;last['logo/'+x.id]=x.data().j});
   last['app/master']=m.data().j;db=nd;cloud=c;try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}
@@ -1451,7 +1451,7 @@ function fbDocsOf(D,adm){const d={};
  D.resellers.forEach(r=>{const[a,o]=splitR(r),k=kid(r.id);
   if(adm){const x={j:JSON.stringify(a)};if(r.trial){x.trial=true;x.fee=0;x.dueMs=r.due?Date.parse(r.due+'T12:00:00'):Date.now()}d['resm/'+k]=x;if(r.pass)d['secrets/'+k]=r.pass}
   d['res/'+k]={j:JSON.stringify({r:o,c:D.clients.filter(c=>c.rid===r.id),n:D.renewals.filter(x=>x.rid===r.id),pp:ppOf(D,r.id)})};
-  if(r.logo)d['logo/'+k]=r.logo});return d}
+  if(r.logo)d['logo/'+k]=r.logo});(D.notifs||[]).forEach(n=>{const o={t:n.t,m:n.m,d:n.d};if(n.r)o.r=n.r;d['notif/'+kid(n.rid)+'/'+kid(n.id)]=o});return d}
 const sameDocs=(a,b)=>{const x=Object.keys(a),y=Object.keys(b);return x.length===y.length&&x.every(k=>a[k]===b[k])};
 const fbStr=(D,adm)=>{const d=fbDocsOf(D,adm),o={};for(const k in d)o[k]=JSON.stringify(d[k]);return o};
 function fbSave(){if(!fb||fb.role==='cli')return;clearTimeout(fbT);fbT=setTimeout(fbFlush,500)}
@@ -1465,21 +1465,22 @@ async function fbPush(){const adm=fb.role==='master';
  for(const p of [...prevPP]){if(!want[p]){await rt('DELETE','pub/'+p);delete lastPub[p]}}
  prevPP=new Set(Object.keys(want));
  const d=fbDocsOf(db,adm);
- for(const k in d){const s=JSON.stringify(d[k]);if(last[k]!==s){await rt('PUT',k,d[k]);last[k]=s}}
- for(const k of Object.keys(last)){if(!(k in d)){await rt('DELETE',k);delete last[k]}}}
+ for(const k in d){const nf=k.startsWith('notif/');if(nf&&!adm)continue;const s=JSON.stringify(d[k]);if(last[k]!==s){await rt('PUT',k,nf?{t:d[k].t,m:d[k].m,d:d[k].d}:d[k]);last[k]=s}}
+ for(const k of Object.keys(last)){if(k.startsWith('notif/')&&!adm)continue;if(!(k in d)){await rt('DELETE',k);delete last[k]}}}
 async function fbFetch(withLogo){const adm=fb.role==='master';let nd,pp=[];
- if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp]=await Promise.all(['master','resm','res','secrets','trialPhones'].map(g));
+ if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp,nf]=await Promise.all(['master','resm','res','secrets','trialPhones','notif'].map(g));
   nd={master:{...(m&&m.j?JSON.parse(m.j):{}),user:db.master.user},resellers:[],clients:[],renewals:[]};nd.master.trialPhones=Object.keys(tp||{});
   const lg=withLogo?await g('logo'):null;
   for(const k in (rs||{})){const o=JSON.parse(rs[k].j),a=rm&&rm[k]?JSON.parse(rm[k].j):{},r={...o.r,...a};r.id=r.id||k;
    if(rm&&rm[k]&&rm[k].trial&&rm[k].dueMs)r.due=dOf(rm[k].dueMs);if(sc&&sc[k])r.pass=sc[k];
    const old=db.resellers.find(x=>x.id===r.id);if(lg&&lg[k])r.logo=lg[k];else if(!withLogo&&old&&old.logo)r.logo=old.logo;
-   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp.push(...(o.pp||[]))}}
- else{const k=kid(fb.rid);const [rm,rs,lg]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null]);
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp.push(...(o.pp||[]))}
+  nd.notifs=[];for(const rk in (nf||{}))for(const id in nf[rk]){const x=nf[rk][id],rr=nd.resellers.find(r=>kid(r.id)===rk);if(rr&&x)nd.notifs.push({id,rid:rr.id,t:x.t,m:x.m,d:x.d,r:x.r||null})}}
+ else{const k=kid(fb.rid);const [rm,rs,lg,nf]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null,rt('GET','notif/'+k)]);
   nd={master:{},resellers:[],clients:[],renewals:[]};
   if(rm){const o=rs?JSON.parse(rs.j):{r:{},c:[],n:[],pp:[]},a=JSON.parse(rm.j),r={...o.r,...a};r.id=r.id||fb.rid;if(rm.trial&&rm.dueMs)r.due=dOf(rm.dueMs);
    const old=db.resellers.find(x=>x.id===r.id);if(lg)r.logo=lg;else if(!withLogo&&old&&old.logo)r.logo=old.logo;
-   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp=o.pp||[]}}
+   nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp=o.pp||[];nd.notifs=Object.keys(nf||{}).map(id=>({id,rid:r.id,t:nf[id].t,m:nf[id].m,d:nf[id].d,r:nf[id].r||null}))}}
  return{nd,pp}}
 function fbSeed(nd){lastPub={};nd.clients.forEach(c=>{const p=pubKey(c);if(p)lastPub[p]=pubPlain(nd,c)})}
 async function fbLoad(){const{nd,pp}=await fbFetch(true);db=nd;last=fbStr(db,fb.role==='master');prevPP=new Set(pp);fbSeed(db)}
@@ -1494,7 +1495,7 @@ async function fbPoll(){if(!fb||fb.role==='cli'||document.hidden||fbBusy||fbT)re
  try{await reqPull();if(fbBusy||fbT)return;const{nd}=await fbFetch(false),adm=fb.role==='master',rs=fbStr(nd,adm);
   const loc=fbStr(db,adm);if(sameDocs(rs,loc))return;
   if(!sameDocs(loc,last)||fbBusy||fbT)return;
-  db=nd;last=fbStr(db,adm);fbSeed(db);softRender()}catch(e){if(e.message==='SESSION'){toast('Sessão expirada. Entre novamente.');fbBye()}}}
+  const ou=NT().filter(n=>!n.r).length;db=nd;last=fbStr(db,adm);fbSeed(db);if(!adm&&NT().filter(n=>!n.r).length>ou)toast('Nova notificação do administrador.');softRender()}catch(e){if(e.message==='SESSION'){toast('Sessão expirada. Entre novamente.');fbBye()}}}
 async function fbRecon(){if(!fb||fb.role!=='master'||recBusy)return;recBusy=true;let ch=false;
  try{for(const r of db.resellers){
    if(!r.uid&&r.pass&&r.user){if(r.pass.length<6||!fbPwOk(r.user,r.pass)){authErr[r.id]='Senha com 6+ caracteres e usuário válido (até 30 letras ou um e-mail).';continue}
@@ -1603,6 +1604,24 @@ function plansTab(){const rs=realRes();let tot=0;
 function savePlans(e){e.preventDefault();const f=e.target,pl={};
  for(const k in PLAN_DEF){const fee=+f['fee_'+k].value,mx=f['max_'+k].value;if(!(fee>=0)){toast('Valor inválido.');return}pl[k]={fee,max:mx===''?null:Math.max(1,Math.floor(+mx))}}
  db.master.plans=pl;db.resellers.forEach(r=>{if(r.plan&&pl[r.plan])r.maxCli=pl[r.plan].max});save();render();toast('Planos salvos.')}
+const NT=()=>db.notifs||(db.notifs=[]);
+const fmtDT=ms=>ms?new Date(ms).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
+let nopen='';
+function sendNotif(e){e.preventDefault();const f=e.target,t=f.t.value.trim(),m=f.m.value.trim(),to=f.to.value;if(!t||!m){toast('Preencha o título e a mensagem.');return}
+ const rs=to==='*'?realRes():db.resellers.filter(r=>r.id===to);if(!rs.length){toast('Nenhuma revenda para receber.');return}
+ const d=Date.now();rs.forEach((r,i)=>NT().push({id:uid()+i.toString(36),rid:r.id,t:t.slice(0,100),m:m.slice(0,2000),d:d+i,r:null}));
+ save();render();toast('Notificação enviada para '+rs.length+' revenda'+(rs.length===1?'':'s')+'.')}
+function delNotif(id){ask('Excluir esta notificação?',0,()=>{db.notifs=NT().filter(n=>n.id!==id);save();render()})}
+function openNotif(id){const n=NT().find(x=>x.id===id);if(!n)return;nopen=nopen===id?'':id;
+ if(!n.r){n.r=Date.now();
+  if(FBMODE){const k='notif/'+kid(n.rid)+'/'+kid(n.id);rt('PUT',k+'/r',n.r).then(()=>{last[k]=JSON.stringify(fbDocsOf(db,false)[k])}).catch(()=>{n.r=null;toast('Não foi possível marcar como lida. Tente de novo.');render()})}
+  else save()}
+ render()}
+function notifRes(me){const L=NT().filter(n=>n.rid===me.id).sort((a,b)=>b.d-a.d),nu=L.filter(n=>!n.r).length;
+ return `<div class="card"><h2>Notificações${nu?` · ${nu} não lida${nu===1?'':'s'}`:''}</h2>${L.length?L.map(n=>`<div onclick="openNotif('${n.id}')" role="button" tabindex="0" style="cursor:pointer;border:1px solid ${n.r?'var(--bd)':'var(--pri)'};border-radius:10px;padding:12px 14px;margin-bottom:10px;background:${n.r?'var(--card)':'var(--bg2)'}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>${n.r?'':'● '}${esc(n.t)}</b><span class="b ${n.r?'pago':'pend'}">${n.r?'Lida':'Não lida'}</span></div><small style="color:var(--mut)">${fmtDT(n.d)}</small>${nopen===n.id?`<p style="margin:10px 0 0;white-space:pre-wrap">${esc(n.m)}</p>`:'<p class="note" style="margin:6px 0 0">Toque para abrir</p>'}</div>`).join(''):'<p class="note">Nenhuma notificação.</p>'}</div>`}
+function notifAdm(){const rs=realRes(),all=NT(),L=all.slice().sort((a,b)=>b.d-a.d).slice(0,300),nu=all.filter(n=>!n.r).length;
+ return `<div class="card"><h2>Nova notificação</h2><form onsubmit="sendNotif(event)"><div><label>Enviar para</label><select name="to"><option value="*">Todas as revendas</option>${rs.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select></div><div><label>Título</label><input name="t" maxlength="100" required></div><div style="grid-column:1/-1"><label>Mensagem</label><textarea name="m" maxlength="2000" rows="4" required></textarea></div><button>Enviar notificação</button></form></div>
+ <div class="card"><h2>Enviadas (${all.length})${nu?` · ${nu} não lida${nu===1?'':'s'}`:''}</h2>${L.length?`<div class="tw"><table><tr><th>Para</th><th>Mensagem</th><th>Enviada</th><th>Status</th><th></th></tr>${L.map(n=>{const r=db.resellers.find(x=>x.id===n.rid);return `<tr><td>${esc(r?r.name:'(excluída)')}</td><td><b>${esc(n.t)}</b><br><small style="color:var(--mut)">${esc(n.m.slice(0,80))}${n.m.length>80?'…':''}</small></td><td>${fmtDT(n.d)}</td><td>${n.r?`<span class="b pago">Lida</span><br><small>${fmtDT(n.r)}</small>`:'<span class="b pend">Não lida</span>'}</td><td><button class="s d" onclick="delNotif('${n.id}')">Excluir</button></td></tr>`}).join('')}</table></div>`:'<p class="note">Nenhuma notificação enviada.</p>'}</div>`}
 function addReseller(e){e.preventDefault();const f=e.target;
  const user=f.user.value.trim();
  if(user===db.master.user||db.resellers.some(r=>r.user===user)){toast('Esse usuário já existe.');return}
@@ -2100,10 +2119,10 @@ function bkpApply(o,kind,mode){let skipped=0,add=0,upd=0;
  save();render();toast('Backup restaurado: '+add+' adicionados, '+upd+' atualizados'+(skipped?', '+skipped+' ignorados':'')+'.')}
 function tabBar(items){return '<div class="tabs">'+items.map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="tab='${k}';render();window.scrollTo(0,0)">${l}</button>`).join('')+'</div>'}
 function sideNav(it){return `<nav class="side">${it.map(([k,l,ic])=>`<button class="${tab===k?'on':''}" title="${l}" aria-label="${l}" onclick="tab='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${ic}</svg><span>${l}</span></button>`).join('')}</nav>`}
-function mTabs(){return sideNav([['dash','Dashboard',RIC.dash],['rev','Revendas',IC.store],['plans','Planos','<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'],['trial','Teste grátis','<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>'],['all','Clientes por revenda',RIC.cli],['cfg','Pix e mensagens',RIC.cfg]])}
-const RIC={dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',new:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',cli:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',ren:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',cfg:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'};
-function rTabs(n){const it=[['dash','Dashboard'],['new','Novo cliente'],['cli','Meus clientes'],['ren','Renovações'],['cfg','Configurações']];
- return `<nav class="side">${it.map(([k,l])=>`<button class="${tab===k?'on':''}${k==='ren'&&n?' hasn':''}" title="${l}" aria-label="${l}" onclick="tab='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${RIC[k]}</svg><span>${l}${k==='ren'&&n?`<em>${n}</em>`:''}</span></button>`).join('')}</nav>`}
+function mTabs(){return sideNav([['dash','Dashboard',RIC.dash],['rev','Revendas',IC.store],['plans','Planos','<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'],['notif','Notificações','<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>'],['trial','Teste grátis','<path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>'],['all','Clientes por revenda',RIC.cli],['cfg','Pix e mensagens',RIC.cfg]])}
+const RIC={notif:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',new:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',cli:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',ren:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',cfg:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'};
+function rTabs(n,nu){const it=[['dash','Dashboard'],['new','Novo cliente'],['cli','Meus clientes'],['ren','Renovações'],['notif','Notificações'],['cfg','Configurações']];
+ return `<nav class="side">${it.map(([k,l])=>`<button class="${tab===k?'on':''}${(k==='ren'?n:k==='notif'?nu:0)?' hasn':''}" title="${l}" aria-label="${l}" onclick="tab='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${RIC[k]}</svg><span>${l}${(k==='ren'?n:k==='notif'?nu:0)?`<em>${k==='ren'?n:nu}</em>`:''}</span></button>`).join('')}</nav>`}
 function blockMsg(r){if(r.trial)return 'Seu teste grátis expirou em '+fmt(r.due)+'. Fale com o administrador para contratar.';return 'Acesso bloqueado: a mensalidade venceu em '+fmt(r.due)+'. Fale com o administrador para regularizar.'}
 function render0(){const a=$('#app');
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
@@ -2121,17 +2140,18 @@ function render0(){const a=$('#app');
   (tab==='dash'?`${masterDash()}`
   :tab==='rev'?`<div class="card"><h2>Nova revenda</h2><form onsubmit="addReseller(event)"><div><label>Nome</label><input name="name" required></div><div><label>Usuário (use o e-mail da revenda para ela poder recuperar a senha)</label><input name="user" autocapitalize="none" autocorrect="off" spellcheck="false" required></div><div><label>Senha</label><input name="pass" required></div><div><label>WhatsApp</label><input name="phone" placeholder="5581999999999"></div><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--tx);grid-column:1/-1"><input type="checkbox" name="unl"  onchange="unlTog(this.form)" style="width:auto"> Acesso ilimitado (sem data de expiração)</label><div><label>Plano</label><select name="plan" onchange="planPick(this.form)">${planOpts('')}</select></div><div><label>Valor mensal (R$)</label><input name="fee" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--tx)"><input type="checkbox" name="sendacc" checked style="width:auto"> Enviar acesso ao cadastrar</label><button>Criar revenda</button></form></div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><h2 style="margin:0">Revendas (${realRes().length})</h2><button class="s" onclick="bmOpen()" style="width:auto">Mensagem em massa</button></div>${realRes().length?`<div class="tw"><table><tr><th>Nome</th><th>Usuário</th><th>Clientes</th><th>Plano</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr>${rows}</table></div>`:'<p class="note">Nenhuma revenda criada.</p>'}</div>`
+  :tab==='notif'?notifAdm()
   :tab==='plans'?plansTab()
   :tab==='trial'?trialTab()
   :tab==='all'?clientsByRes()
   :`${masterCard()}${accCard()}${backupCard('admin')}`)+'</div></div>';
  } else {
   const me=db.resellers.find(r=>r.id===ses.id),list=db.clients.filter(c=>c.rid===ses.id).sort((x,y)=>x.due.localeCompare(y.due));const npend=db.renewals.filter(r=>r.rid===ses.id&&r.status==='pend').length;
-  a.innerHTML=`<header><h1 style="display:flex;align-items:center;gap:10px">${me.logo?`<img src="${me.logo}" alt="" style="height:40px;border-radius:6px">`:''}${esc(me.name)}${planChip(me)}</h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell">${rTabs(npend)}<div class="mainc">${tab==='cfg'?`${logoCard(me)}${backupCard('rev')}<div class="card"><h2>Dados de recebimento (Pix)</h2><form onsubmit="savePix(event)"><div><label>Tipo da chave</label><select name="ktype">${[['cpf','CPF / CNPJ'],['cel','Celular'],['email','E-mail'],['evp','Chave aleatória']].map(o=>`<option value="${o[0]}" ${(me.pix?pixType(me.pix):'cpf')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div><label>Chave Pix</label><input name="key" value="${esc(me.pix?.key)}" required></div><div><label>Nome do recebedor</label><input name="pname" value="${esc(me.pix?.name)}" maxlength="25" required></div><div><label>Cidade</label><input name="city" value="${esc(me.pix?.city)}" maxlength="15" required></div><button>Salvar</button></form><p class="note">Usado para gerar o QR Code Pix de cada cobrança.</p></div>
+  a.innerHTML=`<header><h1 style="display:flex;align-items:center;gap:10px">${me.logo?`<img src="${me.logo}" alt="" style="height:40px;border-radius:6px">`:''}${esc(me.name)}${planChip(me)}</h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell">${rTabs(npend,NT().filter(x=>x.rid===ses.id&&!x.r).length)}<div class="mainc">${tab==='cfg'?`${logoCard(me)}${backupCard('rev')}<div class="card"><h2>Dados de recebimento (Pix)</h2><form onsubmit="savePix(event)"><div><label>Tipo da chave</label><select name="ktype">${[['cpf','CPF / CNPJ'],['cel','Celular'],['email','E-mail'],['evp','Chave aleatória']].map(o=>`<option value="${o[0]}" ${(me.pix?pixType(me.pix):'cpf')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div><label>Chave Pix</label><input name="key" value="${esc(me.pix?.key)}" required></div><div><label>Nome do recebedor</label><input name="pname" value="${esc(me.pix?.name)}" maxlength="25" required></div><div><label>Cidade</label><input name="city" value="${esc(me.pix?.city)}" maxlength="15" required></div><button>Salvar</button></form><p class="note">Usado para gerar o QR Code Pix de cada cobrança.</p></div>
   <div class="card"><h2>Mensagem de cobrança</h2><form onsubmit="saveMsg(event)" style="grid-template-columns:1fr"><div><label>Texto padrão (editável)</label><textarea name="msg" style="height:170px;font-family:inherit;font-size:13px">${esc(me.msg&&me.msg!==OLD_MSG?me.msg:DEF_MSG)}</textarea></div><div style="display:flex;gap:8px"><button>Salvar mensagem</button><button type="button" class="s" onclick="resetMsg()">Restaurar padrão</button></div></form><p class="note">Variáveis: {nome} {valor} {plano} {telas} {dias} {usuario} {operador} {aplicativo} {vencimento} {situacao} {chave} {pix} {cupom} {total}. A chave Pix e o copia e cola entram automaticamente quando você cadastra o Pix.</p></div>
   <div class="card"><h2>Cupons de desconto</h2><form onsubmit="saveCoupons(event)" style="grid-template-columns:1fr">${getCoupons(me).map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="min-width:70px">${brl(k.v)}</b><input name="code${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="on${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}<div><button>Salvar cupons</button></div></form><p class="note">Ao enviar a cobrança, escolha um cupom (opcional): o desconto entra na mensagem e no valor do Pix.</p></div>
   `:tab==='new'?`<div class="card"><h2>Novo cliente</h2><form onsubmit="addClient(event)" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" required></div><div><label>WhatsApp (com DDD)</label><input name="phone" placeholder="81999999999" inputmode="tel" pattern="[0-9 ()+\-]{10,20}" title="Digite o número com DDD, só números" required></div>${telaSel(null)}${usersBlock([])}${appsBlock([])}${sitSel(null)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div>${stField(today(),false)}<div><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" name="send" checked style="width:auto"> Enviar cobrança ao cadastrar</label></div><button>Adicionar</button></form></div>
-  `:tab==='cli'?`<div class="card"><h2>Meus clientes</h2><div class="cbar"><button class="s" onclick="bulkOpen(false)" style="width:auto">Mensagem em massa</button><button onclick="cbOpen()" style="width:auto">Cobrança em massa${cbBadge()}</button><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" type="search" placeholder="Pesquisar por nome, WhatsApp, plano, aplicativo..." value="${esc(cliQ)}" oninput="cliSearch(this.value)" autocomplete="off"></div><label>Ordenar <select onchange="cliSort(this.value)">${[['','Padrão'],['az','Nome A–Z'],['za','Nome Z–A']].map(([v,l])=>`<option value="${v}" ${v===cliO?'selected':''}>${l}</option>`).join('')}</select></label><label>Mostrar <select onchange="cliSize(this.value)">${[10,20,30,40,50,100,200,500,0].map(n=>`<option value="${n}" ${n===cliN?'selected':''}>${n||'Todos'}</option>`).join('')}</select> por página</label></div><div class="sits" id="sits">${sitsHtml()}</div><div id="cliList">${cliListHtml()}</div></div>`:tab==='ren'?renCard(ses.id):resellerDash(list)}</div></div>`}}
+  `:tab==='cli'?`<div class="card"><h2>Meus clientes</h2><div class="cbar"><button class="s" onclick="bulkOpen(false)" style="width:auto">Mensagem em massa</button><button onclick="cbOpen()" style="width:auto">Cobrança em massa${cbBadge()}</button><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" type="search" placeholder="Pesquisar por nome, WhatsApp, plano, aplicativo..." value="${esc(cliQ)}" oninput="cliSearch(this.value)" autocomplete="off"></div><label>Ordenar <select onchange="cliSort(this.value)">${[['','Padrão'],['az','Nome A–Z'],['za','Nome Z–A']].map(([v,l])=>`<option value="${v}" ${v===cliO?'selected':''}>${l}</option>`).join('')}</select></label><label>Mostrar <select onchange="cliSize(this.value)">${[10,20,30,40,50,100,200,500,0].map(n=>`<option value="${n}" ${n===cliN?'selected':''}>${n||'Todos'}</option>`).join('')}</select> por página</label></div><div class="sits" id="sits">${sitsHtml()}</div><div id="cliList">${cliListHtml()}</div></div>`:tab==='ren'?renCard(ses.id):tab==='notif'?notifRes(me):resellerDash(list)}</div></div>`}}
 render();if(!FBMODE)cloudInit();else fbCheckSetup();
 let lastDay=today();const chkDay=()=>{if(today()!==lastDay){lastDay=today();if(ses)softRender()}};setInterval(chkDay,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chkDay()});
 </script><script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script></body></html>
