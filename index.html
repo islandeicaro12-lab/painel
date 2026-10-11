@@ -1468,7 +1468,7 @@ async function fbPush(){const adm=fb.role==='master';
  for(const k in d){const nf=k.startsWith('notif/');if(nf&&!adm)continue;const s=JSON.stringify(d[k]);if(last[k]!==s){await rt('PUT',k,nf?{t:d[k].t,m:d[k].m,d:d[k].d}:d[k]);last[k]=s}}
  for(const k of Object.keys(last)){if(k.startsWith('notif/')&&!adm)continue;if(!(k in d)){await rt('DELETE',k);delete last[k]}}}
 async function fbFetch(withLogo){const adm=fb.role==='master';let nd,pp=[];
- if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp,nf]=await Promise.all(['master','resm','res','secrets','trialPhones','notif'].map(g));
+ if(adm){const g=p=>rt('GET',p);const [m,rm,rs,sc,tp,nf]=await Promise.all(['master','resm','res','secrets','trialPhones','notif'].map(p=>p==='notif'?g(p).catch(()=>null):g(p)));
   nd={master:{...(m&&m.j?JSON.parse(m.j):{}),user:db.master.user},resellers:[],clients:[],renewals:[]};nd.master.trialPhones=Object.keys(tp||{});
   const lg=withLogo?await g('logo'):null;
   for(const k in (rs||{})){const o=JSON.parse(rs[k].j),a=rm&&rm[k]?JSON.parse(rm[k].j):{},r={...o.r,...a};r.id=r.id||k;
@@ -1476,7 +1476,7 @@ async function fbFetch(withLogo){const adm=fb.role==='master';let nd,pp=[];
    const old=db.resellers.find(x=>x.id===r.id);if(lg&&lg[k])r.logo=lg[k];else if(!withLogo&&old&&old.logo)r.logo=old.logo;
    nd.resellers.push(r);nd.clients.push(...(o.c||[]));nd.renewals.push(...(o.n||[]));pp.push(...(o.pp||[]))}
   nd.notifs=[];for(const rk in (nf||{}))for(const id in nf[rk]){const x=nf[rk][id],rr=nd.resellers.find(r=>kid(r.id)===rk);if(rr&&x)nd.notifs.push({id,rid:rr.id,t:x.t,m:x.m,d:x.d,r:x.r||null})}}
- else{const k=kid(fb.rid);const [rm,rs,lg,nf]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null,rt('GET','notif/'+k)]);
+ else{const k=kid(fb.rid);const [rm,rs,lg,nf]=await Promise.all([rt('GET','resm/'+k),rt('GET','res/'+k),withLogo?rt('GET','logo/'+k):null,rt('GET','notif/'+k).catch(()=>null)]);
   nd={master:{},resellers:[],clients:[],renewals:[]};
   if(rm){const o=rs?JSON.parse(rs.j):{r:{},c:[],n:[],pp:[]},a=JSON.parse(rm.j),r={...o.r,...a};r.id=r.id||fb.rid;if(rm.trial&&rm.dueMs)r.due=dOf(rm.dueMs);
    const old=db.resellers.find(x=>x.id===r.id);if(lg)r.logo=lg;else if(!withLogo&&old&&old.logo)r.logo=old.logo;
