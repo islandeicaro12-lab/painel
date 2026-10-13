@@ -69,7 +69,7 @@ a.btn{display:inline-block;padding:9px 16px;border-radius:8px;background:var(--p
 .up{display:flex;flex-direction:column}.up .it{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd)}.up .it:first-child{border-top:0;padding-top:0}
 .av{width:34px;height:34px;border-radius:50%;background:var(--bg2);color:var(--tx);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
 .up .m{flex:1;min-width:0}.up .m b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.up .m small{color:var(--mut);font-size:12px}
-.up .r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.up .r b{font-weight:600}
+.up .r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.up .r b{font-weight:600}.up .cb{width:auto;margin:4px 0 0;padding:6px 12px;font-size:12px;border-radius:8px;white-space:nowrap}
 .chip{font-size:11.5px;padding:2px 8px;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
 .emp{color:var(--mut);font-size:13px;padding:14px 0;text-align:center}
 .pw{position:relative}.pw input{padding-right:86px}.pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;padding:5px 9px;background:transparent;border:0;box-shadow:none;color:var(--mut);font-size:12.5px;cursor:pointer;border-radius:6px}.pw .eye:hover{color:var(--tx);background:var(--bg2)}
@@ -1840,14 +1840,14 @@ function kpi(ic,l,v,sm,tone){return `<div class="kp t-${tone}"><div class="ic"><
 function segCard(title,sub,items){
  const tot=items.reduce((a,x)=>a+x.v,0);
  return `<div class="card dp"><h3>${title}<small>${sub}</small></h3><div class="seg">${tot?items.filter(x=>x.v>0).map(x=>`<i class="t-${x.t}" style="width:${x.v/tot*100}%;background:var(--c)"></i>`).join(''):''}</div><div class="lg">${items.map(x=>`<div class="t-${x.t}"><em></em><span>${x.l}</span><b>${x.n}</b>${x.s!=null?`<small>${x.s}</small>`:''}</div>`).join('')}</div></div>`}
-function upCard(title,rows,vazio){
+function upCard(title,rows,vazio,act){
  const chip=n=>n<0?['bad','Atrasado '+(-n)+'d']:n===0?['warn','Hoje']:n===1?['warn','Amanhã']:['info','Em '+n+' dias'];
  const ini=t=>(String(t||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('')||'?').toUpperCase();
- return `<div class="card dp"><h3>${title}<small>${rows.length?rows.length+' no período':''}</small></h3>`+(rows.length?'<div class="up">'+rows.slice(0,8).map(x=>{const n=diasAte(x.due),c=chip(n);return `<div class="it"><div class="av">${esc(ini(x.n))}</div><div class="m"><b>${esc(x.n)}</b><small>${esc(x.sub||'')}</small></div><div class="r"><b>${brl(x.val)}</b><span class="chip t-${c[0]}">${fmt(x.due)} · ${c[1]}</span></div></div>`}).join('')+'</div>'+(rows.length>8?`<p class="note">+ ${rows.length-8} outros</p>`:''):`<div class="emp">${vazio}</div>`)+'</div>'}
+ return `<div class="card dp"><h3>${title}<small>${rows.length?rows.length+' no período':''}</small></h3>`+(rows.length?'<div class="up">'+rows.slice(0,8).map(x=>{const n=diasAte(x.due),c=chip(n);return `<div class="it"><div class="av">${esc(ini(x.n))}</div><div class="m"><b>${esc(x.n)}</b><small>${esc(x.sub||'')}</small></div><div class="r"><b>${brl(x.val)}</b><span class="chip t-${c[0]}">${fmt(x.due)} · ${c[1]}</span>${act&&x.cid?`<button class="cb" onclick="${act}('${esc(x.cid)}')" aria-label="Enviar cobrança para ${esc(x.n)}">Enviar cobrança</button>`:''}</div></div>`}).join('')+'</div>'+(rows.length>8?`<p class="note">+ ${rows.length-8} outros</p>`:''):`<div class="emp">${vazio}</div>`)+'</div>'}
 function dashHead(){return `<div class="dh"><h2>Visão geral</h2><span>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>`}
 const sumV=a=>a.reduce((x,c)=>x+Number(c.value!=null?c.value:c.fee||0),0);
 function cliRows(list,showRes){const lim=addDays(today(),DASHD);
- return list.filter(c=>c.due<=lim).sort((a,b)=>a.due.localeCompare(b.due)).map(c=>({n:c.name,sub:(showRes?(db.resellers.find(r=>r.id===c.rid)?.name||'')+' · ':'')+(c.plan||'Sem plano'),val:c.value,due:c.due}))}
+ return list.filter(c=>c.due<=lim).sort((a,b)=>a.due.localeCompare(b.due)).map(c=>({n:c.name,sub:(showRes?(db.resellers.find(r=>r.id===c.rid)?.name||'')+' · ':'')+(c.plan||'Sem plano'),val:c.value,due:c.due,cid:c.id}))}
 function resHead(){const me=db.resellers.find(r=>r.id===ses.id)||{};return `<div class="rhd">${me.logo?`<img src="${me.logo}" alt="Logo de ${esc(me.name)}">`:`<div class="av lg">${esc((me.name||'?').trim().charAt(0).toUpperCase())}</div>`}<div><h2>${esc(me.name||'')}</h2><span>Visão geral · ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>${rDue(me)}</div>`}
 function rDue(me){if(me.unlimited)return `<div class="rdue"><small>Acesso</small><b>Ilimitado</b><span class="chip t-ok">Sem data de expiração</span></div>`;if(!me.due)return '';const n=diasAte(me.due),c=n<0?['bad','Atrasada']:n===0?['warn','Vence hoje']:n===1?['warn','Vence amanhã']:n<=3?['warn','Em '+n+' dias']:['ok','Em '+n+' dias'];return `<div class="rdue"><small>${me.trial?'Teste grátis válido até':'Vencimento da mensalidade'}</small><b>${fmt(me.due)}</b><span class="chip t-${c[0]}">${c[1]}</span></div>`}
 function resellerDash(list){
@@ -1857,7 +1857,7 @@ function resellerDash(list){
  return resHead()+`<div class="kg">${kpi('users','Clientes',list.length,'Ativos na carteira','pri')}${kpi('cash','Receita mensal',brl(sumV(list)),'Soma dos planos','ok')}${kpi('alert','Vencem em '+DIAS+' dias',s3.length,brl(sumV(s3)),'warn')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'info')}${kpi('alert','Em atraso',late.length,brl(sumV(late)),'bad')}</div>`+
  `<div class="dc">${segCard('Situação dos clientes',list.length+' no total',[{l:'Renovado',t:'ok',v:cnt('pago').length,n:cnt('pago').length,s:brl(cv('pago'))},{l:'Pendente',t:'info',v:cnt('pend').length,n:cnt('pend').length,s:brl(cv('pend'))},{l:'Prestes a expirar',t:'warn',v:cnt('exp').length,n:cnt('exp').length,s:brl(cv('exp'))},{l:'Devendo',t:'bad',v:cnt('atr').length,n:cnt('atr').length,s:brl(cv('atr'))}])}`+
  `${segCard('Financeiro','valores em R$',[{l:'Recebido',t:'ok',v:s.rec,n:brl(s.rec)},{l:'A receber',t:'info',v:s.pen,n:brl(s.pen)},{l:'Atrasado',t:'bad',v:s.atr,n:brl(s.atr)}])}</div>`+
- upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.')}
+ upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.','wa')}
 function masterDash(){
  const t=today(),lim=addDays(t,DASHD),ra=db.resellers.filter(r=>r.fee!=null&&r.due&&!r.trial&&!r.unlimited);
  const fin={pago:0,pend:0,atr:0},nn={pago:0,pend:0,atr:0};ra.forEach(r=>{const k=stR(r);fin[k]+=Number(r.fee||0);nn[k]++});
