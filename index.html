@@ -1687,7 +1687,8 @@ function resetMsg(){const r=db.resellers.find(r=>r.id===ses.id);delete r.msg;sav
 const getCoupons=r=>r.coupons||[5,10,15].map(v=>({v,code:'CUPOM'+v,on:true}));
 function saveCoupons(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
  r.coupons=getCoupons(r).map((k,i)=>({v:k.v,code:f['code'+i].value.trim()||k.code,on:f['on'+i].checked}));save();toast('Cupons salvos.')}
-function wa(id){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
+function waNow(id){wa(id,true)}
+function wa(id,direct){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
  let d=(c.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente com DDD.');return}
  if(d.length<=11)d='55'+d;
  const x=st(c),hp=r&&r.pix&&r.pix.key,key=hp?pixKey(r.pix):'',cps=getCoupons(r).filter(k=>k.on);
@@ -1697,6 +1698,7 @@ function wa(id){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.i
   return{m,tot,code,k}};
  qrOn=false;let cur=calc('');
  const u1=t=>'https://wa.me/'+d+'?text='+encodeURIComponent(t),u2=t=>'https://web.whatsapp.com/send?phone='+d+'&text='+encodeURIComponent(t);
+ if(direct&&hp){window.open(u1(cur.m),'_blank','noopener,noreferrer');toast('Abrindo o WhatsApp com a cobrança de '+c.name+'.');return}
  $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>Enviar cobrança</h2><p class="note" style="margin:0 0 10px">Para: ${esc(c.name)} · +${d}</p>
  ${cps.length?`<div style="margin-bottom:12px"><label>Cupom de desconto (opcional)</label><select id="cp"><option value="">Sem cupom</option>${cps.map((k,i)=>`<option value="${i}">${esc(k.code)} — ${brl(k.v)} de desconto</option>`).join('')}</select></div>`:''}
  ${hp?`<label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--tx)"><input type="checkbox" id="qron" style="width:auto"> Enviar link do QR Code na mensagem</label>`:''}<div class="tabs" style="margin-bottom:12px"><button id="tb1" class="on">Mensagem</button><button id="tb2">Chave Pix</button><button id="tb3">QR Code</button></div>
@@ -1857,7 +1859,7 @@ function resellerDash(list){
  return resHead()+`<div class="kg">${kpi('users','Clientes',list.length,'Ativos na carteira','pri')}${kpi('cash','Receita mensal',brl(sumV(list)),'Soma dos planos','ok')}${kpi('alert','Vencem em '+DIAS+' dias',s3.length,brl(sumV(s3)),'warn')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'info')}${kpi('alert','Em atraso',late.length,brl(sumV(late)),'bad')}</div>`+
  `<div class="dc">${segCard('Situação dos clientes',list.length+' no total',[{l:'Renovado',t:'ok',v:cnt('pago').length,n:cnt('pago').length,s:brl(cv('pago'))},{l:'Pendente',t:'info',v:cnt('pend').length,n:cnt('pend').length,s:brl(cv('pend'))},{l:'Prestes a expirar',t:'warn',v:cnt('exp').length,n:cnt('exp').length,s:brl(cv('exp'))},{l:'Devendo',t:'bad',v:cnt('atr').length,n:cnt('atr').length,s:brl(cv('atr'))}])}`+
  `${segCard('Financeiro','valores em R$',[{l:'Recebido',t:'ok',v:s.rec,n:brl(s.rec)},{l:'A receber',t:'info',v:s.pen,n:brl(s.pen)},{l:'Atrasado',t:'bad',v:s.atr,n:brl(s.atr)}])}</div>`+
- upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.','wa')}
+ upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.','waNow')}
 function masterDash(){
  const t=today(),lim=addDays(t,DASHD),ra=db.resellers.filter(r=>r.fee!=null&&r.due&&!r.trial&&!r.unlimited);
  const fin={pago:0,pend:0,atr:0},nn={pago:0,pend:0,atr:0};ra.forEach(r=>{const k=stR(r);fin[k]+=Number(r.fee||0);nn[k]++});
