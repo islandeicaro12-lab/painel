@@ -1859,7 +1859,7 @@ function resellerDash(list){
  return resHead()+`<div class="kg">${kpi('users','Clientes',list.length,'Ativos na carteira','pri')}${kpi('cash','Receita mensal',brl(sumV(list)),'Soma dos planos','ok')}${kpi('alert','Vencem em '+DIAS+' dias',s3.length,brl(sumV(s3)),'warn')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'info')}${kpi('alert','Em atraso',late.length,brl(sumV(late)),'bad')}</div>`+
  `<div class="dc">${segCard('Situação dos clientes',list.length+' no total',[{l:'Renovado',t:'ok',v:cnt('pago').length,n:cnt('pago').length,s:brl(cv('pago'))},{l:'Pendente',t:'info',v:cnt('pend').length,n:cnt('pend').length,s:brl(cv('pend'))},{l:'Prestes a expirar',t:'warn',v:cnt('exp').length,n:cnt('exp').length,s:brl(cv('exp'))},{l:'Devendo',t:'bad',v:cnt('atr').length,n:cnt('atr').length,s:brl(cv('atr'))}])}`+
  `${segCard('Financeiro','valores em R$',[{l:'Recebido',t:'ok',v:s.rec,n:brl(s.rec)},{l:'A receber',t:'info',v:s.pen,n:brl(s.pen)},{l:'Atrasado',t:'bad',v:s.atr,n:brl(s.atr)}])}</div>`+
- upCard('Próximos vencimentos',cliRows(list,false),'Nenhum cliente vence nos próximos '+DASHD+' dias.','waNow')}
+ upCard('Próximos vencimentos',cliRows(list.filter(c=>{const n=diasAte(c.due);return n>=0&&n<=3}),false),'Nenhum cliente vence hoje ou nos próximos 3 dias.','waNow')}
 function masterDash(){
  const t=today(),lim=addDays(t,DASHD),ra=db.resellers.filter(r=>r.fee!=null&&r.due&&!r.trial&&!r.unlimited);
  const fin={pago:0,pend:0,atr:0},nn={pago:0,pend:0,atr:0};ra.forEach(r=>{const k=stR(r);fin[k]+=Number(r.fee||0);nn[k]++});
