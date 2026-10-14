@@ -1876,7 +1876,8 @@ async function payApply(){if(!fb||fb.role!=='rev'||!db.resellers[0])return false
   try{await rt('DELETE','pay/'+rid+'/'+k)}catch(x){}}
  if(nomes.length){save();softRender();toast('Pagamento confirmado e plano renovado: '+nomes.join(', ')+'.')}return nomes.length>0}
 async function mpCheck(silent){if(!mpOn())return;const ids=db.clients.filter(c=>c.rid===ses.id&&c.mp&&c.mp.id).map(c=>c.mp.id).slice(0,20);
- try{if(ids.length)await mpApi('/check',{rid:kid(ses.id),ids});const ch=await payApply();if(!silent&&!ch)toast('Nenhum pagamento novo até agora.')}catch(e){if(!silent)toast('Não foi possível verificar agora. Tente de novo em instantes.')}}
+ try{let j={};if(ids.length)j=await mpApi('/check',{rid:kid(ses.id),ids});const ch=await payApply();if(!silent&&!ch){const v=Object.values(j.st||{});
+  toast(!ids.length?'Nenhum Pix automático gerado ainda. Toque em Enviar cobrança e pague esse Pix (não a chave fixa).':v.includes('sem_permissao')?'O servidor não conseguiu gravar o pagamento. Publique de novo as regras do Firebase.':v.includes('erro_mp')?'O Mercado Pago não aceitou o token. Reconecte com o token de produção.':v.some(x=>['pending','in_process','authorized'].includes(x))?'O Mercado Pago ainda mostra o Pix como pendente (não pago).':'Nenhum pagamento novo até agora.')}}catch(e){if(!silent)toast('Não foi possível verificar agora. Tente de novo em instantes.')}}
 function mpCard(me){if(!FBMODE)return '';
  if(!PAYAPI)return `<div class="card"><h2>Confirmação automática de pagamento</h2><p class="note" style="margin:0">Recurso ainda não ativado pelo administrador.</p></div>`;
  return `<div class="card"><h2>Confirmação automática de pagamento</h2><p class="note" style="margin:0 0 10px">Conecte o seu <b>Mercado Pago</b>. A mensagem de cobrança passa a levar um Pix exclusivo de cada cliente. Quando o cliente paga, o painel confirma e renova o plano sozinho.</p>
