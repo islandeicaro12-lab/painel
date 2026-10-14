@@ -1693,8 +1693,8 @@ function wa(id,direct,pw,noMp){const c=db.clients.find(c=>c.id===id),r=db.resell
  if(d.length<=11)d='55'+d;
  if(!noMp&&mpOn()&&!mpValid(c)){if(direct){let w=null;try{w=window.open('','_blank')}catch(e){}
    toast('Gerando o Pix… o WhatsApp abre em seguida.');
-   mpEnsure(c).then(ok=>{if(!ok)toast('Pix automático indisponível agora. Enviando com a chave Pix fixa.');wa(id,true,w,!ok)});return}
-  toast('Gerando o Pix com confirmação automática…');mpEnsure(c).then(ok=>{if(ok)wa(id);else toast('Não foi possível gerar o Pix automático. Confira o token do Mercado Pago em Configurações.')});return}
+   mpEnsure(c).then(ok=>{if(!ok)toast('Pix automático indisponível: '+mpErrTxt()+'. Enviando com a chave Pix fixa.');wa(id,true,w,!ok)});return}
+  toast('Gerando o Pix com confirmação automática…');mpEnsure(c).then(ok=>{if(ok)wa(id);else toast('Não foi possível gerar o Pix automático: '+mpErrTxt()+'.')});return}
  const dyn=mpOn()&&mpValid(c);
  const x=st(c),hp=r&&r.pix&&r.pix.key,key=hp?pixKey(r.pix):'',cps=getCoupons(r).filter(k=>k.on);
  const calc=ci=>{const k=ci===''?null:cps[+ci],tot=k?Math.max(0.01,c.value-k.v):c.value,code=ci===''&&dyn?c.mp.code:(hp?pixPayload(r.pix,tot,'x'):'');
@@ -1864,9 +1864,11 @@ const mpMe=()=>db.resellers.find(r=>r.id===ses.id);
 const mpOn=()=>{const me=ses&&ses.role==='rev'?mpMe():null;return !!(FBMODE&&PAYAPI&&me&&me.mpOn)};
 const mpValid=c=>!!(c.mp&&c.mp.code&&c.mp.amt===Number(c.value)&&c.mp.due===c.due&&Date.now()-c.mp.at<5*864e5);
 const mpBusy={};
-async function mpApi(path,body){const r=await fetch(PAYAPI+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,idToken:await tok()})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||String(r.status));return j}
+async function mpApi(path,body){const r=await fetch(PAYAPI+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...body,idToken:await tok()})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error||String(r.status))+(j.detail?':'+j.detail:''));return j}
+let mpLastErr='';
+function mpErrTxt(){const e=String(mpLastErr||'');return /Failed to fetch|NetworkError|Load failed/i.test(e)?'não foi possível falar com o servidor de pagamentos: confira o endereço salvo no admin':e.startsWith('erro_interno')?'o servidor não entrou no Firebase: confira FB_SVC_PASS, FB_SVC_EMAIL e FB_API_KEY no Cloudflare ('+e+')':e.startsWith('nao_autorizado')?'login expirado: saia e entre de novo':e.startsWith('sem_token')?'token do Mercado Pago não encontrado: reconecte':e.startsWith('mercado_pago')?'o Mercado Pago recusou ('+e.replace('mercado_pago:','')+')':e.startsWith('dados_invalidos')?'valor ou cliente inválido':'erro '+e}
 function mpEnsure(c){if(mpValid(c))return Promise.resolve(true);if(mpBusy[c.id])return mpBusy[c.id];
- return mpBusy[c.id]=(async()=>{try{const j=await mpApi('/charge',{rid:kid(c.rid),cid:c.id,amount:Number(c.value),desc:(c.plan||'Mensalidade')+' - '+c.name});if(!j.code)throw 0;c.mp={id:j.id,code:j.code,amt:Number(c.value),due:c.due,at:Date.now()};save();return true}catch(e){return false}finally{delete mpBusy[c.id]}})()}
+ return mpBusy[c.id]=(async()=>{try{const j=await mpApi('/charge',{rid:kid(c.rid),cid:c.id,amount:Number(c.value),desc:(c.plan||'Mensalidade')+' - '+c.name});if(!j.code)throw 0;c.mp={id:j.id,code:j.code,amt:Number(c.value),due:c.due,at:Date.now()};save();return true}catch(e){mpLastErr=(e&&e.message)||'';return false}finally{delete mpBusy[c.id]}})()}
 let mpPrepT=0;
 function mpPrep(){if(!mpOn()||Date.now()-mpPrepT<20000)return;const l=db.clients.filter(c=>c.rid===ses.id&&(n=>n>=0&&n<=3)(diasAte(c.due))&&!mpValid(c));if(!l.length)return;mpPrepT=Date.now();(async()=>{for(const c of l)await mpEnsure(c)})()}
 async function payApply(){if(!fb||fb.role!=='rev'||!db.resellers[0])return false;const rid=kid(fb.rid);let m=null;try{m=await rt('GET','pay/'+rid)}catch(e){return false}
