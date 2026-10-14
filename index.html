@@ -1730,7 +1730,7 @@ function pixKey(px){const k=px.key.trim(),t=pixType(px),dg=k.replace(/\D/g,'');
  if(t==='email'||t==='evp')return k.toLowerCase();
  if(t==='cel')return '+'+((dg.length<=11)?'55'+dg:dg);
  return dg}
-function pixPayload(px,value,txid){txid='***';
+function pixPayload(px,value,txid){txid=String(txid||'').replace(/[^A-Za-z0-9]/g,'').slice(0,25);if(txid.length<4)txid='PAINEL';
  const body=tlv('00','01')+tlv('26',tlv('00','br.gov.bcb.pix')+tlv('01',pixKey(px)))+tlv('52','0000')+tlv('53','986')+(value>0?tlv('54',value.toFixed(2)):'')+tlv('58','BR')+tlv('59',clean(px.name,25))+tlv('60',clean(px.city,15))+tlv('62',tlv('05',txid))+'6304';
  return body+crc16(body)}
 function showQR(id,m,desc){m=m||1;const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
