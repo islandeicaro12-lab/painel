@@ -1688,10 +1688,12 @@ const getCoupons=r=>r.coupons||[5,10,15].map(v=>({v,code:'CUPOM'+v,on:true}));
 function saveCoupons(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
  r.coupons=getCoupons(r).map((k,i)=>({v:k.v,code:f['code'+i].value.trim()||k.code,on:f['on'+i].checked}));save();toast('Cupons salvos.')}
 function waNow(id){wa(id,true)}
-function wa(id,direct){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
+function wa(id,direct,pw,noMp){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
  let d=(c.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente com DDD.');return}
  if(d.length<=11)d='55'+d;
- if(mpOn()&&!mpValid(c)){if(direct){toast('Gerando o Pix com confirmação automática… toque de novo em alguns segundos.');mpEnsure(c);return}
+ if(!noMp&&mpOn()&&!mpValid(c)){if(direct){let w=null;try{w=window.open('','_blank')}catch(e){}
+   toast('Gerando o Pix… o WhatsApp abre em seguida.');
+   mpEnsure(c).then(ok=>{if(!ok)toast('Pix automático indisponível agora. Enviando com a chave Pix fixa.');wa(id,true,w,!ok)});return}
   toast('Gerando o Pix com confirmação automática…');mpEnsure(c).then(ok=>{if(ok)wa(id);else toast('Não foi possível gerar o Pix automático. Confira o token do Mercado Pago em Configurações.')});return}
  const dyn=mpOn()&&mpValid(c);
  const x=st(c),hp=r&&r.pix&&r.pix.key,key=hp?pixKey(r.pix):'',cps=getCoupons(r).filter(k=>k.on);
@@ -1701,7 +1703,8 @@ function wa(id,direct){const c=db.clients.find(c=>c.id===id),r=db.resellers.find
   return{m,tot,code,k}};
  qrOn=false;let cur=calc('');
  const u1=t=>'https://wa.me/'+d+'?text='+encodeURIComponent(t),u2=t=>'https://web.whatsapp.com/send?phone='+d+'&text='+encodeURIComponent(t);
- if(direct&&hp){window.open(u1(cur.m),'_blank','noopener,noreferrer');c.sentOn=today();save();if(!AQ)render();toast('Abrindo o WhatsApp com a cobrança de '+c.name+'.');return true}
+ if(direct&&hp){if(pw){try{pw.location.href=u1(cur.m)}catch(e){window.open(u1(cur.m),'_blank','noopener,noreferrer')}}else window.open(u1(cur.m),'_blank','noopener,noreferrer');c.sentOn=today();save();if(!AQ)render();toast('Abrindo o WhatsApp com a cobrança de '+c.name+'.');return true}
+ if(pw){try{pw.close()}catch(e){}}
  $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left;max-width:420px"><h2>Enviar cobrança</h2><p class="note" style="margin:0 0 10px">Para: ${esc(c.name)} · +${d}</p>
  ${cps.length?`<div style="margin-bottom:12px"><label>Cupom de desconto (opcional)</label><select id="cp"><option value="">Sem cupom</option>${cps.map((k,i)=>`<option value="${i}">${esc(k.code)} — ${brl(k.v)} de desconto</option>`).join('')}</select></div>`:''}
  ${hp?`<label style="display:flex;gap:6px;align-items:center;margin:0 0 12px;color:var(--tx)"><input type="checkbox" id="qron" style="width:auto"> Enviar link do QR Code na mensagem</label>`:''}<div class="tabs" style="margin-bottom:12px"><button id="tb1" class="on">Mensagem</button><button id="tb2">Chave Pix</button><button id="tb3">QR Code</button></div>
