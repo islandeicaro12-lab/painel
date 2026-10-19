@@ -1670,7 +1670,7 @@ async function fbLogin(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#
    else{ses={role:'rev',id:r.id};tab='dash'}}
  }catch(x){fbReset();err=netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
  render()}
-function fbReset(){agMe=null;agT='agenda';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+function fbReset(){agMe=null;agLogo='';agT='agenda';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
 async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
 async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
@@ -2428,11 +2428,11 @@ function agPixCode(c,aid,v){try{if(!agPixOk(c)||!(v>0))return '';return pixPaylo
 function agCmdTxt(c,x,aid,withPix){const i=agSlotInfo(x.s),pr=+x.pr||0,vp=+x.vp||0,code=withPix?agPixCode(c,aid,vp):'';
  return `COMANDA #${agCmdId(aid)} - ${c.n}\nCliente: ${x.n}\nServiço: ${x.v||''}\nData: ${fmt(i.d)} às ${i.h}`+(pr>0?`\nValor do serviço: ${brl(pr)}`:'')+(agFpOf(x)?`\nForma de pagamento: ${AG_FP[agFpOf(x)]}`:'')+(vp>0?`\nPagar agora (${agPct(c)===100?'valor total':'sinal de '+agPct(c)+'%'}): ${brl(vp)}`:'')+(x.pd?'\nPagamento: CONFIRMADO':(vp>0?'\nPagamento: aguardando':(pr>0?'\nPagamento: no dia, no local':'')))+(code?`\n\nPix copia e cola:\n${code}`:'')+(c.ad?`\n\nLocal: ${c.ad}`:'')}
 // ---- página pública ----
-let ag={loading:true,err:'',cfg:null,tk:{},svc:0,date:'',slot:'',f:{n:'',p:'',o:''},busy:false,done:null};
+let ag={logo:'',loading:true,err:'',cfg:null,tk:{},svc:0,date:'',slot:'',f:{n:'',p:'',o:''},busy:false,done:null};
 const agR=()=>{const a=$('#app');if(a)a.innerHTML=agPublic()};
 async function agInit(){if(!FBMODE){ag.loading=false;ag.err='O agendamento funciona apenas no site publicado.';agR();return}
  try{const v=await rt('GET','bk/pg/'+AGQ,undefined,false);const c=v&&v.j?agCfg(v.j):null;
-  if(v&&v.x!=null&&v.x<Date.now()){ag.err='Os agendamentos desta página estão indisponíveis no momento.'}else if(!c){ag.err='Página de agendamento não encontrada.'}else if(c.on===false){ag.err='Os agendamentos estão pausados no momento. Tente mais tarde.'}else{ag.cfg=c;await agTk(true)}}
+  if(v&&v.x!=null&&v.x<Date.now()){ag.err='Os agendamentos desta página estão indisponíveis no momento.'}else if(!c){ag.err='Página de agendamento não encontrada.'}else if(c.on===false){ag.err='Os agendamentos estão pausados no momento. Tente mais tarde.'}else{ag.cfg=c;rt('GET','bk/lg/'+AGQ,undefined,false).then(l=>{if(typeof l==='string'&&/^data:image\/(png|jpeg|webp);base64,/.test(l)){ag.logo=l;agR()}}).catch(()=>{});await agTk(true)}}
  catch(e){ag.err='Não foi possível carregar a página. Verifique a internet e tente de novo.'}
  ag.loading=false;agR()}
 async function agTk(quiet){try{ag.tk=(await rt('GET','bk/tk/'+AGQ,undefined,false))||{}}catch(e){if(!quiet)toast('Não foi possível atualizar os horários.')}}
@@ -2450,7 +2450,7 @@ function agPublic(){document.body.classList.add('agb');
  if(ag.loading){setTimeout(agInit,0);return wrap('<h1>Agendamento</h1>','<div class="ag-em">Carregando…</div>')}
  if(ag.err)return wrap('<h1>Agendamento</h1>',`<div class="ag-em">${esc(ag.err)}</div>`);
  const c=ag.cfg,svs=c.svc&&c.svc.length?c.svc:[{n:'Atendimento'}],sv=agCombo(svs);
- const head=`<h1>${esc(c.n)}</h1>${c.d?`<p>${esc(c.d)}</p>`:''}${c.ad?`<p style="font-size:13.5px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.ad)}" target="_blank" rel="noopener noreferrer" style="color:#2ee6a6">${esc(c.ad)}</a></p>`:''}`;
+ const head=`${ag.logo?`<img src="${ag.logo}" alt="Logo ${esc(c.n)}" style="max-height:64px;max-width:180px;border-radius:10px;background:#fff;padding:5px;margin-bottom:12px;display:block">`:''}<h1>${esc(c.n)}</h1>${c.d?`<p>${esc(c.d)}</p>`:''}${c.ad?`<p style="font-size:13.5px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.ad)}" target="_blank" rel="noopener noreferrer" style="color:#2ee6a6">${esc(c.ad)}</a></p>`:''}`;
  if(ag.done){const x=ag.done,msg=`Olá! Fiz um agendamento (comanda #${agCmdId(x.aid)}): ${x.v} em ${fmt(x.d)} às ${x.h}. Nome: ${x.n}.`+(x.vp>0?` Estou enviando o comprovante do Pix de ${brl(x.vp)}.`:(x.fp?` Pagamento: ${AG_FP[x.fp]}.`:'')),w=String(c.wa||'').replace(/\D/g,'');
   return wrap(head,`<div class="ag-c"><div class="ag-ok"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2 style="text-align:center">Agendamento enviado</h2><div class="ag-sum"><b>Comanda #${agCmdId(x.aid)}</b><br>${esc(x.v)}<br>${fmt(x.d)} às ${x.h}<br>${esc(x.n)}${x.pr>0?`<br>Valor: <b>${brl(x.pr)}</b>`:''}${x.fp?`<br>Pagamento: <b>${AG_FP[x.fp]}</b>`:''}${c.ad?`<br>Local: ${esc(c.ad)}`:''}</div>${agPayBox(c,x)}<p class="ag-nt">Você receberá a confirmação pelo WhatsApp informado. Guarde esta data e este horário.</p>${w?`<a class="ag-wa" href="https://wa.me/${w.length<=11?'55'+w:w}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener noreferrer">Avisar no WhatsApp</a>`:''}<button class="ag-go" style="margin-top:10px;background:#e9eef5;color:#0a1b33" onclick="ag.done=null;ag.slot='';ag.f={n:'',p:'',o:'',fp:ag.f.fp};agTk(true).then(agR)">Fazer outro agendamento</button></div>`)}
  const days=agDays(c);if(!ag.date||!days.some(x=>x.d===ag.date))ag.date=days[0]?days[0].d:'';
@@ -2479,7 +2479,7 @@ async function agBook(e){e.preventDefault();if(ag.busy)return;const f=ag.f,n=(f.
   const i=agSlotInfo(slot);ag.done={v:sv.n,d:i.d,h:i.h,n,pr,vp:rec.vp||0,fp,aid:slot+'_'+nonce,s:slot};ag.busy=false;agR();window.scrollTo(0,0)}
  catch(x){ag.busy=false;agR();toast('Não foi possível concluir. Tente de novo em instantes.')}}
 // ---- administrador ----
-let agMe=null;let bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};
+let agLogo='';let agMe=null;let bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};
 let bkD0=null;
 const AG_FOREVER=4102444800000;
 async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(bkD.busy||!FBMODE||!ok)return;bkD.busy=true;
@@ -2491,6 +2491,7 @@ async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(
    AC.sort((a,b)=>String(a.name).localeCompare(String(b.name)));bkD.ac=AC}
   else{const o=await rt('GET','bko/'+ses.id);if(!o)throw {status:403};agMe={...JSON.parse(o.j),on:o.on===true,dueMs:o.dueMs};
    const pids=Object.keys(o.pgs||{});
+   if(pids.length){try{const l=await rt('GET','bk/lg/'+pids[0]);agLogo=typeof l==='string'?l:''}catch(e){}}else agLogo='';
    await Promise.all(pids.map(async pid=>{const pg=await rt('GET','bk/pg/'+pid);if(!pg)return;const c=agCfg(pg.j);if(!c)return;P[pid]=c;M[pid]={o:pg.o||'',x:pg.x};
     const ap=await rt('GET','bk/ap/'+pid);for(const aid in ap||{}){const x=ap[aid];if(x&&x.s)L.push({pid,aid,...x})}}))}
   bkD.pg=P;bkD.meta=M;bkD.ap=L;bkD.ok=true;bkD.err=''}
@@ -2526,7 +2527,7 @@ function agWa(pid,aid){const x=bkD.ap.find(y=>y.pid===pid&&y.aid===aid),c=bkD.pg
  const i=agSlotInfo(x.s),tpl=x.st==='x'?'Olá, {nome}! Precisamos cancelar o agendamento de {servico} em {data} às {hora}. Podemos remarcar?':(c&&c.msg)||AG_MSG;
  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(fillMsg(tpl,{nome:x.n,servico:x.v||'',data:fmt(i.d),hora:i.h})),'_blank','noopener,noreferrer')}
 async function agTog(pid){const c=bkD.pg[pid];if(!c)return;const n={...c,on:c.on===false};try{await agPut(pid,n);render();toast(n.on?'Painel ativado.':'Painel pausado: o link não aceita novos agendamentos.')}catch(e){toast('Não foi possível salvar.')}}
-function agDelPg(pid){const c=bkD.pg[pid];if(!c)return;ask('Excluir o painel "'+c.n+'" e todos os agendamentos dele? Não dá para desfazer.',0,async()=>{try{await rt('DELETE','bk/ap/'+pid);await rt('DELETE','bk/tk/'+pid);const o=(bkD.meta[pid]||{}).o;if(o)await rt('DELETE','bko/'+o+'/pgs/'+pid);await rt('DELETE','bk/pg/'+pid);delete bkD.pg[pid];bkD.ap=bkD.ap.filter(x=>x.pid!==pid);render();toast('Painel excluído.')}catch(e){toast('Não foi possível excluir.')}})}
+function agDelPg(pid){const c=bkD.pg[pid];if(!c)return;ask('Excluir o painel "'+c.n+'" e todos os agendamentos dele? Não dá para desfazer.',0,async()=>{try{await rt('DELETE','bk/ap/'+pid);await rt('DELETE','bk/tk/'+pid);await rt('DELETE','bk/lg/'+pid).catch(()=>{});const o=(bkD.meta[pid]||{}).o;if(o)await rt('DELETE','bko/'+o+'/pgs/'+pid);await rt('DELETE','bk/pg/'+pid);delete bkD.pg[pid];bkD.ap=bkD.ap.filter(x=>x.pid!==pid);render();toast('Painel excluído.')}catch(e){toast('Não foi possível excluir.')}})}
 function svRow(v){return `<div class="sv-r"><input class="svn" placeholder="Serviço (ex.: Consulta)" maxlength="60" value="${esc(v.n||'')}"><input class="svp" type="number" min="0" step="0.01" placeholder="Preço (R$)" value="${v.p===''||v.p==null?'':esc(v.p)}"><button type="button" class="s" onclick="this.parentNode.remove()" aria-label="Remover serviço">×</button></div>`}
 function agEdit(pid){if(!pid&&ses.role==='ag'){if(agMe&&agMe.maxPg>0&&Object.keys(bkD.pg).length>=agMe.maxPg){toast('Você atingiu o limite de '+agMe.maxPg+' painel(is) do seu plano. Fale com o administrador.');return}}const c=pid?bkD.pg[pid]:{n:'',d:'',wa:'',svc:[{n:'Atendimento',p:''}],days:[1,2,3,4,5],s:'09:00',e:'18:00',st:30,bs:'12:00',be:'13:00',max:30,min:2,on:true,msg:AG_MSG};if(!c)return;
  const sel=(id,opts,v)=>`<select id="${id}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
@@ -2595,7 +2596,7 @@ async function agAcRenew(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let 
  try{await agAcPatch(a);render();toast('Renovado até '+fmt(n)+'.')}catch(e){a.due=old.due;a.on=old.on;toast('Não foi possível renovar.')}}
 async function agAcTog(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;a.on=!a.on;try{await agAcPatch(a);render();toast(a.on?'Acesso ativado.':'Acesso desativado: o cliente não consegue mais entrar e os links dele ficam fora do ar.')}catch(e){a.on=!a.on;toast('Não foi possível salvar.')}}
 function agAcDel(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;ask('Excluir o cliente "'+a.name+'", o acesso e todos os painéis e agendamentos dele? Não dá para desfazer.',0,async()=>{
- try{for(const k of Object.keys(bkD.meta).filter(k=>bkD.meta[k].o===a.oid)){await rt('DELETE','bk/ap/'+k);await rt('DELETE','bk/tk/'+k);await rt('DELETE','bk/pg/'+k);delete bkD.pg[k];delete bkD.meta[k]}
+ try{for(const k of Object.keys(bkD.meta).filter(k=>bkD.meta[k].o===a.oid)){await rt('DELETE','bk/ap/'+k);await rt('DELETE','bk/tk/'+k);await rt('DELETE','bk/lg/'+k).catch(()=>{});await rt('DELETE','bk/pg/'+k);delete bkD.pg[k];delete bkD.meta[k]}
   bkD.ap=bkD.ap.filter(x=>bkD.pg[x.pid]);
   if(a.uid){try{const s=await signIn(a.user,a.pass);await itCall('delete',{idToken:s.tok})}catch(e){}try{await rt('DELETE','users/'+a.uid)}catch(e){}}
   await rt('DELETE','secrets/'+a.oid);await rt('DELETE','bko/'+a.oid);bkD.ac=bkD.ac.filter(x=>x!==a);render();toast('Cliente excluído.')}catch(e){toast('Não foi possível excluir.')}})}
@@ -2619,7 +2620,7 @@ function agNew(){const k=Object.keys(bkD.pg);if(agMe&&agMe.maxPg>0&&k.length>=ag
  $('#lnsave').onclick=async()=>{const n=$('#lnn').value.trim();if(!n){toast('Digite o nome da loja.');return}
   const cfg={n,d:$('#lnd').value.trim(),ad:$('#lna').value.trim(),wa:$('#lnw').value.replace(/\D/g,''),svc:[{n:'Atendimento',p:''}],days:[1,2,3,4,5],s:'09:00',e:'18:00',st:30,bs:'12:00',be:'13:00',max:30,min:2,on:true,msg:AG_MSG,hd:{},bl:[]};
   let id='';while(id.length<10)id+=Math.random().toString(36).slice(2);id=id.slice(0,10);
-  try{await agPut(id,cfg);agS=id;agT=Object.keys(bkD.pg).length<=1?'hor':'agenda';closeM();render();toast('Loja criada. Agora defina os dias e horários de atendimento.')}catch(e){toast('Não foi possível criar a loja. Fale com o administrador.')}}}
+  try{await agPut(id,cfg);if(agLogo)await rt('PUT','bk/lg/'+id,agLogo).catch(()=>{});agS=id;agT=Object.keys(bkD.pg).length<=1?'hor':'agenda';closeM();render();toast('Loja criada. Agora defina os dias e horários de atendimento.')}catch(e){toast('Não foi possível criar a loja. Fale com o administrador.')}}}
 function agOwnerBody(){
  if(!bkD.ok&&!bkD.busy&&!bkD.err)setTimeout(agLoad,0);else if(Date.now()-bkD.t>25000&&!bkD.busy&&agT==='agenda')setTimeout(agLoad,0);
  const st=agMe&&agMe.on&&agMe.dueMs>Date.now(),ks=Object.keys(bkD.pg),id=agCur(),c=bkD.pg[id];
@@ -2663,7 +2664,8 @@ function agOwnerBody(){
   body=`<div class="card"><h2>Dados da loja</h2><span class="agh" style="margin-top:0">Nome</span><input id="lon" maxlength="60" value="${esc(c.n)}"><span class="agh">Descrição</span><input id="lod" maxlength="160" value="${esc(c.d||'')}"><span class="agh">Endereço</span><input id="loa" maxlength="140" value="${esc(c.ad||'')}" placeholder="Rua, número, bairro, cidade"><span class="agh">WhatsApp da loja (com DDD)</span><input id="low" type="tel" inputmode="tel" value="${esc(c.wa||'')}"><span class="agh">Mensagem de confirmação (WhatsApp). Variáveis: {nome} {servico} {data} {hora}</span><textarea id="lom" rows="3" maxlength="400">${esc(c.msg||AG_MSG)}</textarea><div style="margin-top:14px"><button onclick="agSaveLoja()">Salvar</button></div></div>
   <div class="card"><h2>Situação</h2><p class="note" style="margin:0 0 10px">${c.on===false?'A loja está pausada: o link não aceita novos agendamentos.':'A loja está ativa e recebendo agendamentos.'}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s p" onclick="agTog('${id}')">${c.on===false?'Ativar loja':'Pausar loja'}</button><button class="s" onclick="agNew()">Adicionar outra loja</button><button class="s d" onclick="agDelPg('${id}')">Excluir esta loja</button></div></div>`}
  else{const d=agMe&&agMe.dueMs<AG_FOREVER?fmt(dOf(agMe.dueMs)):'sem vencimento';
-  body=`<div class="card"><h2>Meu acesso</h2><p class="note" style="margin:0 0 10px">Usuário: <b>${esc(agMe?agMe.user:'')}</b><br>Acesso válido até: <b>${d}</b><br>Lojas: <b>${ks.length}${agMe&&agMe.maxPg?' de '+agMe.maxPg:''}</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" onclick="agMyPass()">Trocar senha</button><button class="s" onclick="logout()">Sair</button></div></div>`}
+  body=`<div class="card"><h2>Meu acesso</h2><p class="note" style="margin:0 0 10px">Usuário: <b>${esc(agMe?agMe.user:'')}</b><br>Acesso válido até: <b>${d}</b><br>Lojas: <b>${ks.length}${agMe&&agMe.maxPg?' de '+agMe.maxPg:''}</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" onclick="agMyPass()">Trocar senha</button><button class="s" onclick="logout()">Sair</button></div></div>
+  <div class="card"><h2>Logo da empresa</h2><p class="note" style="margin:0 0 10px">A logo aparece no topo da página de agendamento que você envia aos clientes.</p><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${agLogo?`<img src="${agLogo}" alt="Logo" style="max-height:80px;max-width:160px;border-radius:8px;background:#fff;padding:4px;border:1px solid var(--bd)">`:'<span class="note">Nenhuma logo cadastrada.</span>'}<div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="$('#aglf').click()" style="width:auto">${agLogo?'Trocar logo':'Adicionar logo'}</button>${agLogo?'<button class="s d" onclick="agRmLogo()">Remover</button>':''}</div><input id="aglf" type="file" accept="image/*" hidden onchange="agSetLogo(this.files[0]);this.value=''"></div></div>`}
  return err+nav+(agT==='conta'?'':pick)+body}
 
 async function agPaid(pid,aid,v){const x=bkD.ap.find(y=>y.pid===pid&&y.aid===aid);if(!x)return;try{await rt('PUT','bk/ap/'+pid+'/'+aid,agRec(x,{pd:v}));x.pd=v;render();if(!$('#modal').innerHTML.trim()===false)agCmd(pid,aid);toast(v?'Pagamento registrado.':'Pagamento desmarcado.')}catch(e){toast('Não foi possível salvar.')}}
@@ -2681,6 +2683,15 @@ async function agSavePix(){const c=bkD.pg[agCur()],key=$('#pxk').value.trim(),t=
  const patch={fp,pm:+$('#pxm').value};if(key)patch.px={type:t,key,name:$('#pxn').value.trim().slice(0,60),city:$('#pxc').value.trim().slice(0,40)};
  else if(c.px){const n={...c,...patch};delete n.px;try{await agPut(agCur(),n);render();toast('Pagamento salvo.')}catch(e){toast('Não foi possível salvar.')}return}
  await agSv2(patch,'Pagamento salvo. As novas comandas já usam essas formas.')}
+
+function agSetLogo(f){if(!f)return;if(!/^image\/(png|jpeg|webp|gif)/.test(f.type)){toast('Escolha uma imagem PNG, JPG ou WebP.');return}
+ const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=async()=>{const M=300,k=Math.min(1,M/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));const cx=cv.getContext('2d');cx.drawImage(im,0,0,cv.width,cv.height);
+  let d=cv.toDataURL('image/png');if(d.length>150000){cx.globalCompositeOperation='destination-over';cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);d=cv.toDataURL('image/jpeg',.8)}
+  if(d.length>180000){toast('A imagem é muito pesada. Use uma logo menor.');return}
+  const ks=Object.keys(bkD.pg);if(!ks.length){toast('Cadastre a loja primeiro.');return}
+  try{for(const id of ks)await rt('PUT','bk/lg/'+id,d);agLogo=d;render();toast('Logo salva. Já aparece na página da sua loja.')}catch(e){toast('Não foi possível salvar a logo. Publique as regras novas do Firebase.')}};
+  im.onerror=()=>toast('Não foi possível ler a imagem.');im.src=rd.result};rd.readAsDataURL(f)}
+async function agRmLogo(){try{for(const id of Object.keys(bkD.pg))await rt('DELETE','bk/lg/'+id);agLogo='';render();toast('Logo removida.')}catch(e){toast('Não foi possível remover.')}}
 async function agSaveHor(){const c=bkD.pg[agCur()],days=[],hd={};document.querySelectorAll('.hw').forEach(i=>{const w=+i.dataset.w,s=document.querySelector('.hs[data-w="'+w+'"]').value,e=document.querySelector('.he[data-w="'+w+'"]').value;if(i.checked){if(!s||!e||agTmin(s)+(+$('#hst').value)>agTmin(e)){days.err=AG_WD[w];return}days.push(w);hd[w]=[s,e]}});
  if(days.err){toast('Confira o horário de '+days.err+': precisa caber pelo menos um horário.');return}if(!days.length){toast('Marque pelo menos um dia de atendimento.');return}
  const bs=$('#hbs').value,be=$('#hbe').value;if((bs||be)&&(!bs||!be||agTmin(bs)>=agTmin(be))){toast('Confira a pausa: início antes do fim, ou deixe os dois vazios.');return}
@@ -2690,7 +2701,7 @@ async function agBlDel(d){const c=bkD.pg[agCur()];await agSv2({bl:(c.bl||[]).fil
 async function agSaveSrv(){const svc=[...document.querySelectorAll('#agsv .sv-r')].map(r=>({n:r.querySelector('.svn').value.trim().slice(0,60),p:r.querySelector('.svp').value===''?'':Math.max(0,+r.querySelector('.svp').value)})).filter(v=>v.n);if(!svc.length){toast('Cadastre pelo menos um serviço.');return}await agSv2({svc},'Serviços salvos.')}
 async function agSaveLoja(){const n=$('#lon').value.trim();if(!n){toast('Digite o nome da loja.');return}await agSv2({n,d:$('#lod').value.trim(),ad:$('#loa').value.trim(),wa:$('#low').value.replace(/\D/g,''),msg:$('#lom').value.trim()||AG_MSG},'Dados da loja salvos.')}
 function agOwnerHtml(){const nm=agMe?agMe.name:'';
- return `<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="agown">${agOwnerBody()}</div>`}
+ return `<header><h1 style="display:flex;align-items:center;gap:10px">${agLogo?`<img src="${agLogo}" alt="" style="height:34px;max-width:90px;object-fit:contain;border-radius:6px;background:#fff;padding:2px">`:logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="agown">${agOwnerBody()}</div>`}
 function render0(){const a=$('#app');
  if(AGQ){a.innerHTML=agPublic();return}
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
