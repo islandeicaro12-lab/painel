@@ -235,6 +235,12 @@ body.agb{background:#f3f7fb;color:#0a1b33}body.agb #tt{display:none!important}
 .sv-r{display:grid;grid-template-columns:1fr 110px 36px;gap:8px;margin-bottom:8px}
 .agm .md{max-width:520px;text-align:left;max-height:92vh;overflow:auto}.agm .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.agm label{font-size:13px;color:var(--mut);display:block;margin:10px 0 4px}
 @media(max-width:560px){.ap{grid-template-columns:66px 1fr}.agm .g2{grid-template-columns:1fr}}
+
+.agn{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;position:sticky;top:0;background:var(--bg);z-index:5;scrollbar-width:none}.agn::-webkit-scrollbar{display:none}
+.agn button{flex:0 0 auto;border-radius:99px;padding:9px 16px;font-size:14.5px;background:transparent;color:var(--tx);border:1px solid var(--bd);min-height:42px}.agn button.on{background:var(--pri);color:var(--onpri);border-color:var(--pri)}
+.agwd{display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px}.agwd label{display:flex;gap:7px;align-items:center;margin:0;color:var(--tx);font-size:14.5px}.agwd input[type=checkbox]{width:auto;min-height:0}.agwd.off input[type=time]{opacity:.4}
+.agbl{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.agbl span{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--bd);border-radius:99px;padding:5px 6px 5px 12px;font-size:13.5px}.agbl button{padding:2px 9px;min-height:0;border-radius:99px;background:transparent;color:var(--tx);border:0;font-size:16px}
+.agh{font-size:13px;color:var(--mut);margin:12px 0 4px;display:block}
 </style></head><body><div class="wrap" id="app"></div><div id="modal"></div><button id="tt" class="s" onclick="toggleTheme()"></button>
 <script>
 (function(){var mods={},defs={};function req(n){n=n.replace('./','');if(!mods[n]){var m={exports:{}};defs[n](m,m.exports,req);mods[n]=m.exports}return mods[n]}
@@ -1661,7 +1667,7 @@ async function fbLogin(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#
    else{ses={role:'rev',id:r.id};tab='dash'}}
  }catch(x){fbReset();err=netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
  render()}
-function fbReset(){agMe=null;bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+function fbReset(){agMe=null;agT='agenda';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
 async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
 async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
@@ -2415,11 +2421,11 @@ async function agInit(){if(!FBMODE){ag.loading=false;ag.err='O agendamento funci
  catch(e){ag.err='Não foi possível carregar a página. Verifique a internet e tente de novo.'}
  ag.loading=false;agR()}
 async function agTk(quiet){try{ag.tk=(await rt('GET','bk/tk/'+AGQ,undefined,false))||{}}catch(e){if(!quiet)toast('Não foi possível atualizar os horários.')}}
-function agSlots(c,date){const [y,m,d]=date.split('-').map(Number),out=[],st=Math.max(5,+c.st||30),a=agTmin(c.s),b=agTmin(c.e),mn=(+c.min||0)*3600000;
+function agSlots(c,date){const [y,m,d]=date.split('-').map(Number),out=[],st=Math.max(5,+c.st||30),wdh=(c.hd||{})[new Date(y,m-1,d).getDay()]||[c.s,c.e],a=agTmin(wdh[0]),b=agTmin(wdh[1]),mn=(+c.min||0)*3600000;
  for(let t=a;t+st<=b;t+=st){if(c.bs&&c.be&&t<agTmin(c.be)&&t+st>agTmin(c.bs))continue;
   const hh=String(Math.floor(t/60)).padStart(2,'0'),mm=String(t%60).padStart(2,'0'),key=date.replace(/-/g,'')+'-'+hh+mm;
   if(new Date(y,m-1,d,Math.floor(t/60),t%60).getTime()<Date.now()+mn)continue;out.push({key,label:hh+':'+mm,taken:!!ag.tk[key]})}return out}
-function agDays(c){const out=[];for(let i=0;i<=(+c.max||30);i++){const d=addDays(today(),i),wd=new Date(d+'T12:00:00').getDay();if((c.days||[]).includes(wd)&&agSlots(c,d).length)out.push({d,wd})}return out}
+function agDays(c){const out=[];for(let i=0;i<=(+c.max||30);i++){const d=addDays(today(),i),wd=new Date(d+'T12:00:00').getDay();if((c.days||[]).includes(wd)&&!(c.bl||[]).includes(d)&&agSlots(c,d).length)out.push({d,wd})}return out}
 function agPick(k,v){if(k==='svc'){ag.svc=+v}else if(k==='date'){ag.date=v;ag.slot=''}else if(k==='slot'){ag.slot=v}agR();if(k==='slot'){const e=document.getElementById('agnm');if(e)e.scrollIntoView({behavior:'smooth',block:'center'})}}
 function agIn(k,v){ag.f[k]=v}
 function agPublic(){document.body.classList.add('agb');
@@ -2427,7 +2433,7 @@ function agPublic(){document.body.classList.add('agb');
  if(ag.loading){setTimeout(agInit,0);return wrap('<h1>Agendamento</h1>','<div class="ag-em">Carregando…</div>')}
  if(ag.err)return wrap('<h1>Agendamento</h1>',`<div class="ag-em">${esc(ag.err)}</div>`);
  const c=ag.cfg,svs=c.svc&&c.svc.length?c.svc:[{n:'Atendimento'}],sv=svs[ag.svc]||svs[0];
- const head=`<h1>${esc(c.n)}</h1>${c.d?`<p>${esc(c.d)}</p>`:''}`;
+ const head=`<h1>${esc(c.n)}</h1>${c.d?`<p>${esc(c.d)}</p>`:''}${c.ad?`<p style="font-size:13.5px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.ad)}" target="_blank" rel="noopener noreferrer" style="color:#2ee6a6">${esc(c.ad)}</a></p>`:''}`;
  if(ag.done){const x=ag.done,msg=`Olá! Fiz um agendamento: ${x.v} em ${fmt(x.d)} às ${x.h}. Nome: ${x.n}.`,w=String(c.wa||'').replace(/\D/g,'');
   return wrap(head,`<div class="ag-c"><div class="ag-ok"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2 style="text-align:center">Agendamento enviado</h2><div class="ag-sum"><b>${esc(x.v)}</b><br>${fmt(x.d)} às ${x.h}<br>${esc(x.n)}</div><p class="ag-nt">Você receberá a confirmação pelo WhatsApp informado. Guarde esta data e este horário.</p>${w?`<a class="ag-wa" href="https://wa.me/${w.length<=11?'55'+w:w}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener noreferrer">Avisar no WhatsApp</a>`:''}<button class="ag-go" style="margin-top:10px;background:#e9eef5;color:#0a1b33" onclick="ag.done=null;ag.slot='';ag.f={n:'',p:'',o:''};agTk(true).then(agR)">Fazer outro agendamento</button></div>`)}
  const days=agDays(c);if(!ag.date||!days.some(x=>x.d===ag.date))ag.date=days[0]?days[0].d:'';
@@ -2464,8 +2470,8 @@ async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(
     const ap=await rt('GET','bk/ap/'+pid);for(const aid in ap||{}){const x=ap[aid];if(x&&x.s)L.push({pid,aid,...x})}}))}
   bkD.pg=P;bkD.meta=M;bkD.ap=L;bkD.ok=true;bkD.err=''}
  catch(x){bkD.err=x&&(x.status===401||x.status===403)?'Sem permissão. Publique de novo as regras do Firebase (arquivo regras-firebase.json).':'Não foi possível carregar os agendamentos.'}
- bkD.busy=false;bkD.t=Date.now();if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag')&&!$('#modal').innerHTML.trim()){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}}
-setInterval(()=>{if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag')&&!document.hidden&&Date.now()-bkD.t>25000)agLoad()},10000);
+ bkD.busy=false;bkD.t=Date.now();if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag'&&agT==='agenda')&&!$('#modal').innerHTML.trim()){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}}
+setInterval(()=>{if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag'&&agT==='agenda')&&!document.hidden&&Date.now()-bkD.t>25000)agLoad()},10000);
 const agLink=pid=>(appLink().replace(/\/?$/,'/'))+'?ag='+pid;
 function agendaTab(){
  if(!FBMODE)return `<div class="card"><h2>Agendamentos</h2><p class="note" style="margin:0">Os painéis de agendamento funcionam no site publicado (painelcobranca.online). Abra por lá para criar e usar.</p></div>`;
@@ -2515,7 +2521,7 @@ function agEdit(pid){if(!pid&&ses.role==='ag'){if(agMe&&agMe.maxPg>0&&Object.key
   if(!s||!e||agTmin(s)+st>agTmin(e)){toast('Confira o início e o fim: precisa caber pelo menos um horário.');return}if((bs||be)&&(!bs||!be||agTmin(bs)>=agTmin(be))){toast('Confira a pausa: início antes do fim, ou deixe os dois vazios.');return}
   const cfg={n,d:$('#agnd').value.trim(),wa:$('#agnw').value.replace(/\D/g,''),svc,days,s,e,st,bs,be,max:+$('#agmx').value,min:+$('#agmn').value,on:pid?c.on!==false:true,msg:$('#agms').value.trim()||AG_MSG};
   const id=pid||(()=>{let x='';while(x.length<10)x+=Math.random().toString(36).slice(2);return x.slice(0,10)})();
-  try{await agPut(id,cfg);closeM();render();toast(pid?'Painel salvo.':'Painel criado. Copie o link e envie aos clientes.')}catch(x){toast('Não foi possível salvar. Publique as regras novas do Firebase.')}}}
+  try{await agPut(id,pid?{...c,...cfg,hd:(s===c.s&&e===c.e)?(c.hd||{}):{}}:cfg);closeM();render();toast(pid?'Painel salvo.':'Painel criado. Copie o link e envie aos clientes.')}catch(x){toast('Não foi possível salvar. Publique as regras novas do Firebase.')}}}
 
 const agPut=async(id,cfg)=>{const m=bkD.meta[id]||{},body={j:JSON.stringify(cfg)};
  if(ses.role==='ag'){body.o=ses.id;body.x=agMe.dueMs}else if(m.o){body.o=m.o;if(m.x!=null)body.x=m.x}
@@ -2571,8 +2577,67 @@ function agAcWa(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let d=String(
  const m=`Olá, ${a.name}! Seu acesso ao painel de agendamentos está pronto.\n\nLink: ${appLink()}\nUsuário: ${a.user}\nSenha: ${a.pass}\n\nEntre, crie seu painel de agendamento e envie o link para os seus clientes.`+(a.due?`\nAcesso válido até ${fmt(a.due)}.`:'');
  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(m),'_blank','noopener,noreferrer')}
 function agMyPass(){ask('Nova senha:',1,async p=>{if(!p)return;if(p.length<6){toast('A senha precisa ter pelo menos 6 caracteres.');return}try{await itCall('update',{idToken:await tok(),password:p,returnSecureToken:false});try{await rt('PUT','secrets/'+ses.id,p)}catch(e){}toast('Senha alterada.')}catch(x){toast(x.code==='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'?'Por segurança, saia, entre de novo e repita.':'Não foi possível trocar a senha.')}})}
+
+// ===== Painel do profissional (abas) =====
+let agT='agenda',agS='';
+const agCur=()=>{const k=Object.keys(bkD.pg);if(!agS||!bkD.pg[agS])agS=k[0]||'';return agS};
+const agSel=(id,opts,v)=>`<select id="${id}">${opts.map(([a,b])=>`<option value="${a}" ${String(a)===String(v)?'selected':''}>${b}</option>`).join('')}</select>`;
+const agSv2=async(patch,msg)=>{const id=agCur(),c=bkD.pg[id];if(!c)return false;try{await agPut(id,{...c,...patch});render();toast(msg||'Salvo.');return true}catch(e){toast('Não foi possível salvar. '+(e.status===401||e.status===403?'Seu acesso pode ter vencido ou estar bloqueado.':'Tente de novo.'));return false}};
+function agNew(){const k=Object.keys(bkD.pg);if(agMe&&agMe.maxPg>0&&k.length>=agMe.maxPg){toast('Você atingiu o limite de '+agMe.maxPg+' loja(s) do seu acesso. Fale com o administrador.');return}
+ $('#modal').innerHTML=`<div class="ov agm"><div class="md"><h2>${k.length?'Nova loja':'Cadastre a sua loja'}</h2><p class="note" style="margin:0 0 6px">Depois você define horários e serviços nas abas ao lado.</p>
+ <label>Nome da loja</label><input id="lnn" maxlength="60" placeholder="Ex.: Studio Ana">
+ <label>Descrição (opcional)</label><input id="lnd" maxlength="160" placeholder="Ex.: Escolha o melhor dia e horário">
+ <label>Endereço (opcional)</label><input id="lna" maxlength="140" placeholder="Rua, número, bairro, cidade">
+ <label>WhatsApp da loja (com DDD)</label><input id="lnw" type="tel" inputmode="tel" placeholder="81999999999">
+ <div style="display:flex;gap:8px;margin-top:14px"><button id="lnsave">Criar loja</button><button class="s" onclick="closeM()">Cancelar</button></div></div></div>`;
+ $('#lnsave').onclick=async()=>{const n=$('#lnn').value.trim();if(!n){toast('Digite o nome da loja.');return}
+  const cfg={n,d:$('#lnd').value.trim(),ad:$('#lna').value.trim(),wa:$('#lnw').value.replace(/\D/g,''),svc:[{n:'Atendimento',p:''}],days:[1,2,3,4,5],s:'09:00',e:'18:00',st:30,bs:'12:00',be:'13:00',max:30,min:2,on:true,msg:AG_MSG,hd:{},bl:[]};
+  let id='';while(id.length<10)id+=Math.random().toString(36).slice(2);id=id.slice(0,10);
+  try{await agPut(id,cfg);agS=id;agT=Object.keys(bkD.pg).length<=1?'hor':'agenda';closeM();render();toast('Loja criada. Agora defina os dias e horários de atendimento.')}catch(e){toast('Não foi possível criar a loja. Fale com o administrador.')}}}
+function agOwnerBody(){
+ if(!bkD.ok&&!bkD.busy&&!bkD.err)setTimeout(agLoad,0);else if(Date.now()-bkD.t>25000&&!bkD.busy&&agT==='agenda')setTimeout(agLoad,0);
+ const st=agMe&&agMe.on&&agMe.dueMs>Date.now(),ks=Object.keys(bkD.pg),id=agCur(),c=bkD.pg[id];
+ const err=bkD.err?`<div class="err" style="margin:0 0 10px">${esc(bkD.err)}</div>`:'';
+ if(agMe&&!st)return err+`<div class="card"><h2>Acesso vencido</h2><p class="note" style="margin:0">O seu acesso ao painel de agendamentos venceu ou foi desativado. Fale com o administrador para renovar. Enquanto isso, as páginas de agendamento ficam fora do ar.</p></div>`;
+ if(!bkD.ok&&!bkD.err)return '<div class="card"><p class="note" style="margin:0">Carregando…</p></div>';
+ if(!ks.length)return err+`<div class="card" style="text-align:center;padding:28px 18px"><h2>Bem-vindo!</h2><p class="note">Cadastre a sua loja para começar a receber agendamentos. Você define nome, endereço, serviços e horários de atendimento, e recebe um link para enviar aos seus clientes.</p><button onclick="agNew()" style="width:auto">Cadastrar minha loja</button></div>`;
+ const tabs=[['agenda','Agenda'],['hor','Horários'],['srv','Serviços'],['loja','Minha loja'],['conta','Conta']];
+ const nav=`<div class="agn">${tabs.map(([k,l])=>`<button class="${agT===k?'on':''}" onclick="agT='${k}';render();window.scrollTo(0,0)">${l}</button>`).join('')}</div>`;
+ const pick=ks.length>1?`<div class="card" style="padding:12px 16px"><select onchange="agS=this.value;render()">${ks.map(k=>`<option value="${k}" ${k===id?'selected':''}>${esc(bkD.pg[k].n)}</option>`).join('')}</select></div>`:'';
+ let body='';
+ if(agT==='agenda'){const t=today(),all=bkD.ap.filter(x=>x.pid===id),F={pend:x=>x.st==='p',hoje:x=>agSlotInfo(x.s).d===t&&x.st!=='x',prox:x=>agSlotInfo(x.s).d>=t&&x.st!=='x',todos:()=>true},cnt=k=>all.filter(F[k]).length;
+  const list=all.filter(F[bkD.f]).sort((a,b)=>bkD.f==='todos'?b.s.localeCompare(a.s):a.s.localeCompare(b.s)),chip={p:'Pendente',c:'Confirmado',x:'Cancelado'},lk=agLink(id);
+  body=`<div class="kg">${kpi('alert','Pendentes',cnt('pend'),'Aguardando confirmação','warn')}${kpi('clock','Hoje',cnt('hoje'),'Agendamentos de hoje','pri')}${kpi('users','Próximos',cnt('prox'),'Sem contar cancelados','info')}</div>
+  <div class="card"><h2>Link da sua loja</h2><p class="note" style="margin:0 0 8px">Envie este link para os seus clientes agendarem sozinhos.${c.on===false?' <b>A loja está pausada.</b>':''}</p><div class="rev-url" style="word-break:break-all;margin-bottom:10px">${esc(lk)}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="s p" onclick="copyTxt('${esc(lk)}')">Copiar link</button><button class="s" onclick="window.open('${esc(lk)}','_blank')">Abrir</button><button class="s" onclick="window.open('https://wa.me/?text='+encodeURIComponent('Agende seu horário: ${esc(lk)}'),'_blank','noopener,noreferrer')">Compartilhar</button></div></div>
+  <div class="card"><h2>Agenda</h2><div class="agfl">${[['pend','Pendentes'],['hoje','Hoje'],['prox','Próximos'],['todos','Todos']].map(([k,l])=>`<button class="${bkD.f===k?'on':''}" onclick="bkD.f='${k}';render()">${l}<small>${cnt(k)}</small></button>`).join('')}</div>
+  ${list.length?list.map(x=>{const i=agSlotInfo(x.s);return `<div class="ap"><div class="tm"><b>${i.h}</b><small>${i.d.slice(8)}/${i.d.slice(5,7)}</small></div><div><div class="nm">${esc(x.n)}<span class="b ${x.st==='c'?'pago':x.st==='x'?'atr':'exp'}">${chip[x.st]||'Pendente'}</span></div><div class="sb">${esc(x.v||'')}<br>${esc(x.p)}${x.o?'<br>“'+esc(x.o)+'”':''}</div><div class="ac">${x.st==='p'?`<button class="s p" onclick="agSet('${x.pid}','${x.aid}','c')">Confirmar</button>`:''}<button class="s" onclick="agWa('${x.pid}','${x.aid}')">WhatsApp</button>${x.st!=='x'?`<button class="s" onclick="agSet('${x.pid}','${x.aid}','x')">Cancelar</button>`:''}<button class="s d" onclick="agRm('${x.pid}','${x.aid}')">Excluir</button></div></div></div>`}).join(''):`<p class="note" style="margin:6px 0 0">${bkD.f==='pend'?'Nenhum agendamento pendente.':'Nenhum agendamento neste filtro.'}</p>`}</div>`}
+ else if(agT==='hor'){const hd=c.hd||{},bl=(c.bl||[]).filter(d=>d>=today()).sort();
+  body=`<div class="card"><h2>Dias e horários de atendimento</h2><p class="note" style="margin:0 0 10px">Marque os dias em que você atende e o horário de abertura e fechamento de cada um.</p>
+  ${[1,2,3,4,5,6,0].map(w=>{const on=(c.days||[]).includes(w),h=hd[w]||[c.s,c.e];return `<div class="agwd ${on?'':'off'}"><label><input type="checkbox" class="hw" data-w="${w}" ${on?'checked':''} onchange="this.closest('.agwd').classList.toggle('off',!this.checked)">${AG_WD[w]}</label><input type="time" class="hs" data-w="${w}" value="${esc(h[0])}"><input type="time" class="he" data-w="${w}" value="${esc(h[1])}"></div>`}).join('')}
+  <div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><span class="agh">Duração de cada horário</span>${agSel('hst',[[15,'15 min'],[20,'20 min'],[30,'30 min'],[40,'40 min'],[45,'45 min'],[60,'1 hora'],[90,'1h30'],[120,'2 horas']],c.st)}</div><div><span class="agh">Antecedência mínima</span>${agSel('hmn',[[0,'Sem mínimo'],[1,'1 hora'],[2,'2 horas'],[4,'4 horas'],[12,'12 horas'],[24,'1 dia']],c.min)}</div>
+  <div><span class="agh">Pausa: início (opcional)</span><input id="hbs" type="time" value="${esc(c.bs||'')}"></div><div><span class="agh">Pausa: fim</span><input id="hbe" type="time" value="${esc(c.be||'')}"></div></div>
+  <span class="agh">Quantos dias à frente o cliente pode agendar</span>${agSel('hmx',[[7,'7 dias'],[14,'14 dias'],[30,'30 dias'],[60,'60 dias'],[90,'90 dias']],c.max)}
+  <div style="margin-top:14px"><button onclick="agSaveHor()">Salvar horários</button></div></div>
+  <div class="card"><h2>Folgas e dias fechados</h2><p class="note" style="margin:0 0 8px">Feriados, férias ou qualquer dia em que você não vai atender. Esses dias não aparecem para o cliente.</p><div style="display:flex;gap:8px"><input id="blD" type="date" min="${today()}"><button class="s p" onclick="agBlAdd()" style="width:auto">Adicionar</button></div>
+  <div class="agbl">${bl.length?bl.map(d=>`<span>${fmt(d)}<button onclick="agBlDel('${d}')" aria-label="Remover">×</button></span>`).join(''):'<span style="border:0;padding:0;color:var(--mut)">Nenhuma folga cadastrada.</span>'}</div></div>`}
+ else if(agT==='srv'){const sv=c.svc&&c.svc.length?c.svc:[{n:'',p:''}];
+  body=`<div class="card"><h2>Serviços</h2><p class="note" style="margin:0 0 10px">O cliente escolhe um serviço ao agendar. O preço é opcional.</p><div id="agsv">${sv.map(svRow).join('')}</div><button type="button" class="s" onclick="if(document.querySelectorAll('#agsv .sv-r').length<12){const d=document.createElement('div');d.innerHTML=svRow({});document.getElementById('agsv').appendChild(d.firstChild)}else toast('Máximo de 12 serviços.')">+ Adicionar serviço</button><div style="margin-top:14px"><button onclick="agSaveSrv()">Salvar serviços</button></div></div>`}
+ else if(agT==='loja'){
+  body=`<div class="card"><h2>Dados da loja</h2><span class="agh" style="margin-top:0">Nome</span><input id="lon" maxlength="60" value="${esc(c.n)}"><span class="agh">Descrição</span><input id="lod" maxlength="160" value="${esc(c.d||'')}"><span class="agh">Endereço</span><input id="loa" maxlength="140" value="${esc(c.ad||'')}" placeholder="Rua, número, bairro, cidade"><span class="agh">WhatsApp da loja (com DDD)</span><input id="low" type="tel" inputmode="tel" value="${esc(c.wa||'')}"><span class="agh">Mensagem de confirmação (WhatsApp). Variáveis: {nome} {servico} {data} {hora}</span><textarea id="lom" rows="3" maxlength="400">${esc(c.msg||AG_MSG)}</textarea><div style="margin-top:14px"><button onclick="agSaveLoja()">Salvar</button></div></div>
+  <div class="card"><h2>Situação</h2><p class="note" style="margin:0 0 10px">${c.on===false?'A loja está pausada: o link não aceita novos agendamentos.':'A loja está ativa e recebendo agendamentos.'}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s p" onclick="agTog('${id}')">${c.on===false?'Ativar loja':'Pausar loja'}</button><button class="s" onclick="agNew()">Adicionar outra loja</button><button class="s d" onclick="agDelPg('${id}')">Excluir esta loja</button></div></div>`}
+ else{const d=agMe&&agMe.dueMs<AG_FOREVER?fmt(dOf(agMe.dueMs)):'sem vencimento';
+  body=`<div class="card"><h2>Meu acesso</h2><p class="note" style="margin:0 0 10px">Usuário: <b>${esc(agMe?agMe.user:'')}</b><br>Acesso válido até: <b>${d}</b><br>Lojas: <b>${ks.length}${agMe&&agMe.maxPg?' de '+agMe.maxPg:''}</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" onclick="agMyPass()">Trocar senha</button><button class="s" onclick="logout()">Sair</button></div></div>`}
+ return err+nav+(agT==='conta'?'':pick)+body}
+async function agSaveHor(){const c=bkD.pg[agCur()],days=[],hd={};document.querySelectorAll('.hw').forEach(i=>{const w=+i.dataset.w,s=document.querySelector('.hs[data-w="'+w+'"]').value,e=document.querySelector('.he[data-w="'+w+'"]').value;if(i.checked){if(!s||!e||agTmin(s)+(+$('#hst').value)>agTmin(e)){days.err=AG_WD[w];return}days.push(w);hd[w]=[s,e]}});
+ if(days.err){toast('Confira o horário de '+days.err+': precisa caber pelo menos um horário.');return}if(!days.length){toast('Marque pelo menos um dia de atendimento.');return}
+ const bs=$('#hbs').value,be=$('#hbe').value;if((bs||be)&&(!bs||!be||agTmin(bs)>=agTmin(be))){toast('Confira a pausa: início antes do fim, ou deixe os dois vazios.');return}
+ const f=hd[days[0]];await agSv2({days,hd,s:f[0],e:f[1],st:+$('#hst').value,min:+$('#hmn').value,bs,be,max:+$('#hmx').value},'Horários salvos.')}
+async function agBlAdd(){const d=$('#blD').value;if(!d){toast('Escolha a data.');return}const c=bkD.pg[agCur()],bl=[...(c.bl||[])];if(bl.includes(d)){toast('Essa data já está na lista.');return}if(bl.length>=60){toast('Máximo de 60 folgas.');return}bl.push(d);await agSv2({bl},'Folga adicionada.')}
+async function agBlDel(d){const c=bkD.pg[agCur()];await agSv2({bl:(c.bl||[]).filter(x=>x!==d)},'Folga removida.')}
+async function agSaveSrv(){const svc=[...document.querySelectorAll('#agsv .sv-r')].map(r=>({n:r.querySelector('.svn').value.trim().slice(0,60),p:r.querySelector('.svp').value===''?'':Math.max(0,+r.querySelector('.svp').value)})).filter(v=>v.n);if(!svc.length){toast('Cadastre pelo menos um serviço.');return}await agSv2({svc},'Serviços salvos.')}
+async function agSaveLoja(){const n=$('#lon').value.trim();if(!n){toast('Digite o nome da loja.');return}await agSv2({n,d:$('#lod').value.trim(),ad:$('#loa').value.trim(),wa:$('#low').value.replace(/\D/g,''),msg:$('#lom').value.trim()||AG_MSG},'Dados da loja salvos.')}
 function agOwnerHtml(){const nm=agMe?agMe.name:'';
- return `<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="agMyPass()">Trocar senha</button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell"><div class="mainc" style="max-width:900px;margin:0 auto;width:100%">${agendaTab()}</div></div>`}
+ return `<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell"><div class="mainc" style="max-width:900px;margin:0 auto;width:100%">${agOwnerBody()}</div></div>`}
 function render0(){const a=$('#app');
  if(AGQ){a.innerHTML=agPublic();return}
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
