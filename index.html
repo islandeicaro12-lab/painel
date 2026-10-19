@@ -241,6 +241,7 @@ body.agb{background:#f3f7fb;color:#0a1b33}body.agb #tt{display:none!important}
 .agwd{display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px}.agwd label{display:flex;gap:7px;align-items:center;margin:0;color:var(--tx);font-size:14.5px}.agwd input[type=checkbox]{width:auto;min-height:0}.agwd.off input[type=time]{opacity:.4}
 .agbl{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.agbl span{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--bd);border-radius:99px;padding:5px 6px 5px 12px;font-size:13.5px}.agbl button{padding:2px 9px;min-height:0;border-radius:99px;background:transparent;color:var(--tx);border:0;font-size:16px}
 .agh{font-size:13px;color:var(--mut);margin:12px 0 4px;display:block}
+.agown{display:block;width:100%;max-width:900px;margin:14px auto 0}.agown .agn{max-width:100%}
 </style></head><body><div class="wrap" id="app"></div><div id="modal"></div><button id="tt" class="s" onclick="toggleTheme()"></button>
 <script>
 (function(){var mods={},defs={};function req(n){n=n.replace('./','');if(!mods[n]){var m={exports:{}};defs[n](m,m.exports,req);mods[n]=m.exports}return mods[n]}
@@ -2637,7 +2638,7 @@ async function agBlDel(d){const c=bkD.pg[agCur()];await agSv2({bl:(c.bl||[]).fil
 async function agSaveSrv(){const svc=[...document.querySelectorAll('#agsv .sv-r')].map(r=>({n:r.querySelector('.svn').value.trim().slice(0,60),p:r.querySelector('.svp').value===''?'':Math.max(0,+r.querySelector('.svp').value)})).filter(v=>v.n);if(!svc.length){toast('Cadastre pelo menos um serviço.');return}await agSv2({svc},'Serviços salvos.')}
 async function agSaveLoja(){const n=$('#lon').value.trim();if(!n){toast('Digite o nome da loja.');return}await agSv2({n,d:$('#lod').value.trim(),ad:$('#loa').value.trim(),wa:$('#low').value.replace(/\D/g,''),msg:$('#lom').value.trim()||AG_MSG},'Dados da loja salvos.')}
 function agOwnerHtml(){const nm=agMe?agMe.name:'';
- return `<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell"><div class="mainc" style="max-width:900px;margin:0 auto;width:100%">${agOwnerBody()}</div></div>`}
+ return `<header><h1 style="display:flex;align-items:center;gap:10px">${logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="agown">${agOwnerBody()}</div>`}
 function render0(){const a=$('#app');
  if(AGQ){a.innerHTML=agPublic();return}
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
