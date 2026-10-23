@@ -2990,8 +2990,7 @@ const agMonthLbl=m=>{const [y,mm]=m.split('-').map(Number);const l=new Date(y,mm
 const agMonthAdd=(m,d)=>{const [y,mm]=m.split('-').map(Number),n=new Date(y,mm-1+d,1);return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')};
 function agDueTile(lab,ms,sub){const f=!ms||ms>=AG_FOREVER;let d='',n=0,cls='ok',txt;if(f){txt='Sem vencimento'}else{d=dOf(ms);n=diasAte(d);cls=n<0?'atr':n<=7?'exp':'pago';txt=n<0?'Venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'Vence hoje':n===1?'Falta 1 dia':'Faltam '+n+' dias'}
  return `<div class="agdue ${cls}"><small>${esc(lab)}</small><b>${f?'—':fmt(d)}</b><span class="b ${cls}">${txt}</span>${sub?`<em>${esc(sub)}</em>`:''}</div>`}
-function agDueCard(){const ks=Object.keys(bkD.pg);if(!agMe&&!ks.length)return '';const tiles=[];if(agMe)tiles.push(agDueTile('Vencimento do meu acesso',agMe.dueMs,''));
- ks.forEach(k=>{const c=bkD.pg[k],m=bkD.meta[k]||{};tiles.push(agDueTile('Painel: '+(c.n||'Loja'),m.x!=null?m.x:(agMe?agMe.dueMs:0),'Link da sua loja'+(c.on===false?' · pausado':'')))});
+function agDueCard(){if(!agMe)return '';const tiles=[];if(agMe)tiles.push(agDueTile('Vencimento do meu acesso',agMe.dueMs,''));
  return `<div class="card"><h2>Vencimentos</h2><div class="agdue-g">${tiles.join('')}</div></div>`}
 function agDash(){const m=agDM||(agDM=today().slice(0,7)),all=bkD.ap,inM=all.filter(x=>agSlotInfo(x.s).d.slice(0,7)===m),
  sched=inM.filter(x=>x.st!=='x'),fin=inM.filter(x=>x.st==='f'),rec=fin.reduce((a,x)=>a+(+x.pr||0),0),cl=new Set(fin.map(x=>x.p)),
