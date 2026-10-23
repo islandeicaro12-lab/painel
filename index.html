@@ -2036,8 +2036,8 @@ function wa(id,direct,pw,noMp){const c=db.clients.find(c=>c.id===id),r=db.resell
  if(hp){$('#wc3').onclick=()=>copyTxt(key);$('#wc4').onclick=()=>copyTxt(cur.code);$('#qrb').onclick=()=>showQR(c.id,1,cur.k?cur.k.v:0)}}
 
 
-function savePix(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
- r.pix={type:f.ktype.value,key:f.key.value.trim(),name:f.pname.value.trim(),city:f.city.value.trim()};save();render();toast('Pix salvo.')}
+async function savePix(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
+ r.pix={type:f.ktype.value,key:f.key.value.trim(),name:f.pname.value.trim(),city:f.city.value.trim()};render();await saveNow('Pix salvo na nuvem.')}
 const clean=(t,n)=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 ]/g,'').toUpperCase().slice(0,n)||'NA';
 const tlv=(id,v)=>id+String(v.length).padStart(2,'0')+v;
 function crc16(str){let c=0xFFFF;for(let i=0;i<str.length;i++){c^=str.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
@@ -2109,9 +2109,12 @@ const DEF_MASTER='Olá {nome}! Sua mensalidade de {valor} {situacao} {vencimento
 const getMC=()=>db.master.coupons||[10,20,30,50].map(p=>({p,code:'DESC'+p,on:true}));
 function masterCard(){const mp=db.master.pix||{},ty=mp.key?pixType(mp):'cpf';
  return `<div class="card"><h2>Cobrança das revendas via WhatsApp</h2><form onsubmit="saveMasterBill(event)"><div><label>Tipo da chave</label><select name="ktype">${[['cpf','CPF / CNPJ'],['cel','Celular'],['email','E-mail'],['evp','Chave aleatória']].map(o=>`<option value="${o[0]}" ${ty===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div><div><label>Chave Pix</label><input name="key" value="${esc(mp.key)}"></div><div><label>Nome do recebedor</label><input name="pname" value="${esc(mp.name)}" maxlength="25"></div><div><label>Cidade</label><input name="city" value="${esc(mp.city)}" maxlength="15"></div><div style="grid-column:1/-1"><label>Cupons de desconto para revendas (opcionais no envio)</label>${getMC().map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><b style="min-width:50px">${k.p}%</b><input name="mcode${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="mon${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}</div><div style="grid-column:1/-1"><label>Mensagem editável (variáveis: {nome} {valor} {vencimento} {situacao} {chave} {pix} {cupom} {total})</label><textarea name="msg" style="height:140px;font-family:inherit;font-size:13px">${esc(db.master.msg||DEF_MASTER)}</textarea></div><button>Salvar</button><button type="button" class="s" onclick="resetMasterMsg()">Restaurar mensagem</button></form><p class="note">Seu Pix e esta mensagem são usados no botão WhatsApp de cada revenda.</p></div>`}
-function saveMasterBill(e){e.preventDefault();const f=e.target,k=f.key.value.trim();
- if(k){if(!f.pname.value.trim()||!f.city.value.trim()){toast('Informe nome do recebedor e cidade.');return}db.master.pix={type:f.ktype.value,key:k,name:f.pname.value.trim(),city:f.city.value.trim()}}else delete db.master.pix;
- db.master.msg=f.msg.value;db.master.coupons=getMC().map((k,i)=>({p:k.p,code:f['mcode'+i].value.trim()||k.code,on:f['mon'+i].checked}));save();toast('Dados salvos.')}
+async function saveNow(msg){if(!FBMODE||!fb){save();toast(msg);return true}
+ clearTimeout(fbT);fbT=null;while(fbBusy)await new Promise(r=>setTimeout(r,150));fbBusy=true;
+ try{await fbPush();toast(msg);return true}catch(x){toast('NÃO foi salvo na nuvem ('+(x.status||x.message)+'). Confira a internet e se as regras do Firebase estão publicadas, depois tente de novo.');clearTimeout(fbT);fbT=setTimeout(fbFlush,10000);return false}finally{fbBusy=false}}
+async function saveMasterBill(e){e.preventDefault();const f=e.target,k=f.key.value.trim();
+ if(k){if(!f.pname.value.trim()||!f.city.value.trim()){toast('Para salvar a chave Pix, preencha também o Nome do recebedor e a Cidade.');(f.pname.value.trim()?f.city:f.pname).focus();return}db.master.pix={type:f.ktype.value,key:k,name:f.pname.value.trim(),city:f.city.value.trim()}}else delete db.master.pix;
+ db.master.msg=f.msg.value;db.master.coupons=getMC().map((k,i)=>({p:k.p,code:f['mcode'+i].value.trim()||k.code,on:f['mon'+i].checked}));await saveNow('Dados salvos na nuvem.')}
 function resetMasterMsg(){delete db.master.msg;save();render();toast('Mensagem padrão restaurada.')}
 function waRes(id){const r=db.resellers.find(r=>r.id===id),mp=db.master.pix,hp=mp&&mp.key,cps=getMC().filter(k=>k.on);
  let d=(r.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp da revenda em Editar.');return}
