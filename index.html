@@ -248,6 +248,7 @@ body.agb{background:#f3f7fb;color:#0a1b33}body.agb #tt{display:none!important}
 .ag-dy{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
 .ag-dy button{flex:0 0 auto;min-width:64px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;line-height:1.2}.ag-dy button b{font-size:17px;font-weight:700}.ag-dy button small{font-size:11.5px;color:#51657f;text-transform:capitalize}
 .ag-sl{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.ag-sl button small{display:block;font-size:11px;opacity:.65;font-weight:400;margin-top:1px}
 .ag-sl button:disabled{background:#eef2f7;color:#9aa9bb;border-color:#e1e8f0;text-decoration:line-through;cursor:not-allowed}
 .ag-f{display:grid;gap:12px}.ag-f label{display:block;font-size:13.5px;color:#3c506a;margin-bottom:5px}
 .ag-f input,.ag-f textarea{width:100%;padding:12px 13px;border:1.5px solid #cdd8e5;border-radius:11px;font:16px 'IBM Plex Sans',sans-serif;background:#fff;color:#0a1b33}
@@ -2601,7 +2602,7 @@ function agSlots(c,date){const [y,m,d]=date.split('-').map(Number),out=[],st=Mat
  const ps=c.bs&&c.be?agTmin(c.bs):0,pe=c.bs&&c.be?agTmin(c.be):0;
  for(let t=a;t+st<=b;t+=st){if(pe>ps&&t<pe&&t+st>ps){t=pe-st;continue}
   const hh=String(Math.floor(t/60)).padStart(2,'0'),mm=String(t%60).padStart(2,'0'),key=date.replace(/-/g,'')+'-'+hh+mm;
-  if(new Date(y,m-1,d,Math.floor(t/60),t%60).getTime()<Date.now()+mn)continue;out.push({key,label:hh+':'+mm,taken:!!ag.tk[key]})}return out}
+  if(new Date(y,m-1,d,Math.floor(t/60),t%60).getTime()<Date.now()+mn)continue;out.push({key,label:hh+':'+mm,end:String(Math.floor((t+st)/60)).padStart(2,'0')+':'+String((t+st)%60).padStart(2,'0'),taken:!!ag.tk[key]})}return out}
 function agDays(c){const out=[];for(let i=0;i<=(+c.max||30);i++){const d=addDays(today(),i),wd=new Date(d+'T12:00:00').getDay();if((c.days||[]).includes(wd)&&!(c.bl||[]).includes(d)&&agSlots(c,d).length)out.push({d,wd})}return out}
 function agCombo(svs){let ix=(ag.sel||[0]).filter(i=>svs[i]);if(!ix.length)ix=[0];const it=ix.map(i=>svs[i]),tot=it.reduce((a,v)=>a+(+v.p||0),0);
  return {n:it.map(v=>v.n+(it.length>1&&+v.p>0?' ('+brl(+v.p)+')':'')).join(' + ').slice(0,300),p:tot>0?Math.round(tot*100)/100:'',k:it.length,ix}}
@@ -2620,7 +2621,7 @@ function agPublic(){document.body.classList.add('agb');
  return wrap(head,agAvisosPub(c)+agLocCard(c)+
   (svs.length>1?`<div class="ag-c"><h2>Escolha o serviço</h2><p class="ag-nt" style="margin:-6px 0 10px">Você pode marcar mais de um.</p><div class="ag-sv">${svs.map((v,i)=>{const on=sv.ix.includes(i);return `<button type="button" class="${on?'ag-on':''}" role="checkbox" aria-checked="${on}" onclick="agPick('svc',${i})"><span><b class="ag-ck">${on?'✓':''}</b>${esc(v.n)}</span>${agBrl(v.p)?`<small>${agBrl(v.p)}</small>`:''}</button>`}).join('')}</div>${sv.k>1&&sv.p?`<p class="ag-nt" style="margin:10px 0 0;color:#0a1b33"><b>${sv.k} serviços · Total ${brl(sv.p)}</b></p>`:''}</div>`:'')+
   (days.length?`<div class="ag-c"><h2>Escolha o dia</h2><div class="ag-dy">${days.map(x=>`<button type="button" class="${x.d===ag.date?'ag-on':''}" onclick="agPick('date','${x.d}')"><small>${AG_WD[x.wd]}</small><b>${x.d.slice(8)}/${x.d.slice(5,7)}</b></button>`).join('')}</div></div>
-  <div class="ag-c"><h2>Escolha o horário</h2><div class="ag-sl">${sl.map(x=>`<button type="button" class="${x.key===ag.slot?'ag-on':''}" ${x.taken?'disabled aria-label="'+x.label+' indisponível"':''} onclick="agPick('slot','${x.key}')">${x.label}</button>`).join('')}</div>${sl.every(x=>x.taken)?'<p class="ag-nt">Sem horários livres neste dia. Escolha outro dia.</p>':''}</div>`
+  <div class="ag-c"><h2>Escolha o horário</h2><div class="ag-sl">${sl.map(x=>`<button type="button" class="${x.key===ag.slot?'ag-on':''}" ${x.taken?'disabled aria-label="'+x.label+' indisponível"':''} onclick="agPick('slot','${x.key}')">${x.label}<small>até ${x.end}</small></button>`).join('')}</div>${sl.every(x=>x.taken)?'<p class="ag-nt">Sem horários livres neste dia. Escolha outro dia.</p>':''}</div>`
   :'<div class="ag-c ag-em">Não há horários disponíveis no momento.</div>')+
   (ag.slot?`<div class="ag-c" id="agnm"><h2>Seus dados</h2><div class="ag-sum" style="margin-top:0">${esc(sv.n)}<br>${fmt(agSlotInfo(ag.slot).d)} às ${agSlotInfo(ag.slot).h}</div><form class="ag-f" onsubmit="agBook(event)"><div><label for="agn">Nome</label><input id="agn" value="${esc(ag.f.n)}" oninput="agIn('n',this.value)" autocomplete="name" maxlength="80" required></div><div><label for="agp">WhatsApp com DDD</label><input id="agp" type="tel" inputmode="tel" value="${esc(ag.f.p)}" oninput="agIn('p',this.value)" autocomplete="tel" placeholder="81999999999" required></div><div><label for="ago">Observação (opcional)</label><textarea id="ago" rows="2" maxlength="300" oninput="agIn('o',this.value)">${esc(ag.f.o)}</textarea></div>${agFpBox(c,sv)}<button class="ag-go" ${ag.busy?'disabled':''}>${ag.busy?'Enviando…':'Confirmar agendamento'}</button></form></div>`:''))}
 
@@ -2845,7 +2846,7 @@ async function agManual(){const pid=agCur(),c=bkD.pg[pid];if(!c)return;agMn.pid=
  $('#mnsave').onclick=agMnSave;agMnSum();agMnSl()}
 function agMnSum(){const c=bkD.pg[agMn.pid],svs=c.svc&&c.svc.length?c.svc:[{n:'Atendimento',p:''}];const t=[...document.querySelectorAll('.mnsv:checked')].reduce((a,x)=>a+(+svs[+x.value].p||0),0);$('#mnp').value=t>0?t:''}
 function agMnSl(){const c=bkD.pg[agMn.pid],d=$('#mnd').value,h=$('#mnh');if(!d){h.innerHTML='';return}const o=ag.tk;ag.tk=agMn.tk;let L=[];try{L=agSlots({...c,min:0},d)}catch(e){}ag.tk=o;
- const bl=(c.bl||[]).includes(d);h.innerHTML=(L.length?L.map(x=>`<option value="${x.key}" ${x.taken?'disabled':''}>${x.label}${x.taken?' (ocupado)':''}</option>`).join(''):`<option value="">${bl?'Dia de folga':'Sem horários neste dia'}</option>`);const f=[...h.options].find(x=>!x.disabled&&x.value);if(f)h.value=f.value}
+ const bl=(c.bl||[]).includes(d);h.innerHTML=(L.length?L.map(x=>`<option value="${x.key}" ${x.taken?'disabled':''}>${x.label} às ${x.end}${x.taken?' (ocupado)':''}</option>`).join(''):`<option value="">${bl?'Dia de folga':'Sem horários neste dia'}</option>`);const f=[...h.options].find(x=>!x.disabled&&x.value);if(f)h.value=f.value}
 async function agMnSave(){const pid=agMn.pid,c=bkD.pg[pid],b=$('#mnsave'),n=$('#mnn').value.trim(),ph=$('#mnw').value.replace(/\D/g,''),slot=$('#mnh').value;
  if(!n){toast('Digite o nome do cliente.');return}if(ph.length<10||ph.length>13){toast('Digite o WhatsApp com DDD.');return}if(!slot){toast('Escolha um horário livre.');return}
  const svs=c.svc&&c.svc.length?c.svc:[{n:'Atendimento',p:''}],ix=[...document.querySelectorAll('.mnsv:checked')].map(x=>+x.value);if(!ix.length){toast('Escolha ao menos um serviço.');return}
