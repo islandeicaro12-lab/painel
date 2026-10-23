@@ -214,6 +214,8 @@ body:has(.lp) .wrap{max-width:none;padding:0}
 .lg2 .lgw{display:block;text-align:center;margin-top:12px;font-size:13px;color:var(--mut);text-decoration:none}.lg2 .lgw:hover{color:var(--pri);text-decoration:underline}
 .lg2 .lgc{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}.lg2 .lgc span{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--bg2);color:var(--mut)}
 .lg2 .lgs{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 0 0;font-size:12px;color:var(--mut)}.lg2 .lgs svg{width:15px;height:15px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lp-tabs{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px}.lp-tabs button{background:transparent;color:#cfe0f0;border:0;border-radius:999px;padding:8px 16px;font:600 14px 'IBM Plex Sans',sans-serif;cursor:pointer;width:auto}.lp-tabs button.on{background:#2de0a5;color:#062a1f}
+.lp-top{gap:12px;flex-wrap:wrap}@media (max-width:640px){.lp-top .lp-tabs{order:3;width:100%;justify-content:center}.lp-tabs button{flex:1}}
 .tpk{display:flex;gap:14px;align-items:center;text-align:left;width:100%;background:var(--card,#fff);color:inherit;border:1.5px solid var(--bd);border-radius:14px;padding:14px;margin-top:12px;cursor:pointer;font:inherit}.tpk:hover{border-color:var(--pri,#0b8a63)}.tpk i{flex:none;width:46px;height:46px;border-radius:13px;background:#0a1b33;color:#2de0a5;display:flex;align-items:center;justify-content:center}.tpk i svg{width:24px;height:24px}.tpk b{display:block;font-size:16px}.tpk small{display:block;color:var(--mut);font-size:13.5px;line-height:1.4;margin-top:2px}
 .lp-pts{list-style:none;margin:30px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:600px}.lp-pts li{display:flex;gap:10px;align-items:flex-start}.lp-pts i{flex:none;width:38px;height:38px;border-radius:11px;background:rgba(46,230,166,.12);border:1px solid rgba(46,230,166,.35);color:var(--mint);display:grid;place-items:center}.lp-pts i svg{width:19px;height:19px}.lp-pts b{display:block;font:700 13.5px/1.25 'Sora',sans-serif;color:#f3f7fb}.lp-pts span{display:block;font-size:12.5px;color:#9fb3cc;line-height:1.35;margin-top:2px}
 @media (max-width:560px){.lp-pts{grid-template-columns:1fr;gap:12px}}
@@ -2321,7 +2323,7 @@ function genTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim()
  if(ph&&phUsed(phKey(ph))){toast('Esse número já foi usado em um teste grátis.');return}
  const r=mkTrial(f.name.value,ph);save();render();waAcesso(r.id)}
 let tview=0,tres=null,terr='';
-function tOpen(v){tview=v;terr='';rmsg='';tpn=FBMODE?'':'cob';render()}
+function tOpen(v){if(v===0)lpTab='in';tview=v;terr='';rmsg='';tpn=FBMODE?'':'cob';render()}
 function tGen(e){if(FBMODE)return tpn==='agd'?fbTrialAg(e):fbTrial(e);e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph);
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
  if(phUsed(k)){terr='Esse número já foi usado. Cada número tem direito a apenas um teste grátis.';render();return}
@@ -2542,6 +2544,8 @@ function rTabs(n,nu){const it=[['dash','Dashboard'],['guide','Guia'],['new','Nov
 function blockMsg(r){if(r.trial)return 'Seu teste grátis expirou em '+fmt(r.due)+'. Fale com o administrador para contratar.';return 'Acesso bloqueado: a mensalidade venceu em '+fmt(r.due)+'. Fale com o administrador para regularizar.'}
 
 const WA_NUM='5581993282448',waLink=t=>'https://wa.me/'+WA_NUM+'?text='+encodeURIComponent(t);
+let lpTab='in';
+function lpGo(v){lpTab=v;render();window.scrollTo(0,0)}
 function lpWrap(card){
  const d3=addDays(today(),3),rn=addDays(d3,30);
  const sv=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -2561,15 +2565,17 @@ function lpWrap(card){
  const who=[['Administrador','Gerencia revendas, acessos de agendamento e a cobrança de toda a carteira.'],['Revenda','Cadastra clientes, envia cobranças, acompanha vencimentos e renova planos.'],['Profissional de agendamento','Monta a loja, define horários e serviços, atende pela agenda e controla os fiados.'],['Cliente','Acompanha o próprio plano e paga pelo Pix recebido no WhatsApp.']];
  const faq=[['Como eu entro no painel?','Digite o usuário e a senha que você recebeu. Administradores, revendas e profissionais de agendamento entram pela mesma tela e cada um vê o seu painel.'],['Esqueci minha senha. E agora?','Toque em "Esqueci minha senha" na tela de entrada. Se preferir, fale com a gente no WhatsApp.'],['Como funciona o teste grátis?','Você gera o acesso em segundos, usa por '+TRIAL_DAYS+' dias sem cartão de crédito e cada número de WhatsApp tem direito a 1 teste.'],['Quanto custa?','Os valores variam conforme o plano e o recurso. Fale com a gente no WhatsApp e receba a proposta certa para o seu negócio.'],['Funciona no celular?','Sim. O painel e o link da sua loja funcionam no celular e no computador, sem instalar nada.']];
  const chips=['Pix e QR Code','WhatsApp','Mercado Pago','Celular e computador','Teste grátis de '+TRIAL_DAYS+' dias'];
- return `<div class="lp"><section class="lp-hero"><div class="lp-in">
- <div class="lp-top"><span class="lp-brand">${logo(36)}Agenda+ e Cobrança</span><a href="${waLink('Olá! Quero saber mais sobre o Agenda+ e Cobrança.')}" target="_blank" rel="noopener noreferrer">WhatsApp</a></div>
- <div class="lp-hg"><div class="lp-copy"><span class="lp-eb">2 painéis, cada um com seu acesso</span><h1>Cobrança e agendamento organizados em um só lugar.</h1>
+ const TOP=`<div class="lp-top"><span class="lp-brand">${logo(36)}Agenda+ e Cobrança</span><nav class="lp-tabs" aria-label="Seções"><button type="button" class="${lpTab==='in'?'on':''}" onclick="lpGo('in')">Entrar</button><button type="button" class="${lpTab==='info'?'on':''}" onclick="lpGo('info')">Conheça o sistema</button></nav><a href="${waLink('Olá! Quero saber mais sobre o Agenda+ e Cobrança.')}" target="_blank" rel="noopener noreferrer">WhatsApp</a></div>
+`;
+ const HERO=`<section class="lp-hero"><div class="lp-in">
+ ${TOP} <div class="lp-hg"><div class="lp-copy"><span class="lp-eb">2 painéis, cada um com seu acesso</span><h1>Cobrança e agendamento organizados em um só lugar.</h1>
  <p>Use o <b>Painel de Cobrança</b> para cobrar mensalidades pelo WhatsApp com Pix e renovação automática, e o <b>Painel de Agendamento</b> para receber marcações pelo link da sua loja, controlar fiados e organizar sua equipe.</p>
  <div class="lp-cta"><button type="button" class="lp-b1" onclick="tOpen(1)">Testar grátis por ${TRIAL_DAYS} dias</button><a class="lp-b2" href="${waLink('Olá! Quero conhecer o Agenda+ e Cobrança.')}" target="_blank" rel="noopener noreferrer">Chamar no WhatsApp</a></div>
  <div class="lp-fine">Sem cartão de crédito. Cada número de WhatsApp tem direito a 1 teste.</div>
  <ul class="lp-pts"><li><i>${sv('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5z"/>')}</i><div><b>Painel de Cobrança</b><span>Pix e QR Code no WhatsApp, com renovação automática</span></div></li><li><i>${sv('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>')}</i><div><b>Painel de Agendamento</b><span>Link da loja, comanda, fiados e equipe</span></div></li></ul></div>${card}</div>
  <ul class="lp-chips">${chips.map(c=>`<li>${sv('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}${c}</li>`).join('')}</ul></div></section>
- <section class="lp-sec lp-px"><div class="lp-in"><span class="lp-k">Dois painéis</span><h2>Escolha o painel certo para o seu negócio</h2><p class="lp-sub2">Cada painel tem seu próprio acesso e foi pensado para uma rotina diferente. Você pode usar um ou os dois.</p>
+`,HEROI=`<section class="lp-hero lp-hi"><div class="lp-in">${TOP}<div class="lp-copy" style="padding:34px 0 46px;max-width:760px"><span class="lp-eb">Conheça o sistema</span><h1>Tudo o que você pode fazer com o Agenda+ e Cobrança</h1><p>Veja o que cada painel oferece, como funciona e as perguntas mais comuns.</p><div class="lp-cta"><button type="button" class="lp-b1" onclick="lpGo('in')">Entrar no painel</button><button type="button" class="lp-b2" onclick="tOpen(1)" style="background:transparent;cursor:pointer">Testar grátis por ${TRIAL_DAYS} dias</button></div></div></div></section>
+`,REST=` <section class="lp-sec lp-px"><div class="lp-in"><span class="lp-k">Dois painéis</span><h2>Escolha o painel certo para o seu negócio</h2><p class="lp-sub2">Cada painel tem seu próprio acesso e foi pensado para uma rotina diferente. Você pode usar um ou os dois.</p>
  <div class="lp-pxg">${pil.map(([k,ic,t,sb,li])=>`<article class="lp-pxc ${k}"><i>${sv(ic)}</i><h3>${t}</h3><em>${sb}</em><ul>${li.map(x=>`<li>${sv('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}<span>${x}</span></li>`).join('')}</ul></article>`).join('')}</div></div></section>
  <section class="lp-sec lp-how"><div class="lp-in lp-hw"><div><h2>Do aviso ao Pix confirmado, sem conferir extrato</h2>
  <ol class="lp-st"><li><div><b>Cadastre o cliente</b><span>Nome, WhatsApp, plano e vencimento. Leva menos de um minuto.</span></div></li>
@@ -2585,7 +2591,8 @@ function lpWrap(card){
  <div class="lp-uc"><b>Consulte o valor</b><span>Proposta rápida pelo WhatsApp</span><a href="${waLink('Olá! Quero saber o valor do Agenda+ e Cobrança com clientes ilimitados.')}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a></div></div></section>
  <section class="lp-sec lp-fq"><div class="lp-in"><h2>Perguntas frequentes</h2><div class="lp-fql">${faq.map(([q,r])=>`<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div></div></section>
  <section class="lp-end"><div class="lp-in"><h2>Teste por ${TRIAL_DAYS} dias e veja o painel com os seus clientes</h2><p>Gere o acesso agora ou fale com a gente no WhatsApp: (81) 99328-2448.</p><div class="lp-cta"><button type="button" class="lp-b1" onclick="tOpen(1)">Testar grátis</button><a class="lp-b2" href="${waLink('Olá! Quero conhecer o Agenda+ e Cobrança.')}" target="_blank" rel="noopener noreferrer">Chamar no WhatsApp</a></div></div></section>
- <footer class="lp-foot"><div class="lp-in"><span>Agenda+ e Cobrança</span><span>WhatsApp (81) 99328-2448 · painelcobranca.online</span></div></footer></div>`}
+`,FOOT=` <footer class="lp-foot"><div class="lp-in"><span>Agenda+ e Cobrança</span><span>WhatsApp (81) 99328-2448 · painelcobranca.online</span></div></footer>`;
+ return `<div class="lp">${lpTab==='info'?HEROI+REST:HERO}${FOOT}</div>`}
 function lpInit(){const e=document.getElementById('lpph');if(!e)return;if(!('IntersectionObserver' in window)){e.classList.add('play');return}
  const o=new IntersectionObserver(l=>{if(l[0].isIntersecting){e.classList.add('play');o.disconnect()}},{threshold:.35});o.observe(e)}
 
