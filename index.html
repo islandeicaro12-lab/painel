@@ -1732,7 +1732,7 @@ async function tok(s){s=s||fb;if(Date.now()>s.exp-60000){const r=await fetch('ht
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('SESSION');s.tok=j.id_token;s.ref=j.refresh_token;s.exp=Date.now()+(+j.expires_in||3600)*1000}return s.tok}
 async function rt(method,path,body,s){let q='';if(s!==false)q='?auth='+encodeURIComponent(await tok(s));
  const r=await fetch(FBC.db+'/'+path+'.json'+q,{method,headers:body===undefined?undefined:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
- if(!r.ok){const e=new Error('RT'+r.status);e.status=r.status;throw e}return r.json()}
+ if(!r.ok){const e=new Error('RT'+r.status);e.status=r.status;throw e}const out=await r.json();if(method!=='GET'&&s!==false&&path.startsWith('bk/')&&typeof ses!=='undefined'&&ses&&ses.role==='ag')try{agLogW(method,path,body)}catch(_){}return out}
 const netErr=(x,bad)=>{const c=x&&x.code;if(['INVALID_LOGIN_CREDENTIALS','EMAIL_NOT_FOUND','INVALID_PASSWORD','INVALID_EMAIL'].includes(c)||x==='bad')return bad;
  if(c==='TOO_MANY_ATTEMPTS_TRY_LATER')return 'Muitas tentativas. Aguarde alguns minutos e tente de novo.';
  if(c==='OPERATION_NOT_ALLOWED'||c==='CONFIGURATION_NOT_FOUND')return 'O login por e-mail/senha ainda não foi ativado no Firebase.';
@@ -1844,7 +1844,7 @@ function fbViewBack(){try{const v=fbSv&&fbSv.v;if(!v||v.uid!==ses.id)return;cons
 async function fbResume(){if(!FBMODE||AGQ||ses)return;let o=null;try{o=JSON.parse(localStorage.getItem(SESK)||'null')}catch(e){}if(!o||!o.ref||!o.u)return;fbSv=o;
  const s={tok:'',ref:o.ref,uid:o.uid,exp:0};try{await tok(s)}catch(e){if(e&&e.message==='SESSION')fbForget();return}
  const ab=document.getElementById('app');ab&&(ab.style.opacity='.5');await fbLogin(null,{u:o.u,s});if(ab)ab.style.opacity=''}
-function fbReset(){fbForget();agEm=null;agMe=null;agLogo='';agT='dash';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+function fbReset(){fbForget();agAc={ok:false,busy:false,err:'',list:[],q:'',who:''};agEm=null;agMe=null;agLogo='';agT='dash';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
 async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
 async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
@@ -2833,6 +2833,61 @@ function agPrDel(id){const x=agPr.list.find(y=>y.id===id);if(!x)return;ask('Excl
 function agPrPub(c){const L=(ag.pr||[]).filter(x=>x.on!==false&&agPrOk(x));if(!L.length)return '';const I=ag.pimg||{};
  return `<div class="ag-c"><h2>Produtos</h2><div class="ag-pr">${L.map(x=>{const w=agWaUrl(c,'Olá! Vim pela página da '+c.n+' e tenho interesse em: '+x.n+(x.p!==''&&x.p!=null?' ('+brl(+x.p)+')':'')+'.');const hs=x.q!==''&&x.q!=null,q=+x.q,out=hs&&q<=0,okImg=I[x.id]&&/^data:image\/(png|jpeg|webp);base64,/.test(I[x.id]);
    return `<div class="ag-pi">${okImg?`<img class="ag-pim" src="${I[x.id]}" alt="${esc(x.n)}" loading="lazy">`:''}<div class="ag-pt"><b>${esc(x.n)}</b>${x.d?`<p>${esc(x.d)}</p>`:''}${hs?`<span class="ag-st ${out?'out':q<=3?'low':''}">${out?'Esgotado':q<=3?'Últimas '+q+(q===1?' unidade':' unidades'):'Em estoque: '+q}</span>`:''}</div><div class="ag-pp"><strong>${x.p!==''&&x.p!=null?brl(+x.p):'Sob consulta'}</strong>${w&&!out?`<a href="${esc(w)}" target="_blank" rel="noopener noreferrer">Pedir no WhatsApp</a>`:''}</div></div>`}).join('')}</div></div>`}
+
+// ===== Atividades: registro do que cada pessoa fez no painel =====
+let agAc={ok:false,busy:false,err:'',list:[],q:'',who:''},agLast={a:'',t:0};
+const agWho=()=>ses&&ses.emp?ses.emp.name:'Dono';
+function agLog(a){try{if(!ses||ses.role!=='ag'||!fb)return;const t=Date.now();if(agLast.a===a&&t-agLast.t<2500)return;agLast={a,t};
+ const id=t.toString(36)+Math.random().toString(36).slice(2,6),e={t,u:String(agWho()).slice(0,60),a:String(a).slice(0,200)};
+ rt('PUT','bk/ac/'+ses.id+'/'+id,e).then(()=>{if(agAc.ok){agAc.list.unshift({id,...e});if(agT==='ativ')agAtList()}}).catch(()=>{})}catch(e){}}
+function agLogW(m,p,b){const P=p.split('/');if(P[0]!=='bk')return;const nm=v=>String(v||'').trim()||'cliente';
+ if(P[1]==='ap'&&P[3]){const x=bkD.ap.find(y=>y.pid===P[2]&&y.aid===P[3]);
+  if(m==='DELETE')return agLog('Excluiu o agendamento de '+nm(x&&x.n));
+  if(m==='PUT'&&b){if(!x){const i=agSlotInfo(b.s);return agLog('Agendou manualmente '+nm(b.n)+(b.v?' ('+b.v+')':'')+' em '+fmt(i.d)+' às '+i.h)}
+   if(b.st!==x.st){const n=nm(x.n);if(b.st==='c'&&x.st==='f')return agLog('Reabriu o atendimento de '+n);
+    if(b.st==='c')return agLog('Confirmou o agendamento de '+n);if(b.st==='x')return agLog('Cancelou o agendamento de '+n);
+    if(b.st==='f')return agLog('Finalizou o atendimento de '+n+(b.pr>0?' ('+brl(b.pr)+')':'')+(b.fp&&AG_FP[b.fp]?' · '+AG_FP[b.fp].replace(' (presencial)',''):''));
+    return agLog('Alterou a situação do agendamento de '+n)}
+   return agLog('Atualizou o agendamento de '+nm(x.n))}return}
+ if(P[1]==='pg'&&P[2]&&!P[3]&&m==='PUT'&&b&&b.j){const old=bkD.pg[P[2]],nw=agCfg(b.j);if(!nw)return;if(!old)return agLog('Criou a loja "'+(nw.n||'')+'"');
+  const grp={n:'dados da loja',d:'dados da loja',ad:'dados da loja',ml:'dados da loja',wa:'dados da loja',msg:'mensagem de confirmação',svc:'serviços',hd:'horários',days:'horários',s:'horários',e:'horários',st:'horários',min:'horários',bs:'horários',be:'horários',max:'horários',bl:'folgas',px:'pagamento',fp:'pagamento',pm:'pagamento',th:'tema',rm:'mensagem de lembrete',rv:'mensagem de avaliação',rvl:'mensagem de avaliação',fid:'cartão fidelidade',av:'avisos'},
+   ch=new Set(),all=new Set([...Object.keys(old),...Object.keys(nw)]);all.forEach(k=>{if(JSON.stringify(old[k])!==JSON.stringify(nw[k]))ch.add(k)});
+  if(!ch.size)return;if(ch.size===1&&ch.has('on'))return agLog(nw.on===false?'Pausou a loja':'Ativou a loja');
+  const lab=[...new Set([...ch].map(k=>grp[k]||'configurações da loja'))];return agLog('Alterou: '+lab.join(', '))}
+ if(P[1]==='pr'&&P[2]&&m==='PUT'&&b&&b.j){let nw=[];try{nw=JSON.parse(b.j)}catch(e){return}const old=(agPr&&agPr.list)||[],om=new Map(old.map(x=>[x.id,x])),nm2=new Map(nw.map(x=>[x.id,x]));let k=0;
+  nw.forEach(x=>{if(k>=6)return;const o=om.get(x.id);if(!o){agLog('Adicionou o produto "'+x.n+'"');k++}else if(JSON.stringify(o)!==JSON.stringify(x)){const d=[];if(o.q!==x.q)d.push('estoque '+(o.q===''||o.q==null?'—':o.q)+' → '+(x.q===''||x.q==null?'—':x.q));if(o.p!==x.p)d.push('preço');if((o.on!==false)!==(x.on!==false))d.push(x.on!==false?'passou a aparecer no link':'escondido do link');if(!d.length)d.push('dados');agLog('Alterou o produto "'+x.n+'" ('+d.join(', ')+')');k++}});
+  old.forEach(o=>{if(!nm2.has(o.id)&&k<6){agLog('Excluiu o produto "'+o.n+'"');k++}});return}
+ if(P[1]==='lg'&&m==='PUT')return agLog('Alterou a logo da loja');
+ if(P[1]==='em')return agLog('Alterou a lista de funcionários')}
+function agLogFi(old){const nw={cl:fiD.cl,vd:fiD.vd},cn=id=>((nw.cl.find(c=>c.id===id)||old.cl.find(c=>c.id===id)||{}).n)||'cliente';let k=0;const L=a=>{if(k++<6)agLog(a)};
+ const ov=new Map(old.vd.map(v=>[v.id,v])),nv=new Map(nw.vd.map(v=>[v.id,v])),oc=new Map(old.cl.map(c=>[c.id,c])),nc=new Map(nw.cl.map(c=>[c.id,c]));
+ nw.vd.forEach(v=>{const o=ov.get(v.id);if(!o)return L('Lançou venda fiada #'+v.n+' para '+cn(v.cid)+' ('+brl(v.tot)+')');
+  const a=(o.pg||[]).length,b=(v.pg||[]).length;if(b>a){const q=v.pg[b-1];return L('Registrou pagamento de '+brl(q.v)+' do fiado #'+v.n+' ('+cn(v.cid)+')')}if(b<a)return L('Removeu um pagamento do fiado #'+v.n+' ('+cn(v.cid)+')');
+  if(JSON.stringify(o)!==JSON.stringify(v))L('Editou a venda fiada #'+v.n+' ('+cn(v.cid)+')')});
+ old.vd.forEach(o=>{if(!nv.has(o.id))L('Excluiu a venda fiada #'+o.n+' de '+cn(o.cid))});
+ nw.cl.forEach(c=>{const o=oc.get(c.id);if(!o)L('Cadastrou o cliente de fiado '+c.n);else if(JSON.stringify(o)!==JSON.stringify(c))L('Editou o cliente de fiado '+c.n)});
+ old.cl.forEach(o=>{if(!nc.has(o.id))L('Excluiu o cliente de fiado '+o.n)})}
+async function agAtLoad(){if(agAc.busy||!ses)return;agAc.busy=true;agAc.err='';
+ try{const v=await rt('GET','bk/ac/'+ses.id)||{};const L=Object.keys(v).map(id=>({id,...v[id]})).filter(x=>x&&x.t&&x.a).sort((a,b)=>b.t-a.t).slice(0,600);agAc={...agAc,ok:true,busy:false,err:'',list:L}}
+ catch(e){agAc={...agAc,ok:false,busy:false,err:'Não foi possível carregar as atividades. Publique as regras novas do Firebase (regras-firebase.json).'}}
+ if(agT==='ativ'&&!$('#modal').innerHTML.trim())render()}
+function agAtNames(){const m=new Map();(agEm||[]).forEach(e=>m.set(agNorm(e.name),e.name));m.set('dono','Dono');agAc.list.forEach(x=>{const k=agNorm(x.u);if(!m.has(k))m.set(k,x.u)});return [...m.values()]}
+function agAtFilt(){const q=agNorm(agAc.q),w=agNorm(agAc.who);return agAc.list.filter(x=>(!w||agNorm(x.u)===w)&&(!q||agNorm(x.u).includes(q)||agNorm(x.a).includes(q)))}
+function agAtList(){const e=document.getElementById('agAtL');if(e)e.innerHTML=agAtRows()}
+function agAtRows(){const L=agAtFilt();if(!agAc.list.length)return '<p class="note" style="margin:0">Nenhuma atividade registrada ainda. Daqui para frente, tudo o que você e seus funcionários fizerem no painel aparece aqui.</p>';
+ if(!L.length)return '<p class="note" style="margin:0">Nenhuma atividade encontrada para “'+esc(agAc.q||agAc.who)+'”.</p>';
+ let day='',h='';L.forEach(x=>{const d=new Date(x.t),dk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(dk!==day){day=dk;h+=`<div class="agmh"><b>${dk===today()?'Hoje':fmt(dk)}</b></div>`}
+  h+=`<div class="agh-r"><div class="tm"><b>${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</b></div><div class="nm"><b>${esc(x.u)}</b><small style="white-space:normal">${esc(x.a)}</small></div></div>`});
+ return `<div class="agh-l">${h}</div><p class="note" style="margin:10px 0 0">${L.length} registro${L.length>1?'s':''}${agAc.list.length>=600?' · mostrando as 600 mais recentes':''}</p>`}
+function agAtBody(){if(!agAc.ok&&!agAc.busy&&!agAc.err){setTimeout(agAtLoad,0);if(agEm===null)agEmLoad()}
+ if(agAc.err)return `<div class="err">${esc(agAc.err)}</div><button class="s" onclick="agAc.err='';agAtLoad();render()">Tentar de novo</button>`;
+ if(!agAc.ok)return '<div class="card"><p class="note" style="margin:0">Carregando…</p></div>';
+ const nm=agAtNames();
+ return `<div class="card"><h2>Atividades</h2><p class="note" style="margin:0 0 10px">Tudo o que você e seus funcionários fizeram no painel: agendamentos, atendimentos, fiados, produtos e configurações. Pesquise pelo nome do funcionário.</p>
+ <div class="cbar" style="margin-bottom:8px"><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="agAtQ" type="search" placeholder="Pesquisar pelo nome do funcionário…" value="${esc(agAc.q)}" oninput="agAc.q=this.value;agAtList()" autocomplete="off"></div><button class="s" onclick="agAc.ok=false;agAtLoad();render()">Atualizar</button></div>
+ <div class="agbl" style="margin:0 0 4px"><button type="button" class="s ${agAc.who?'':'p'}" onclick="agAc.who='';render()">Todos</button>${nm.map(n=>`<button type="button" class="s ${agNorm(agAc.who)===agNorm(n)?'p':''}" onclick="agAc.who=this.dataset.n;render()" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>
+ <div class="card" id="agAtL">${agAtRows()}</div>`}
 function agDelPg(pid){const c=bkD.pg[pid];if(!c)return;ask('Excluir o painel "'+c.n+'" e todos os agendamentos dele? Não dá para desfazer.',0,async()=>{try{await rt('DELETE','bk/ap/'+pid);await rt('DELETE','bk/tk/'+pid);await rt('DELETE','bk/lg/'+pid).catch(()=>{});await rt('DELETE','bk/pr/'+pid).catch(()=>{});await rt('DELETE','bk/pi/'+pid).catch(()=>{});const o=(bkD.meta[pid]||{}).o;if(o)await rt('DELETE','bko/'+o+'/pgs/'+pid);await rt('DELETE','bk/pg/'+pid);delete bkD.pg[pid];bkD.ap=bkD.ap.filter(x=>x.pid!==pid);render();toast('Painel excluído.')}catch(e){toast('Não foi possível excluir.')}})}
 function svRow(v){return `<div class="sv-r"><input class="svn" placeholder="Serviço (ex.: Consulta)" maxlength="60" value="${esc(v.n||'')}"><input class="svp" type="number" min="0" step="0.01" placeholder="Preço (R$)" value="${v.p===''||v.p==null?'':esc(v.p)}"><button type="button" class="s" onclick="this.parentNode.remove()" aria-label="Remover serviço">×</button></div>`}
 function agEdit(pid){if(!pid&&ses.role==='ag'){if(agMe&&agMe.maxPg>0&&Object.keys(bkD.pg).length>=agMe.maxPg){toast('Você atingiu o limite de '+agMe.maxPg+' painel(is) do seu plano. Fale com o administrador.');return}}const c=pid?bkD.pg[pid]:{n:'',d:'',wa:'',svc:[{n:'Atendimento',p:''}],days:[1,2,3,4,5],s:'09:00',e:'18:00',st:30,bs:'12:00',be:'13:00',max:30,min:2,on:true,msg:AG_MSG};if(!c)return;
@@ -2943,7 +2998,7 @@ function agNew(){const k=Object.keys(bkD.pg);if(agMe&&agMe.maxPg>0&&k.length>=ag
 
 // ===== Funcionários =====
 const AG_PERMS=[['ag','Agenda e histórico','Ver, confirmar, finalizar e cancelar agendamentos'],['res','Resumo','Aba Resumo: agendamentos, atendidos e gráficos do mês'],['vr','Ver valores recebidos','Mostra os valores em R$ no Resumo e os preços na agenda'],['fi','Fiados','Clientes devedores, vendas fiadas e recebimentos'],['hor','Horários','Dias, horários e folgas'],['srv','Serviços','Cadastro de serviços e preços'],['pix','Pagamento','Formas de pagamento e chave Pix'],['loja','Minha loja','Dados da loja, pausar e excluir'],['prod','Loja de produtos','Cadastrar produtos, preços e escolher o que aparece no Link da loja'],['notif','Notificações','Avisos do administrador e avisos no Link da loja']];
-const AG_TP={dash:'res',agenda:'ag',hist:'ag',fiado:'fi',hor:'hor',srv:'srv',pix:'pix',loja:'loja',prod:'prod',notif:'notif',conta:'',func:'*'};
+const AG_TP={dash:'res',agenda:'ag',hist:'ag',fiado:'fi',hor:'hor',srv:'srv',pix:'pix',loja:'loja',prod:'prod',notif:'notif',conta:'',func:'*',ativ:'*'};
 const agCan=k=>{const e=ses&&ses.emp;if(!e)return true;if(k==='*')return false;return k===''||e.perms.includes(k)};
 const agTabOk=t=>agCan(AG_TP[t]===undefined?'*':AG_TP[t]);
 let agEm=null;
@@ -3004,8 +3059,8 @@ async function agMnSave(){const pid=agMn.pid,c=bkD.pg[pid],b=$('#mnsave'),n=$('#
   await rt('PUT','bk/ap/'+pid+'/'+slot+'_'+nonce,rec);closeM();bkD.f='conf';bkD.t=0;await agLoad();render();toast('Cliente agendado e confirmado.')}
  catch(x){b.disabled=false;toast('Não foi possível agendar ('+(x.status||x.message)+').')}}
 let agNavOn=false;
-function agOwnerNav(){const id=agCur(),pend=bkD.ap.filter(x=>x.pid===id&&x.st==='p').length,I={dash:RIC.dash,agenda:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',fiado:'<path d="M4 5h13a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3z"/><path d="M4 5v11a3 3 0 0 0 3 3M12 10v5"/>',hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',hor:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',srv:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',pix:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',notif:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',func:'<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"/><path d="M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9"/>',loja:IC.store,prod:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',conta:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>'},
- G=[['Atendimento',[['dash','Resumo'],['agenda','Agenda'],['hist','Histórico'],['fiado','Fiados']]],['Configurações',[['hor','Horários'],['srv','Serviços'],['pix','Pagamento'],['loja','Minha loja'],['func','Funcionários']]],['Minha conta',[['prod','Produtos'],['notif','Notificações'],['conta','Conta']]]];
+function agOwnerNav(){const id=agCur(),pend=bkD.ap.filter(x=>x.pid===id&&x.st==='p').length,I={dash:RIC.dash,agenda:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',fiado:'<path d="M4 5h13a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3z"/><path d="M4 5v11a3 3 0 0 0 3 3M12 10v5"/>',hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',hor:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',srv:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',pix:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',notif:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',func:'<circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"/><path d="M17 11a3 3 0 1 0 0-6M22 21v-1a5 5 0 0 0-4-4.9"/>',ativ:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8.5 11h5M11 8.5v5"/>',loja:IC.store,prod:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',conta:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>'},
+ G=[['Atendimento',[['dash','Resumo'],['agenda','Agenda'],['hist','Histórico'],['fiado','Fiados']]],['Configurações',[['hor','Horários'],['srv','Serviços'],['pix','Pagamento'],['loja','Minha loja'],['func','Funcionários'],['ativ','Atividades']]],['Minha conta',[['prod','Produtos'],['notif','Notificações'],['conta','Conta']]]];
  return `<nav class="side">${G.map(([h,l0])=>{const l=l0.filter(([k])=>agTabOk(k));return l.length?`<i class="sdh">${h}</i>`+l.map(([k,t])=>{const n=k==='agenda'?pend:k==='notif'?agNtUnread():0;return `<button class="${agT===k?'on':''}${n?' hasn':''}" title="${t}" aria-label="${t}" onclick="agT='${k}';render();window.scrollTo(0,0)"><svg viewBox="0 0 24 24">${I[k]}</svg><span>${t}${n?`<em>${n}</em>`:''}</span></button>`}).join(''):''}).join('')}</nav>`}
 function agOwnerBody(){agNavOn=false;if(!agTabOk(agT)){const f=['dash','agenda','hist','fiado','hor','srv','pix','loja','prod','notif','conta'].find(agTabOk);agT=f||'conta'}
  if(!bkD.ok&&!bkD.busy&&!bkD.err)setTimeout(agLoad,0);else if(Date.now()-bkD.t>25000&&!bkD.busy&&(agT==='agenda'||agT==='dash'))setTimeout(agLoad,0);
@@ -3029,6 +3084,7 @@ function agOwnerBody(){agNavOn=false;if(!agTabOk(agT)){const f=['dash','agenda',
  else if(agT==='notif'){body=agNtBody()}
  else if(agT==='func'){body=agFuncBody()}
  else if(agT==='prod'){body=agPrBody()}
+ else if(agT==='ativ'){body=agAtBody()}
  else if(agT==='hor'){const hd=c.hd||{},bl=(c.bl||[]).filter(d=>d>=today()).sort();
   body=`<div class="card"><h2>Dias e horários de atendimento</h2><p class="note" style="margin:0 0 10px">Marque os dias em que você atende e o horário de abertura e fechamento de cada um.</p>
   ${[1,2,3,4,5,6,0].map(w=>{const on=(c.days||[]).includes(w),h=hd[w]||[c.s,c.e];return `<div class="agwd ${on?'':'off'}"><label><input type="checkbox" class="hw" data-w="${w}" ${on?'checked':''} onchange="this.closest('.agwd').classList.toggle('off',!this.checked)">${AG_WD[w]}</label><input type="time" class="hs" data-w="${w}" value="${esc(h[0])}"><input type="time" class="he" data-w="${w}" value="${esc(h[1])}"></div>`}).join('')}
@@ -3126,9 +3182,9 @@ function fiApply(j){try{const d=JSON.parse(j);fiD.cl=Array.isArray(d.cl)?d.cl:[]
 async function fiLoad(){if(fiD.busy||!ses||ses.role!=='ag')return;fiD.busy=true;
  try{const o=await rt('GET','bk/fi/'+ses.id);fiApply(o&&o.j);fiD.ok=true;fiD.err='';fiSync()}catch(e){fiD.err='Não foi possível carregar os fiados. Confira a internet, se o seu acesso está ativo e se as regras novas do Firebase foram publicadas.'}
  fiD.busy=false;if((agT==='fiado'||agT==='dash')&&ses&&ses.role==='ag'&&!$('#modal').innerHTML.trim()){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}}
-async function fiMut(fn,msg){try{const o=await rt('GET','bk/fi/'+ses.id);fiApply(o&&o.j);if(fn()===false)return false;
+async function fiMut(fn,msg){try{const o=await rt('GET','bk/fi/'+ses.id);fiApply(o&&o.j);const old0=JSON.parse(JSON.stringify({cl:fiD.cl,vd:fiD.vd}));if(fn()===false)return false;
   const j=JSON.stringify({cl:fiD.cl,vd:fiD.vd,nx:fiD.nx});if(j.length>550000){toast('Limite de dados atingido. Exclua fiados antigos já pagos.');await fiLoad();return false}
-  await rt('PUT','bk/fi/'+ses.id,{j});fiD.ok=true;await fiSync();closeM();render();if(msg)toast(msg);return true}
+  await rt('PUT','bk/fi/'+ses.id,{j});fiD.ok=true;try{agLogFi(old0)}catch(_){}await fiSync();closeM();render();if(msg)toast(msg);return true}
  catch(e){toast('Não foi possível salvar. Confira a internet e se o seu acesso está ativo.');return false}}
 function fiBody(){if(!fiD.ok&&!fiD.busy&&!fiD.err)setTimeout(fiLoad,0);
  if(fiD.err)return `<div class="err">${esc(fiD.err)}</div><button class="s" onclick="fiD.err='';fiLoad()">Tentar de novo</button>`;
