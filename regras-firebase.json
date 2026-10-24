@@ -16,8 +16,8 @@
     },
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins/'+auth.uid).val() === true)",
-        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth.uid === $uid && !data.exists() && newData.child('trial').val() === true && !root.child('resm/'+newData.child('rid').val()).exists()))",
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins/'+auth.uid).val() === true || (root.child('svc/'+auth.uid).val() === true || auth.token.email === 'servico@painelcobranca.online'))",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth.uid === $uid && !data.exists() && newData.child('trial').val() === true && !root.child('resm/'+newData.child('rid').val()).exists() && !root.child('bko/'+newData.child('rid').val()).exists()) || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && (newData.exists() ? (newData.child('rid').val() === root.child('users/'+auth.uid+'/rid').val() && newData.child('emp').isString() && (!data.exists() || (data.child('rid').val() === root.child('users/'+auth.uid+'/rid').val() && data.child('emp').exists()))) : (data.child('rid').val() === root.child('users/'+auth.uid+'/rid').val() && data.child('emp').exists()))))",
         ".validate": "newData.hasChild('rid') && newData.child('rid').isString() && newData.child('rid').val().length > 0 && newData.child('rid').val().length <= 40",
         "rid": {
           ".validate": "newData.isString()"
@@ -25,8 +25,50 @@
         "trial": {
           ".validate": "newData.isBoolean()"
         },
+        "emp": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
         "$o": {
           ".validate": false
+        }
+      }
+    },
+    "svc": {
+      ".read": false,
+      ".write": false
+    },
+    "cfg": {
+      "payApi": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        ".validate": "newData.isString() && newData.val().length <= 200"
+      }
+    },
+    "mpTok": {
+      "$rid": {
+        ".read": "auth != null && (root.child('svc/'+auth.uid).val() === true || auth.token.email === 'servico@painelcobranca.online')",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || root.child('users/'+auth.uid+'/rid').val() === $rid)",
+        ".validate": "newData.isString() && newData.val().length <= 400"
+      }
+    },
+    "pay": {
+      "$rid": {
+        ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('svc/'+auth.uid).val() === true || auth.token.email === 'servico@painelcobranca.online') || root.child('users/'+auth.uid+'/rid').val() === $rid)",
+        "$pid": {
+          ".write": "auth != null && (((root.child('svc/'+auth.uid).val() === true || auth.token.email === 'servico@painelcobranca.online') && !data.exists()) || (!newData.exists() && (root.child('admins/'+auth.uid).val() === true || root.child('users/'+auth.uid+'/rid').val() === $rid)))",
+          ".validate": "newData.hasChildren(['cid','amt','at'])",
+          "cid": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "amt": {
+            ".validate": "newData.isNumber()"
+          },
+          "at": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
         }
       }
     },
@@ -51,7 +93,7 @@
     "secrets": {
       ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
       "$rid": {
-        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (auth != null && !data.exists() && root.child('users/'+auth.uid+'/rid').val() === $rid && root.child('users/'+auth.uid+'/trial').val() === true && newData.isString()))",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $rid && newData.isString()))",
         ".validate": "newData.isString() && newData.val().length <= 100"
       }
     },
@@ -149,6 +191,205 @@
           }
         },
         ".validate": "$phone.matches(/^[0-9]{10,15}$/)"
+      }
+    },
+    "bk": {
+      "pg": {
+        ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && ((!newData.exists() && data.child('o').val() === root.child('users/'+auth.uid+'/rid').val()) || (newData.child('o').val() === root.child('users/'+auth.uid+'/rid').val() && (!data.exists() || data.child('o').val() === root.child('users/'+auth.uid+'/rid').val()) && root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/on').val() === true && root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/dueMs').val() > now && newData.child('x').val() === root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/dueMs').val()))))",
+          ".validate": "newData.hasChild('j') && $pid.matches(/^[a-z0-9]{6,16}$/)",
+          "j": {
+            ".validate": "newData.isString() && newData.val().length <= 6000"
+          },
+          "o": {
+            ".validate": "newData.isString() && newData.val().length <= 45"
+          },
+          "x": {
+            ".validate": "newData.isNumber()"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      },
+      "tk": {
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val()))",
+          "$slot": {
+            ".write": "(!data.exists() && newData.exists() && root.child('bk/pg/'+$pid).exists() && (!root.child('bk/pg/'+$pid+'/x').exists() || root.child('bk/pg/'+$pid+'/x').val() > now)) || (auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val())))",
+            ".validate": "$slot.matches(/^[0-9]{8}-[0-9]{4}$/) && newData.isString() && newData.val().length <= 12"
+          }
+        }
+      },
+      "em": {
+        "$oid": {
+          ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_')))",
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && (!newData.exists() || (root.child('bko/'+$oid+'/on').val() === true && root.child('bko/'+$oid+'/dueMs').val() > now))))",
+          ".validate": "newData.hasChild('j')",
+          "j": {
+            ".validate": "newData.isString() && newData.val().length <= 60000"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      },
+      "pr": {
+        ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('bk/pg/'+$pid+'/o').val() === root.child('users/'+auth.uid+'/rid').val() && (!newData.exists() || (root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/on').val() === true && root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/dueMs').val() > now))))",
+          ".validate": "newData.hasChild('j') && $pid.matches(/^[a-z0-9]{6,16}$/)",
+          "j": {
+            ".validate": "newData.isString() && newData.val().length <= 20000"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      },
+      "pi": {
+        ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('bk/pg/'+$pid+'/o').val() === root.child('users/'+auth.uid+'/rid').val() && (!newData.exists() || (root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/on').val() === true && root.child('bko/'+root.child('users/'+auth.uid+'/rid').val()+'/dueMs').val() > now))))",
+          "$id": {
+            ".validate": "$id.matches(/^[a-z0-9]{4,16}$/) && newData.isString() && newData.val().length <= 130000 && newData.val().matches(/^data:image\\/(png|jpeg|webp);base64,/)"
+          }
+        }
+      },
+      "nt": {
+        ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        "$oid": {
+          ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_')))",
+          "$id": {
+            ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && data.exists() && newData.exists() && newData.child('t').val() === data.child('t').val() && newData.child('m').val() === data.child('m').val() && newData.child('d').val() === data.child('d').val()))",
+            ".validate": "newData.hasChildren(['t','m','d'])",
+            "t": {
+              ".validate": "newData.isString() && newData.val().length <= 100"
+            },
+            "m": {
+              ".validate": "newData.isString() && newData.val().length <= 2000"
+            },
+            "d": {
+              ".validate": "newData.isNumber()"
+            },
+            "r": {
+              ".validate": "newData.isNumber()"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "fi": {
+        "$oid": {
+          ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_')))",
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && (!newData.exists() || (root.child('bko/'+$oid+'/on').val() === true && root.child('bko/'+$oid+'/dueMs').val() > now))))",
+          ".validate": "newData.hasChild('j')",
+          "j": {
+            ".validate": "newData.isString() && newData.val().length <= 600000"
+          },
+          "$o": {
+            ".validate": false
+          }
+        }
+      },
+      "fd": {
+        "$pid": {
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val()))",
+          "$ph": {
+            ".read": true,
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 100000000 && $ph.matches(/^[0-9]{10,11}$/)"
+          }
+        }
+      },
+      "lg": {
+        "$pid": {
+          ".read": true,
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val()))",
+          ".validate": "newData.isString() && newData.val().length <= 200000 && newData.val().matches(/^data:image\\/(png|jpeg|webp);base64,/)"
+        }
+      },
+      "ap": {
+        ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+        "$pid": {
+          ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val()))",
+          ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val()))",
+          "$aid": {
+            ".write": "(!data.exists() && newData.exists() && newData.child('st').val() === 'p' && newData.child('pd').val() !== true && root.child('bk/tk/'+$pid+'/'+newData.child('s').val()).exists() && root.child('bk/pg/'+$pid).exists()) || (auth != null && (root.child('admins/'+auth.uid).val() === true || (root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && root.child('users/'+auth.uid+'/rid').val() === root.child('bk/pg/'+$pid+'/o').val())))",
+            ".validate": "newData.hasChildren(['s','n','p','v','t','st']) && (newData.child('st').val() === 'p' || newData.child('st').val() === 'c' || newData.child('st').val() === 'x' || newData.child('st').val() === 'f')",
+            "s": {
+              ".validate": "newData.isString() && newData.val().matches(/^[0-9]{8}-[0-9]{4}$/)"
+            },
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "p": {
+              ".validate": "newData.isString() && newData.val().matches(/^[0-9]{10,15}$/)"
+            },
+            "v": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "o": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "t": {
+              ".validate": "newData.isNumber()"
+            },
+            "st": {
+              ".validate": "newData.isString()"
+            },
+            "pr": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            },
+            "vp": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+            },
+            "pd": {
+              ".validate": "newData.isBoolean()"
+            },
+            "fd": {
+              ".validate": "newData.isNumber()"
+            },
+            "fp": {
+              ".validate": "newData.isString() && (newData.val() === 'pix' || newData.val() === 'din' || newData.val() === 'car' || newData.val() === 'cre' || newData.val() === 'deb')"
+            },
+            "$o": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    },
+    "bko": {
+      ".read": "auth != null && root.child('admins/'+auth.uid).val() === true",
+      "$oid": {
+        ".read": "auth != null && (root.child('admins/'+auth.uid).val() === true || root.child('users/'+auth.uid+'/rid').val() === $oid)",
+        ".write": "auth != null && (root.child('admins/'+auth.uid).val() === true || (!data.exists() && root.child('users/'+auth.uid+'/rid').val() === $oid && $oid.beginsWith('ag_') && root.child('users/'+auth.uid+'/trial').val() === true && newData.child('on').val() === true && newData.child('dueMs').val() > now && newData.child('dueMs').val() < now + 691200000))",
+        ".validate": "newData.hasChildren(['j','dueMs','on'])",
+        "j": {
+          ".validate": "newData.isString() && newData.val().length <= 3000"
+        },
+        "dueMs": {
+          ".validate": "newData.isNumber()"
+        },
+        "on": {
+          ".validate": "newData.isBoolean()"
+        },
+        "pgs": {
+          "$pid": {
+            ".write": "auth != null && root.child('users/'+auth.uid+'/rid').val() === $oid && root.child('users/'+auth.uid+'/rid').val().beginsWith('ag_') && ((!newData.exists()) || (root.child('bko/'+$oid+'/on').val() === true && root.child('bko/'+$oid+'/dueMs').val() > now))",
+            ".validate": "newData.val() === true"
+          }
+        },
+        "$o": {
+          ".validate": false
+        }
       }
     },
     "req": {
