@@ -2020,6 +2020,10 @@ const getCoupons=r=>r.coupons||[5,10,15].map(v=>({v,code:'CUPOM'+v,on:true}));
 function saveCoupons(e){e.preventDefault();const f=e.target,r=db.resellers.find(r=>r.id===ses.id);
  r.coupons=getCoupons(r).map((k,i)=>({v:k.v,code:f['code'+i].value.trim()||k.code,on:f['on'+i].checked}));save();toast('Cupons salvos.')}
 function waNow(id){wa(id,true)}
+const CP_MSG='Seu pacote foi estendido com sucesso. Agradecemos por continuar conosco!\n\nUsuário: {usuario}\nPróximo vencimento: {vencimento}\n\nCaso necessite de assistência ou tenha perguntas, sinta-se à vontade para nos contatar.';
+function confPay(id){const c=db.clients.find(c=>c.id===id);if(!c)return;let d=String(c.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente com DDD.');return}if(d.length<=11)d='55'+d;
+ const u=(usersList(c).join(', ')||c.user||'').trim()||'—',t=fillMsg(CP_MSG,{usuario:u,vencimento:fmt(c.due),nome:c.name});
+ window.open('https://wa.me/'+d+'?text='+encodeURIComponent(t),'_blank','noopener,noreferrer')}
 function wa(id,direct,pw,noMp){const c=db.clients.find(c=>c.id===id),r=db.resellers.find(r=>r.id===c.rid);
  let d=(c.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente com DDD.');return}
  if(d.length<=11)d='55'+d;
@@ -2167,7 +2171,7 @@ function stats(list){const s={t:0,rec:0,pen:0,atr:0};
 function statsHtml(list){const s=stats(list);
  return `<div class="grid"><div class="stat"><b>${s.t}</b><span>Clientes</span></div><div class="stat"><b>${brl(s.rec)}</b><span>Recebido</span></div><div class="stat"><b>${brl(s.pen)}</b><span>A receber</span></div><div class="stat"><b>${brl(s.atr)}</b><span>Atrasado</span></div></div>`}
 function cliInfo(c){const u=usersList(c).join(', '),ap=appsList(c).join(', ');return (u||ap)?`<small class="ci">${u?'Usuário: '+esc(u):''}${u&&ap?' · ':''}${ap?'App: '+esc(ap):''}</small>`:''}
-function cliActs(c,x){return `<button class="s p" onclick="wa('${c.id}')">WhatsApp</button>${x==='pago'?`<button class="s" onclick="undoCli('${c.id}')">Desfazer</button>`:`<button class="s" onclick="renewCli('${c.id}')">Renovar</button>`}<button class="s" onclick="editCli('${c.id}')">Editar</button><button class="s" onclick="showQR('${c.id}')">QR Code</button><button class="s d" onclick="delCli('${c.id}')">Excluir</button>`}
+function cliActs(c,x){return `<button class="s p" onclick="wa('${c.id}')">WhatsApp</button>${x==='pago'?`<button class="s" onclick="undoCli('${c.id}')">Desfazer</button>`:`<button class="s" onclick="renewCli('${c.id}')">Renovar</button>`}<button class="s" onclick="confPay('${c.id}')" title="Avisa o cliente que o pacote foi estendido">Confirmar pagamento</button><button class="s" onclick="editCli('${c.id}')">Editar</button><button class="s" onclick="showQR('${c.id}')">QR Code</button><button class="s d" onclick="delCli('${c.id}')">Excluir</button>`}
 function clientRows(list,showRes){
  if(!list.length)return '<p class="note">Nenhum cliente ainda.</p>';
  const tbl=`<div class="tw dtab"><table><tr>${showRes?'':`<th class="ckc"><input type="checkbox" class="ck" title="Selecionar todos desta página" ${list.every(c=>selC.has(c.id))?'checked':''} onchange="selPage(this.checked)"></th>`}<th>Cliente</th>${showRes?'<th>Revenda</th>':''}<th>Telas</th><th>Valor</th><th>Vence</th><th>Status</th>${showRes?'':'<th>Ações</th>'}</tr>`+
@@ -2190,10 +2194,10 @@ function kpi(ic,l,v,sm,tone){return `<div class="kp t-${tone}"><div class="ic"><
 function segCard(title,sub,items){
  const tot=items.reduce((a,x)=>a+x.v,0);
  return `<div class="card dp"><h3>${title}<small>${sub}</small></h3><div class="seg">${tot?items.filter(x=>x.v>0).map(x=>`<i class="t-${x.t}" style="width:${x.v/tot*100}%;background:var(--c)"></i>`).join(''):''}</div><div class="lg">${items.map(x=>`<div class="t-${x.t}"><em></em><span>${x.l}</span><b>${x.n}</b>${x.s!=null?`<small>${x.s}</small>`:''}</div>`).join('')}</div></div>`}
-function upCard(title,rows,vazio,act,all,act2){
+function upCard(title,rows,vazio,act,all,act2,act3){
  const chip=n=>n<0?['bad','Atrasado '+(-n)+'d']:n===0?['warn','Hoje']:n===1?['warn','Amanhã']:['info','Em '+n+' dias'];
  const ini=t=>(String(t||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('')||'?').toUpperCase();
- return `<div class="card dp"><h3>${title}<small>${rows.length?rows.length+' no período':''}</small></h3>`+(rows.length?'<div class="up">'+(all?rows:rows.slice(0,8)).map(x=>{const n=diasAte(x.due),c=chip(n);return `<div class="it"><div class="av">${esc(ini(x.n))}</div><div class="m"><b>${esc(x.n)}</b><small>${esc(x.sub||'')}</small></div><div class="r"><b>${brl(x.val)}</b><span class="chip t-${c[0]}">${fmt(x.due)} · ${c[1]}</span>${act&&x.cid?`<div class="ba">${x.sent?'<span class="chip t-ok">Enviada hoje</span>':''}<button class="cb" onclick="${act}('${esc(x.cid)}')" aria-label="Enviar cobrança para ${esc(x.n)}">Enviar cobrança</button>${act2?`<button class="cb s" onclick="${act2}('${esc(x.cid)}')" aria-label="Renovar ${esc(x.n)}">Renovar</button>`:''}</div>`:''}</div></div>`}).join('')+'</div>'+(!all&&rows.length>8?`<p class="note">+ ${rows.length-8} outros</p>`:''):`<div class="emp">${vazio}</div>`)+'</div>'}
+ return `<div class="card dp"><h3>${title}<small>${rows.length?rows.length+' no período':''}</small></h3>`+(rows.length?'<div class="up">'+(all?rows:rows.slice(0,8)).map(x=>{const n=diasAte(x.due),c=chip(n);return `<div class="it"><div class="av">${esc(ini(x.n))}</div><div class="m"><b>${esc(x.n)}</b><small>${esc(x.sub||'')}</small></div><div class="r"><b>${brl(x.val)}</b><span class="chip t-${c[0]}">${fmt(x.due)} · ${c[1]}</span>${act&&x.cid?`<div class="ba">${x.sent?'<span class="chip t-ok">Enviada hoje</span>':''}<button class="cb" onclick="${act}('${esc(x.cid)}')" aria-label="Enviar cobrança para ${esc(x.n)}">Enviar cobrança</button>${act2?`<button class="cb s" onclick="${act2}('${esc(x.cid)}')" aria-label="Renovar ${esc(x.n)}">Renovar</button>`:''}${act3?`<button class="cb s" onclick="${act3}('${esc(x.cid)}')" aria-label="Confirmar pagamento de ${esc(x.n)}">Confirmar pagamento</button>`:''}</div>`:''}</div></div>`}).join('')+'</div>'+(!all&&rows.length>8?`<p class="note">+ ${rows.length-8} outros</p>`:''):`<div class="emp">${vazio}</div>`)+'</div>'}
 function dashHead(){return `<div class="dh"><h2>Visão geral</h2><span>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>`}
 const sumV=a=>a.reduce((x,c)=>x+Number(c.value!=null?c.value:c.fee||0),0);
 function cliRows(list,showRes){const lim=addDays(today(),DASHD);
@@ -2260,7 +2264,7 @@ function resellerDash(list){
  return resHead()+`<div class="kg">${kpi('users','Clientes',list.length,'Ativos na carteira','pri')}${kpi('cash','Receita mensal',brl(sumV(list)),'Soma dos planos','ok')}${kpi('alert','Vencem em '+DIAS+' dias',s3.length,brl(sumV(s3)),'warn')}${kpi('clock','Vencem em '+DASHD+' dias',soon.length,brl(sumV(soon)),'info')}${kpi('alert','Em atraso',late.length,brl(sumV(late)),'bad')}</div>`+
  `<div class="dc">${segCard('Situação dos clientes',list.length+' no total',[{l:'Renovado',t:'ok',v:cnt('pago').length,n:cnt('pago').length,s:brl(cv('pago'))},{l:'Pendente',t:'info',v:cnt('pend').length,n:cnt('pend').length,s:brl(cv('pend'))},{l:'Prestes a expirar',t:'warn',v:cnt('exp').length,n:cnt('exp').length,s:brl(cv('exp'))},{l:'Devendo',t:'bad',v:cnt('atr').length,n:cnt('atr').length,s:brl(cv('atr'))}])}`+
  `${segCard('Financeiro','valores em R$',[{l:'Recebido',t:'ok',v:s.rec,n:brl(s.rec)},{l:'A receber',t:'info',v:s.pen,n:brl(s.pen)},{l:'Atrasado',t:'bad',v:s.atr,n:brl(s.atr)}])}</div>`+
- autoBar()+upCard('Próximos vencimentos',cliRows(list.filter(c=>{const n=diasAte(c.due);return n>=0&&n<=3}),false),'Nenhum cliente vence hoje ou nos próximos 3 dias.','waNow',true,'renewCli')}
+ autoBar()+upCard('Próximos vencimentos',cliRows(list.filter(c=>{const n=diasAte(c.due);return n>=0&&n<=3}),false),'Nenhum cliente vence hoje ou nos próximos 3 dias.','waNow',true,'renewCli','confPay')}
 function masterDash(){
  const t=today(),lim=addDays(t,DASHD),ra=db.resellers.filter(r=>r.fee!=null&&r.due&&!r.trial&&!r.unlimited);
  const fin={pago:0,pend:0,atr:0},nn={pago:0,pend:0,atr:0};ra.forEach(r=>{const k=stR(r);fin[k]+=Number(r.fee||0);nn[k]++});
