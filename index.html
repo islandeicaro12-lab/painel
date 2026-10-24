@@ -1809,29 +1809,41 @@ async function fbRecon(){if(!fb||fb.role!=='master'||recBusy)return;recBusy=true
  if(ch){save();render()}}
 async function fbEnter(role,extra){fb={...fb,role,...extra};await fbLoad();clearInterval(pollT);pollT=setInterval(fbPoll,30000);await payCfgLoad();
  if(role==='rev'){reqPull();payApply();setTimeout(()=>mpCheck(true),2500)}else fbRecon()}
-async function fbLogin(e){e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value,b=e.target.querySelector('button:not([type=button])');
+async function fbLogin(e,rs){if(e)e.preventDefault();const u=rs?rs.u:$('#u').value.trim(),p=rs?'':$('#p').value,b=e?e.target.querySelector('button:not([type=button])'):null;
  if(b)b.disabled=true;err='';
  try{
-  if(lmode==='cli'){const d=u.replace(/\D/g,'');if(d.length<10)throw 'bad';const m=await rt('GET','pub/'+d,undefined,false);let o=null;
+  if(!rs&&lmode==='cli'){const d=u.replace(/\D/g,'');if(d.length<10)throw 'bad';const m=await rt('GET','pub/'+d,undefined,false);let o=null;
    for(const id in (m||{})){try{const x=m[id],k=await pubKeyOf(p,ub64(x.salt)),pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(x.iv)},k,ub64(x.ct));o=JSON.parse(new TextDecoder().decode(pt));break}catch(_){}}
    if(!o)throw 'bad';fb={role:'cli'};db={master:{},resellers:[o.r],clients:[o.c],renewals:o.n||[]};ses={role:'cli',id:o.c.id};render();return}
-  const s=await signIn(u,p);fb=s;const adm=await rt('GET','admins/'+s.uid);
+  const s=rs?rs.s:await signIn(u,p);fb=s;fbKeep(u);const adm=await rt('GET','admins/'+s.uid);
   if(adm===true){db={master:{user:u},resellers:[],clients:[],renewals:[]};await fbEnter('master');ses={role:'master'};tab='dash'}
   else{const me=await rt('GET','users/'+s.uid);if(!me||!me.rid)throw new Error('NOACCESS');
    if(String(me.rid).startsWith('ag_')){const o=await rt('GET','bko/'+me.rid);if(!o)throw new Error('NOACCESS');const j=JSON.parse(o.j);let emp=null;
     if(me.emp){try{const E=await rt('GET','bk/em/'+me.rid),L=E&&E.j?JSON.parse(E.j):[],e=L.find(x=>x.uid===s.uid);if(e&&e.on!==false)emp={id:e.id,name:e.name,perms:Array.isArray(e.perms)?e.perms:[]}}catch(_){}if(!emp){fbReset();err='Acesso de funcionário desativado. Fale com o responsável pela loja.';render();return}}
     if(o.on!==true){fbReset();err='Acesso desativado. Fale com o administrador.'}
     else if(o.dueMs<Date.now()){fbReset();err='Acesso vencido em '+fmt(dOf(o.dueMs))+'. Fale com o administrador para renovar.'}
-    else{fb={...s,role:'ag',rid:me.rid};agMe={...j,on:true,dueMs:o.dueMs};bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};ses={role:'ag',id:me.rid,emp};fiD={cl:[],vd:[],nx:1,ok:false,busy:false,err:'',sub:'vd',f:'aberto',q:'',mo:''};tab='agenda';err=''}
+    else{fb={...s,role:'ag',rid:me.rid};agMe={...j,on:true,dueMs:o.dueMs};bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};ses={role:'ag',id:me.rid,emp};fiD={cl:[],vd:[],nx:1,ok:false,busy:false,err:'',sub:'vd',f:'aberto',q:'',mo:''};tab='agenda';err='';if(rs)fbViewBack()}
     render();return}
    await fbEnter('rev',{rid:me.rid});const r=db.resellers[0];
    if(!r)throw new Error('NOACCESS');
    if(!r.active){fbReset();err='Revenda desativada. Fale com o administrador.'}
    else if(stR(r)==='atr'){fbReset();err=blockMsg(r)}
    else{ses={role:'rev',id:r.id};tab='dash'}}
- }catch(x){fbReset();err=netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
- render()}
-function fbReset(){agEm=null;agMe=null;agLogo='';agT='dash';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
+ }catch(x){const off=rs&&x&&!/SESSION|NOACCESS|PERMISSION|401|403/.test(String(x.message||x)),raw=off?localStorage.getItem(SESK):null;fbReset();if(raw)try{localStorage.setItem(SESK,raw)}catch(_){}err=rs?(off?'Sem conexão. Atualize a página para tentar de novo.':''):netErr(x,lmode==='cli'?'WhatsApp ou senha inválidos.':'Usuário ou senha inválidos.')}
+ if(rs&&ses)fbViewBack();render()}
+const SESK='cobranca_sess_v1';
+function fbKeep(u){try{if(fb&&fb.ref)localStorage.setItem(SESK,JSON.stringify({u,ref:fb.ref,uid:fb.uid,v:{}}))}catch(e){}}
+function fbForget(){try{localStorage.removeItem(SESK)}catch(e){}}
+function fbViewSave(){try{if(!ses||!FBMODE||AGQ)return;const o=JSON.parse(localStorage.getItem(SESK)||'null');if(!o)return;const v={tab,agT,agS,uid:ses.id};if(JSON.stringify(o.v)===JSON.stringify(v))return;o.v=v;localStorage.setItem(SESK,JSON.stringify(o))}catch(e){}}
+let fbSv=null;
+function fbViewBack(){try{const v=fbSv&&fbSv.v;if(!v||v.uid!==ses.id)return;const ptab=tab,pagT=agT,pagS=agS;
+ if(ses.role==='ag'){if(typeof v.agT==='string'&&/^[a-z]+$/.test(v.agT)&&(!agTabOk||agTabOk(v.agT)))agT=v.agT;if(v.agS&&bkD.pg&&bkD.pg[v.agS])agS=v.agS}
+ else if(typeof v.tab==='string'&&/^[a-z]+$/.test(v.tab))tab=v.tab;
+ render();const a=document.getElementById('app');if(!a||a.innerText.trim().length<30){tab=ptab;agT=pagT;agS=pagS}}catch(e){}}
+async function fbResume(){if(!FBMODE||AGQ||ses)return;let o=null;try{o=JSON.parse(localStorage.getItem(SESK)||'null')}catch(e){}if(!o||!o.ref||!o.u)return;fbSv=o;
+ const s={tok:'',ref:o.ref,uid:o.uid,exp:0};try{await tok(s)}catch(e){if(e&&e.message==='SESSION')fbForget();return}
+ const ab=document.getElementById('app');ab&&(ab.style.opacity='.5');await fbLogin(null,{u:o.u,s});if(ab)ab.style.opacity=''}
+function fbReset(){fbForget();agEm=null;agMe=null;agLogo='';agT='dash';agS='';bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};clearInterval(pollT);clearTimeout(fbT);fbT=null;fb=null;last={};lastPub={};prevPP=new Set();authErr={};db={master:{},resellers:[],clients:[],renewals:[]}}
 async function fbBye(){if(fbT||fbBusy){try{clearTimeout(fbT);await fbFlush()}catch(e){}}fbReset();ses=null;cliQ='';cliS='';cliO='';cliP=1;selC.clear();render()}
 async function fbTrial(e){e.preventDefault();const f=e.target,ph=f.phone.value.trim(),k=phKey(ph),b=f.querySelector('button:not([type=button])');
  if(!k){terr='Informe um WhatsApp válido com DDD.';render();return}
@@ -2168,7 +2180,7 @@ function clientRows(list,showRes){
  return tbl+cards}
 
 function navFix(){const b=document.querySelector('.side button.on');if(b&&window.innerWidth<=640){const sd=b.parentNode;sd.scrollLeft=b.offsetLeft-(sd.clientWidth-b.offsetWidth)/2}}
-function render(){render0();agThemeTick();navFix();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud&&!FBMODE)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
+function render(){render0();fbViewSave();agThemeTick();navFix();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud&&!FBMODE)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
 
 const DASHD=7;
 function diasAte(d){return Math.round((new Date(d+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
@@ -2701,7 +2713,7 @@ async function agBook(e){e.preventDefault();if(ag.busy)return;const f=ag.f,n=(f.
 let agLogo='';let agMe=null;let bkD={pg:{},meta:{},ac:[],ap:[],t:0,busy:false,ok:false,err:'',f:'pend',pf:''};
 let bkD0=null;
 const AG_FOREVER=4102444800000;
-async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(bkD.busy||!FBMODE||!ok)return;bkD.busy=true;
+async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(bkD.busy||!FBMODE||!ok)return;bkD.busy=true;const first=!bkD.ok;
  try{const P={},M={},L=[];
   if(ses.role==='master'){const [pg,ap,ko,sc,ntm]=await Promise.all([rt('GET','bk/pg'),Promise.resolve(null),rt('GET','bko'),rt('GET','secrets'),rt('GET','bk/nt').catch(()=>null)]);bkD.ntm=ntm||{};
    for(const k in pg||{}){const c=agCfg(pg[k].j);if(c){P[k]=c;M[k]={o:pg[k].o||'',x:pg[k].x}}}
@@ -2716,7 +2728,7 @@ async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(
     const ap=await rt('GET','bk/ap/'+pid);for(const aid in ap||{}){const x=ap[aid];if(x&&x.s)L.push({pid,aid,...x})}}))}
   bkD.pg=P;bkD.meta=M;bkD.ap=L;bkD.ok=true;bkD.err=''}
  catch(x){bkD.err=x&&(x.status===401||x.status===403)?'Sem permissão. Publique de novo as regras do Firebase (arquivo regras-firebase.json).':'Não foi possível carregar os agendamentos.'}
- bkD.busy=false;bkD.t=Date.now();if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag'&&(agT==='agenda'||agT==='dash'))&&!$('#modal').innerHTML.trim()){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}}
+ bkD.busy=false;bkD.t=Date.now();if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag'&&(first||agT==='agenda'||agT==='dash'))&&!$('#modal').innerHTML.trim()){const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))render()}}
 setInterval(()=>{if(tab==='agenda'&&ses&&(ses.role==='master'||ses.role==='ag'&&(agT==='agenda'||agT==='dash'))&&!document.hidden&&Date.now()-bkD.t>25000)agLoad()},10000);
 const agLink=pid=>(appLink().replace(/\/?$/,'/'))+'?ag='+pid;
 let agA='geral';
@@ -3293,6 +3305,6 @@ function render0(){const a=$('#app');
   <div class="card"><h2>Cupons de desconto</h2><form onsubmit="saveCoupons(event)" style="grid-template-columns:1fr">${getCoupons(me).map((k,i)=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="min-width:70px">${brl(k.v)}</b><input name="code${i}" value="${esc(k.code)}" style="max-width:200px" required><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" name="on${i}" ${k.on?'checked':''} style="width:auto"> Ativo</label></div>`).join('')}<div><button>Salvar cupons</button></div></form><p class="note">Ao enviar a cobrança, escolha um cupom (opcional): o desconto entra na mensagem e no valor do Pix.</p></div>
   `:tab==='new'?`<div class="card"><h2>Novo cliente</h2><form onsubmit="addClient(event)" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" required></div><div><label>WhatsApp (com DDD)</label><input name="phone" placeholder="81999999999" inputmode="tel" pattern="[0-9 ()+\-]{10,20}" title="Digite o número com DDD, só números" required></div>${telaSel(null)}${usersBlock([])}${appsBlock([])}${sitSel(null)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" required></div><div><label>Vencimento</label><input name="due" type="date" value="${today()}" required></div>${stField(today(),false)}<div><label style="display:flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" name="send" checked style="width:auto"> Enviar cobrança ao cadastrar</label></div><button>Adicionar</button></form></div>
   `:tab==='cli'?`<div class="card"><h2>Meus clientes</h2><div class="cbar"><button class="s" onclick="bulkOpen(false)" style="width:auto">Mensagem em massa</button><button onclick="cbOpen()" style="width:auto">Cobrança em massa${cbBadge()}</button>${cbHoje()?`<button class="s p" onclick="cbOpen(true)" style="width:auto">Cobrar quem vence hoje (${cbHoje()})</button>`:''}<div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="cq" type="search" placeholder="Pesquisar por nome, WhatsApp, plano, aplicativo..." value="${esc(cliQ)}" oninput="cliSearch(this.value)" autocomplete="off"></div><label>Ordenar <select onchange="cliSort(this.value)">${[['','Padrão'],['az','Nome A–Z'],['za','Nome Z–A']].map(([v,l])=>`<option value="${v}" ${v===cliO?'selected':''}>${l}</option>`).join('')}</select></label><label>Mostrar <select onchange="cliSize(this.value)">${[10,20,30,40,50,100,200,500,0].map(n=>`<option value="${n}" ${n===cliN?'selected':''}>${n||'Todos'}</option>`).join('')}</select> por página</label></div><div class="sits" id="sits">${sitsHtml()}</div><div id="cliList">${cliListHtml()}</div></div>`:tab==='ren'?renCard(ses.id):tab==='notif'?notifRes(me):tab==='guide'?guideRes():resellerDash(list)}</div></div>`}}
-render();if(!FBMODE)cloudInit();else fbCheckSetup();
+render();if(!FBMODE)cloudInit();else{fbCheckSetup();fbResume()}
 let lastDay=today();const chkDay=()=>{if(today()!==lastDay){lastDay=today();if(ses)softRender()}};setInterval(chkDay,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)chkDay()});
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script></body></html>
