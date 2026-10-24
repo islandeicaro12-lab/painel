@@ -2845,17 +2845,19 @@ function agAcEdit(id){const a=id?bkD.ac.find(x=>x.id===id):{name:'',phone:'',use
  <label>Usuário (e-mail ou nome sem espaços)</label><input id="acu" value="${esc(a.user)}" ${id?'disabled':''} autocapitalize="none" autocorrect="off" spellcheck="false">
  <label>${id?'Nova senha (deixe vazio para manter)':'Senha (mínimo 6 caracteres)'}</label><input id="acp" value="" autocomplete="off">
  <div class="g2"><div><label>Valor mensal (R$)</label><input id="acf" type="number" min="0" step="0.01" value="${a.fee===''||a.fee==null?'':a.fee}"></div><div><label>Máx. de painéis</label><select id="acm">${[[1,'1 painel'],[2,'2 painéis'],[3,'3 painéis'],[5,'5 painéis'],[10,'10 painéis'],[0,'Ilimitado']].map(([v,l])=>`<option value="${v}" ${+a.maxPg===v?'selected':''}>${l}</option>`).join('')}</select></div></div>
+ <label>Aplicativo Android (APK) — link para enviar junto com o acesso</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="aca" type="url" inputmode="url" maxlength="300" value="${esc(a.apk||(id?'':agApkDef()))}" placeholder="https://… .apk (opcional)" style="flex:1;min-width:200px"><button type="button" class="s" onclick="$('#aca').value=appLink().replace(/[/]?$/,'/')+'agenda.apk'">Usar agenda.apk do site</button></div><span class="note" style="display:block;margin:4px 0 8px;font-size:12.5px">Coloque o arquivo .apk no GitHub (na raiz, junto do index.html) ou no Google Drive e cole o link aqui. Ele vai na mensagem de acesso do WhatsApp.</span>
  <label>Vencimento</label><input id="acd" type="date" value="${esc(a.due||addDays(today(),30))}"><label style="display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" id="acx" style="width:auto" ${id&&!a.due?'checked':''}> Sem vencimento (acesso ilimitado)</label>
  <div style="display:flex;gap:8px;margin-top:14px"><button id="acsave">Salvar</button><button class="s" onclick="closeM()">Cancelar</button></div></div></div>`;
  $('#acsave').onclick=()=>agAcSave(id)}
+const agApkDef=()=>{try{return localStorage.getItem('cobranca_apk')||''}catch(e){return ''}};
 async function agAcSave(id){const g=n=>document.getElementById(n).value,old=id&&bkD.ac.find(x=>x.id===id),b=document.getElementById('acsave');
- const name=g('acn').trim(),phone=g('acw').replace(/\D/g,''),user=old?old.user:g('acu').trim(),pass=g('acp'),fee=+g('acf')||0,unl=document.getElementById('acx').checked,due=unl?'':g('acd'),maxPg=+g('acm');
- if(!name){toast('Digite o nome do cliente.');return}if(!unl&&!due){toast('Informe o vencimento ou marque "Sem vencimento".');return}
+ const name=g('acn').trim(),phone=g('acw').replace(/\D/g,''),user=old?old.user:g('acu').trim(),pass=g('acp'),fee=+g('acf')||0,apk=g('aca').trim(),unl=document.getElementById('acx').checked,due=unl?'':g('acd'),maxPg=+g('acm');
+ if(!name){toast('Digite o nome do cliente.');return}if(apk&&!/^https?:\/\/\S+$/i.test(apk)){toast('Link do APK inválido. Use um endereço começando com https://');return}if(apk)try{localStorage.setItem('cobranca_apk',apk)}catch(e){}if(!unl&&!due){toast('Informe o vencimento ou marque "Sem vencimento".');return}
  if(!old){if(!user){toast('Digite o usuário.');return}if(!fbPwOk(user,pass)){toast(FB_PW_MSG);return}
   const u=user.toLowerCase();if(u===String(db.master.user||'').toLowerCase()||db.resellers.some(r=>String(r.user).toLowerCase()===u)||bkD.ac.some(x=>String(x.user).toLowerCase()===u)){toast('Esse usuário já existe.');return}}
  else if(pass&&pass.length<6){toast('A senha precisa ter pelo menos 6 caracteres.');return}
  b.disabled=true;
- try{const A={id:old?old.id:uid(),name,user,phone,fee,due,maxPg,created:old?old.created:today(),uid:old?old.uid:'',...(old&&old.trial?{trial:true}:{})},oid='ag_'+A.id,dm=agDueMs(A);
+ try{const A={id:old?old.id:uid(),name,user,phone,fee,due,maxPg,...(apk?{apk}:{}),created:old?old.created:today(),uid:old?old.uid:'',...(old&&old.trial?{trial:true}:{})},oid='ag_'+A.id,dm=agDueMs(A);
   if(!old){let s;try{s=await itCall('signUp',{email:fbEm(user),password:pass,returnSecureToken:true}).then(mkS)}catch(e){if(e.code==='EMAIL_EXISTS'){toast('Esse usuário já existe.');b.disabled=false;return}throw e}
    A.uid=s.uid;await rt('PUT','users/'+A.uid,{rid:oid});await rt('PUT','secrets/'+oid,pass);await rt('PUT','bko/'+oid,{j:JSON.stringify(A),dueMs:dm,on:true});
    bkD.ac.push({...A,oid,on:true,dueMs:dm,pass});closeM();render();toast('Cliente criado. Toque em Enviar acesso para mandar o usuário e a senha.')}
@@ -2863,7 +2865,7 @@ async function agAcSave(id){const g=n=>document.getElementById(n).value,old=id&&
    await rt('PUT','bko/'+oid+'/j',JSON.stringify(A));await rt('PUT','bko/'+oid+'/dueMs',dm);Object.assign(old,A,{dueMs:dm});await agSyncX(old);closeM();render();toast('Cliente salvo.')}}
  catch(e){b.disabled=false;toast('Não foi possível salvar ('+(e.status||e.code||e.message)+'). Publique as regras novas do Firebase.')}}
 async function agSyncX(a){for(const k in bkD.meta){if(bkD.meta[k].o===a.oid){const x=a.on?a.dueMs:0;try{await rt('PUT','bk/pg/'+k+'/x',x);bkD.meta[k].x=x}catch(e){}}}}
-async function agAcPatch(a){const A={id:a.id,name:a.name,user:a.user,phone:a.phone,fee:a.fee,due:a.due,maxPg:a.maxPg,created:a.created,uid:a.uid,...(a.trial?{trial:true}:{})};a.dueMs=agDueMs(a);
+async function agAcPatch(a){const A={id:a.id,name:a.name,user:a.user,phone:a.phone,fee:a.fee,due:a.due,maxPg:a.maxPg,...(a.apk?{apk:a.apk}:{}),created:a.created,uid:a.uid,...(a.trial?{trial:true}:{})};a.dueMs=agDueMs(a);
  await rt('PUT','bko/'+a.oid+'/j',JSON.stringify(A));await rt('PUT','bko/'+a.oid+'/dueMs',a.dueMs);await rt('PUT','bko/'+a.oid+'/on',a.on);await agSyncX(a)}
 async function agAcRenew(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let n=addDays(a.due&&a.due>today()?a.due:today(),30);const old={due:a.due,on:a.on};a.due=n;a.on=true;
  try{await agAcPatch(a);render();toast('Renovado até '+fmt(n)+'.')}catch(e){a.due=old.due;a.on=old.on;toast('Não foi possível renovar.')}}
@@ -2874,7 +2876,7 @@ function agAcDel(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;ask('Excluir
   if(a.uid){try{const s=await signIn(a.user,a.pass);await itCall('delete',{idToken:s.tok})}catch(e){}try{await rt('DELETE','users/'+a.uid)}catch(e){}}
   await rt('DELETE','secrets/'+a.oid);await rt('DELETE','bko/'+a.oid);await rt('DELETE','bk/fi/'+a.oid).catch(()=>{});await rt('DELETE','bk/nt/'+a.oid).catch(()=>{});await rt('DELETE','bk/em/'+a.oid).catch(()=>{});bkD.ac=bkD.ac.filter(x=>x!==a);render();toast('Cliente excluído.')}catch(e){toast('Não foi possível excluir.')}})}
 function agAcWa(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let d=String(a.phone||'').replace(/\D/g,'');if(d.length<10){toast('Cadastre o WhatsApp do cliente em Editar.');return}if(d.length<=11)d='55'+d;
- const m=`Olá, ${a.name}! Seu acesso ao painel de agendamentos está pronto.\n\nLink: ${appLink()}\nUsuário: ${a.user}\nSenha: ${a.pass}\n\nEntre, crie seu painel de agendamento e envie o link para os seus clientes.`+(a.due?`\nAcesso válido até ${fmt(a.due)}.`:'');
+ const m=`Olá, ${a.name}! Seu acesso ao painel de agendamentos está pronto.\n\nLink: ${appLink()}\nUsuário: ${a.user}\nSenha: ${a.pass}\n\nEntre, crie seu painel de agendamento e envie o link para os seus clientes.`+(a.apk?`\n\nAplicativo para Android (baixe e instale): ${a.apk}`:'')+(a.due?`\nAcesso válido até ${fmt(a.due)}.`:'');
  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(m),'_blank','noopener,noreferrer')}
 function agMyPass(){ask('Nova senha:',1,async p=>{if(!p)return;if(p.length<6){toast('A senha precisa ter pelo menos 6 caracteres.');return}try{await itCall('update',{idToken:await tok(),password:p,returnSecureToken:false});try{await rt('PUT','secrets/'+ses.id,p)}catch(e){}toast('Senha alterada.')}catch(x){toast(x.code==='CREDENTIAL_TOO_OLD_LOGIN_AGAIN'?'Por segurança, saia, entre de novo e repita.':'Não foi possível trocar a senha.')}})}
 
