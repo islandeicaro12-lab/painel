@@ -1919,6 +1919,9 @@ const st=c=>{const t=today();if(c.due<t)return'atr';if(c.due<=addDays(t,DIAS))re
 const lb={pago:'Pago',pend:'Pendente',atr:'Atrasado'};
 const lbC={pago:'Renovado',pend:'Pendente',exp:'Prestes a expirar',atr:'Devendo'};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function addMonths(d,n,anc){n=n==null?1:n;const [y,m,dd]=d.split('-').map(Number),dim=(yy,mm)=>new Date(yy,mm,0).getDate();let day=dd;if(anc&&anc>dd&&dd===Math.min(anc,dim(y,m)))day=anc;const t=m-1+n,Y=y+Math.floor(t/12),M=((t%12)+12)%12+1,D=Math.min(day,dim(Y,M));return Y+'-'+String(M).padStart(2,'0')+'-'+String(D).padStart(2,'0')}
+function nextDue(o){let n=addMonths(o.due,1,o.dd);while(n<=today())n=addMonths(n,1,o.dd||+o.due.slice(8));return n}
+function setDue(o,n){const a=o.dd&&o.dd>+n.slice(8)&&+n.slice(8)===Math.min(o.dd,new Date(+n.slice(0,4),+n.slice(5,7),0).getDate())?o.dd:(+o.due.slice(8)>+n.slice(8)?+o.due.slice(8):0);if(a)o.dd=a;else delete o.dd;o.due=n}
 function addDays(d,n){const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
 
 function login(e){if(FBMODE)return fbLogin(e);e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value;
@@ -2000,9 +2003,9 @@ function addClient(e){e.preventDefault();const f=e.target;
  if(f.phone.value.replace(/\D/g,'').length<10){toast('Informe o WhatsApp com DDD.');return}
  const nid=uid(),snd=f.send.checked;db.clients.push({id:nid,rid:ses.id,name:f.name.value.trim(),phone:f.phone.value.trim(),screens:+f.tela.value,plan:telaTxt(+f.tela.value),users:usersOf(f),user:usersOf(f).join(", "),apps:appsOf(f),app:appsOf(f).join(", "),value:+f.value.value,due:f.due.value,paid:f.paid.checked,created:today(),sit:sitVal(f)});
  save();render();if(snd)wa(nid)}
-function renewCli(id){const c=db.clients.find(c=>c.id===id);let n=addDays(c.due,30);while(n<=today())n=addDays(n,30);
- $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Renovar ${esc(c.name)}</h2><form id="rf" style="grid-template-columns:1fr"><div><label>Novo vencimento (padrão: +30 dias)</label><input name="d" type="date" value="${n}" required></div><div style="display:flex;gap:8px"><button>Confirmar renovação</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
- $('#rf').onsubmit=e=>{e.preventDefault();c.prevDue=c.due;c.prevPaid=!!c.paid;c.due=e.target.d.value;c.paid=true;save();closeM();render();toast('Plano renovado.')}}
+function renewCli(id){const c=db.clients.find(c=>c.id===id);let n=nextDue(c);
+ $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Renovar ${esc(c.name)}</h2><form id="rf" style="grid-template-columns:1fr"><div><label>Novo vencimento (padrão: mesmo dia do próximo mês)</label><input name="d" type="date" value="${n}" required></div><div style="display:flex;gap:8px"><button>Confirmar renovação</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
+ $('#rf').onsubmit=e=>{e.preventDefault();c.prevDue=c.due;c.prevPaid=!!c.paid;setDue(c,e.target.d.value);c.paid=true;save();closeM();render();toast('Plano renovado. Abrindo a confirmação no WhatsApp…');confPay(id)}}
 function editCli(id){const c=db.clients.find(c=>c.id===id);
  $('#modal').innerHTML=`<div class="ov"><div class="md" style="text-align:left"><h2>Editar cliente</h2><form id="cf" style="grid-template-columns:1fr" oninput="fSync(event,this)" onchange="fSync(event,this)"><div><label>Nome</label><input name="name" value="${esc(c.name)}" required></div><div><label>WhatsApp</label><input name="phone" value="${esc(c.phone)}"></div>${telaSel(c)}${usersBlock(usersList(c))}${appsBlock(appsList(c))}${sitSel(c)}<div><label>Valor (R$)</label><input name="value" type="number" step="0.01" min="0" value="${c.value}" required></div><div><label>Vencimento</label><input name="due" type="date" value="${c.due}" required></div>${stField(c.due,c.paid)}<div style="display:flex;gap:8px"><button>Salvar</button><button type="button" class="s" onclick="closeM()">Cancelar</button></div></form></div></div>`;
  $('#cf').onsubmit=e=>{e.preventDefault();const f=e.target;c.name=f.name.value.trim();c.phone=f.phone.value.trim();if(f.tela.value){c.screens=+f.tela.value;c.plan=telaTxt(c.screens)}c.users=usersOf(f);c.user=c.users.join(", ");c.apps=appsOf(f);c.app=c.apps.join(", ");c.value=+f.value.value;c.due=f.due.value;c.paid=f.paid.checked;c.sit=sitVal(f);save();closeM();render();toast('Cliente atualizado.')}}
@@ -2108,7 +2111,7 @@ function editRes(id){const r=db.resellers.find(r=>r.id===id);
   r.name=f.name.value.trim();r.user=u;r.pass=f.pass.value;r.phone=f.phone.value.trim();r.unlimited=f.unl.checked;delete r.plan;delete r.maxCli;if(r.unlimited){r.fee=null;r.due='';r.paid=false}else{r.fee=f.fee.value===''?null:+f.fee.value;r.due=f.due.value}save();closeM();render();toast('Revenda atualizada.')}}
 
 const stR=r=>r.unlimited?'pago':!r.due?'pend':(r.paid&&r.due>today())?'pago':(r.due<today()?'atr':'pend');
-function payRes(id){const r=db.resellers.find(r=>r.id===id);r.prevDue=r.due;let n=addDays(r.due,30);while(n<=today())n=addDays(n,30);r.due=n;r.paid=true;save();render()}
+function payRes(id){const r=db.resellers.find(r=>r.id===id);r.prevDue=r.due;setDue(r,nextDue(r));r.paid=true;save();render()}
 function undoRes(id){const r=db.resellers.find(r=>r.id===id);if(r.prevDue)r.due=r.prevDue;r.paid=false;save();render()}
 function myPassCard(){return `<div class="card"><h2>Alterar minha senha</h2><form onsubmit="myPass(event)" style="display:grid;grid-template-columns:1fr;gap:10px;max-width:420px"><div><label>Senha atual</label><input name="cur" type="password" autocomplete="current-password" required></div><div><label>Nova senha (mínimo 6 caracteres)</label><input name="n1" type="password" autocomplete="new-password" minlength="6" required></div><div><label>Repita a nova senha</label><input name="n2" type="password" autocomplete="new-password" minlength="6" required></div><button>Salvar nova senha</button></form></div>`}
 async function myPass(e){e.preventDefault();const f=e.target,b=f.querySelector('button'),r=db.resellers.find(r=>r.id===ses.id);if(!r)return;
@@ -2225,7 +2228,7 @@ function mpPrep(){if(!mpOn()||Date.now()-mpPrepT<20000)return;const l=db.clients
 async function payApply(){if(!fb||fb.role!=='rev'||!db.resellers[0])return false;const rid=kid(fb.rid);let m=null;try{m=await rt('GET','pay/'+rid)}catch(e){return false}
  if(!m)return false;const nomes=[];
  for(const k in m){const e=m[k]||{},c=db.clients.find(c=>c.id===e.cid);
-  if(c&&!(c.payIds||[]).includes(k)){c.prevDue=c.due;c.prevPaid=!!c.paid;let n=addDays(c.due,30);while(n<=today())n=addDays(n,30);c.due=n;c.paid=true;c.payIds=[...(c.payIds||[]).slice(-9),k];c.paidVia='Pix automático';delete c.mp;nomes.push(c.name)}
+  if(c&&!(c.payIds||[]).includes(k)){c.prevDue=c.due;c.prevPaid=!!c.paid;setDue(c,nextDue(c));c.paid=true;c.payIds=[...(c.payIds||[]).slice(-9),k];c.paidVia='Pix automático';delete c.mp;nomes.push(c.name)}
   try{await rt('DELETE','pay/'+rid+'/'+k)}catch(x){}}
  if(nomes.length){save();softRender();toast('Pagamento confirmado e plano renovado: '+nomes.join(', ')+'.')}return nomes.length>0}
 async function mpCheck(silent){if(!mpOn())return;const ids=db.clients.filter(c=>c.rid===ses.id&&c.mp&&c.mp.id).map(c=>c.mp.id).slice(0,20);
@@ -2402,12 +2405,12 @@ function fSync(ev,f){const n=ev.target.name,D=/^d1$/,fut=()=>f.due.value>today()
  if(n==='sit'){const v=f.sit.value;
   if(D.test(v)){f.due.value=addDays(today(),-1);f.paid.checked=false}
   else if(v==='gratis')f.value.value=0;
-  else if(v==='renovado'){f.paid.checked=true;if(!f.due.value||!fut())f.due.value=addDays(today(),30)}}
+  else if(v==='renovado'){f.paid.checked=true;if(!f.due.value||!fut())f.due.value=addMonths(today(),1)}}
  else if(n==='due'&&f.due.value){const m=mm();
   if(f.sit.value==='renovado'&&!fut()){f.sit.value=m>0?'d1':'';f.paid.checked=false}
   else if(D.test(f.sit.value)||f.sit.value==='')f.sit.value=m>0?'d1':(f.paid.checked&&fut()?'renovado':'')}
  else if(n==='paid'){
-  if(f.paid.checked){if(f.sit.value===''||D.test(f.sit.value)){f.sit.value='renovado';if(!fut())f.due.value=addDays(today(),30)}}
+  if(f.paid.checked){if(f.sit.value===''||D.test(f.sit.value)){f.sit.value='renovado';if(!fut())f.due.value=addMonths(today(),1)}}
   else if(f.sit.value==='renovado'){const m=f.due.value?mm():0;f.sit.value=m>0?'d1':''}}
  stUpd(f)}
 function diasMsg(due){const n=diasAte(due);return n<0?'venceu há '+(-n)+(n===-1?' dia':' dias'):n===0?'vence hoje':n===1?'falta 1 dia':'faltam '+n+' dias'}
@@ -2521,12 +2524,12 @@ function cleanClient(c,rid){if(!c||typeof c!=='object')return null;const name=S_
  const sc=Math.round(Number(c.screens));if(sc>=1&&sc<=10)o.screens=sc;
  const us=A_(c.users,5);if(us.length){o.users=us;o.user=us.join(', ')}else if(c.user)o.user=S_(c.user,200);
  const ap=A_(c.apps,30);if(ap.length){o.apps=ap;o.app=ap.join(', ')}else if(c.app)o.app=S_(c.app,300);
- if(D_(c.created))o.created=c.created;if(c.sit==='novo'||c.sit==='gratis')o.sit=c.sit;if(c.oper)o.oper=S_(c.oper,80);if(D_(c.prevDue))o.prevDue=c.prevDue;if(c.prevPaid!==undefined)o.prevPaid=!!c.prevPaid;if(c.pass)o.pass=S_(c.pass,60);return o}
+ if(D_(c.created))o.created=c.created;if(c.sit==='novo'||c.sit==='gratis')o.sit=c.sit;if(c.oper)o.oper=S_(c.oper,80);if(D_(c.prevDue))o.prevDue=c.prevDue;if(+c.dd>=29&&+c.dd<=31)o.dd=+c.dd;if(c.prevPaid!==undefined)o.prevPaid=!!c.prevPaid;if(c.pass)o.pass=S_(c.pass,60);return o}
 function cleanRenewal(r,rid){if(!r||typeof r!=='object')return null;const date=D_(r.date),val=N_(r.value),m=Math.round(Number(r.months));if(!date||val===null||!(m>=1&&m<=120)||!r.cid)return null;return{id:S_(r.id,40)||uid(),cid:S_(r.cid,40),rid,months:m,value:val,date,status:['pend','ok','no'].includes(r.status)?r.status:'pend'}}
 function cleanRes(r){if(!r||typeof r!=='object')return null;const name=S_(r.name,120).trim(),user=S_(r.user,60).trim(),pass=S_(r.pass,80);if(!name||!user||!pass)return null;
  const o={id:S_(r.id,40)||uid(),name,user,pass,phone:S_(r.phone,30),active:r.active!==false,paid:!!r.paid,created:D_(r.created)||today()};
  if(r.unlimited){o.unlimited=true;o.fee=null;o.due=''}else{o.fee=r.fee==null?null:N_(r.fee);o.due=D_(r.due)||''}
- if(r.trial)o.trial=true;if(D_(r.prevDue))o.prevDue=r.prevDue;if(typeof r.msg==='string')o.msg=r.msg.slice(0,3000);
+ if(r.trial)o.trial=true;if(D_(r.prevDue))o.prevDue=r.prevDue;if(+r.dd>=29&&+r.dd<=31)o.dd=+r.dd;if(typeof r.msg==='string')o.msg=r.msg.slice(0,3000);
  const ac=A_(r.appCat,100);if(ac.length)o.appCat=ac;
  if(typeof r.logo==='string'&&/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(r.logo)&&r.logo.length<400000)o.logo=r.logo;
  if(r.pix&&typeof r.pix==='object'){const k=S_(r.pix.key,120);if(k)o.pix={type:S_(r.pix.type,10),key:k,name:S_(r.pix.name,60),city:S_(r.pix.city,40)}}
@@ -3029,7 +3032,7 @@ async function agAcSave(id){const g=n=>document.getElementById(n).value,old=id&&
 async function agSyncX(a){for(const k in bkD.meta){if(bkD.meta[k].o===a.oid){const x=a.on?a.dueMs:0;try{await rt('PUT','bk/pg/'+k+'/x',x);bkD.meta[k].x=x}catch(e){}}}}
 async function agAcPatch(a){const A={id:a.id,name:a.name,user:a.user,phone:a.phone,fee:a.fee,due:a.due,maxPg:a.maxPg,...(a.apk?{apk:a.apk}:{}),created:a.created,uid:a.uid,...(a.trial?{trial:true}:{})};a.dueMs=agDueMs(a);
  await rt('PUT','bko/'+a.oid+'/j',JSON.stringify(A));await rt('PUT','bko/'+a.oid+'/dueMs',a.dueMs);await rt('PUT','bko/'+a.oid+'/on',a.on);await agSyncX(a)}
-async function agAcRenew(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let n=addDays(a.due&&a.due>today()?a.due:today(),30);const old={due:a.due,on:a.on};a.due=n;a.on=true;
+async function agAcRenew(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;let n=addMonths(a.due&&a.due>today()?a.due:today(),1);const old={due:a.due,on:a.on};a.due=n;a.on=true;
  try{await agAcPatch(a);render();toast('Renovado até '+fmt(n)+'.')}catch(e){a.due=old.due;a.on=old.on;toast('Não foi possível renovar.')}}
 async function agAcTog(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;a.on=!a.on;try{await agAcPatch(a);render();toast(a.on?'Acesso ativado.':'Acesso desativado: o cliente não consegue mais entrar e os links dele ficam fora do ar.')}catch(e){a.on=!a.on;toast('Não foi possível salvar.')}}
 function agAcDel(id){const a=bkD.ac.find(x=>x.id===id);if(!a)return;ask('Excluir o cliente "'+a.name+'", o acesso e todos os painéis e agendamentos dele? Não dá para desfazer.',0,async()=>{
