@@ -2133,7 +2133,7 @@ async function myPass(e){e.preventDefault();const f=e.target,b=f.querySelector('
   b.disabled=false;return}
  if(cur!==r.pass){toast('Senha atual incorreta.');return}
  r.pass=n1;save();f.reset();toast('Senha alterada com sucesso.')}
-function logoCard(r){return `<div class="card"><h2>Logo da revenda</h2><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${r.logo?`<img src="${r.logo}" alt="Logo" style="max-height:80px;max-width:160px;border-radius:8px;background:#fff;padding:4px">`:'<span class="note">Nenhuma logo cadastrada.</span>'}<div style="display:flex;gap:8px"><button onclick="$('#lf').click()">${r.logo?'Trocar logo':'Adicionar logo'}</button>${r.logo?'<button class="s d" onclick="rmLogo()">Remover</button>':''}</div>${r.logo?`<label style="display:flex;align-items:center;gap:8px;flex-basis:100%;margin:0;font-weight:500"><input type="checkbox" style="width:auto" ${wmOn()?'checked':''} onchange="wmSet(this.checked)"> Mostrar a logo clara, em tamanho pequeno, preenchendo o fundo do painel</label>`:''}<input id="lf" type="file" accept="image/*" hidden onchange="setLogo(this.files[0])"></div></div>`}
+function logoCard(r){return `<div class="card"><h2>Logo da revenda</h2><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${r.logo?`<img src="${r.logo}" alt="Logo" style="max-height:80px;max-width:160px;border-radius:8px;background:#fff;padding:4px">`:'<span class="note">Nenhuma logo cadastrada.</span>'}<div style="display:flex;gap:8px"><button onclick="$('#lf').click()">${r.logo?'Trocar logo':'Adicionar logo'}</button>${r.logo?'<button class="s d" onclick="rmLogo()">Remover</button>':''}</div>${r.logo?`<div style="flex-basis:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="note" style="margin:0">Logo clara e pequena no fundo do painel: <b>${wmOn()?'ativada':'desativada'}</b></span><button class="s${wmOn()?' d':''}" onclick="wmSet(${wmOn()?'false':'true'})">${wmOn()?'Desativar':'Ativar'}</button></div>`:''}<input id="lf" type="file" accept="image/*" hidden onchange="setLogo(this.files[0])"></div></div>`}
 function setLogo(f){if(!f)return;if(!/^image\//.test(f.type)){toast('Escolha um arquivo de imagem.');return}
  const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const M=300,k=Math.min(1,M/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
  const r=db.resellers.find(r=>r.id===ses.id);r.logo=cv.toDataURL(f.type==='image/jpeg'?'image/jpeg':'image/png',.85);save();render();toast('Logo salva.')};im.onerror=()=>toast('Não foi possível ler a imagem.');im.src=rd.result};rd.readAsDataURL(f)}
@@ -2199,13 +2199,13 @@ function clientRows(list,showRes){
  return tbl+cards}
 
 function navFix(){const b=document.querySelector('.side button.on');if(b&&window.innerWidth<=640){const sd=b.parentNode;sd.scrollLeft=b.offsetLeft-(sd.clientWidth-b.offsetWidth)/2}}
-const wmOn=()=>{try{return localStorage.getItem('cobranca_wm')!=='0'}catch(e){return true}};
+const wmOn=()=>{const r=ses&&db.resellers.find(r=>r.id===ses.id);return !(r&&r.wm===false)};
 function wmPaint(){let st=document.getElementById('wmst');const me=ses&&ses.role==='rev'&&db.resellers.find(r=>r.id===ses.id);
  if(!me||!me.logo||!/^data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+$/.test(me.logo)||!wmOn()){if(st)st.remove();return}
  if(!st){st=document.createElement('style');st.id='wmst';document.head.appendChild(st)}
  const css=`body::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;background:url("${me.logo}") 0 0/56px 56px repeat;opacity:.05}`;
  if(st.textContent!==css)st.textContent=css}
-function wmSet(on){try{localStorage.setItem('cobranca_wm',on?'1':'0')}catch(e){}wmPaint()}
+function wmSet(on){const r=db.resellers.find(r=>r.id===ses.id);if(!r)return;if(on)delete r.wm;else r.wm=false;save();render();toast(on?'Logo ativada no fundo do painel.':'Logo desativada no fundo do painel.')}
 let rvK='';function render(){const k=JSON.stringify([ses&&ses.id,ses&&ses.role,typeof tab!=='undefined'?tab:'',typeof agT!=='undefined'?agT:'',typeof agHV!=='undefined'?agHV:'',typeof agBdTab!=='undefined'?agBdTab:'']);document.body.classList.toggle('norise',k===rvK);rvK=k;render0();fbViewSave();agThemeTick();navFix();wmPaint();paintTT();document.getElementById('tt').style.display=ses?'none':'grid';if(!storeOk&&!cloud&&!FBMODE)$('#app').insertAdjacentHTML('afterbegin','<div class="card err">Este navegador bloqueou o armazenamento: os dados valem só até recarregar a página.</div>')}
 
 const DASHD=7;
