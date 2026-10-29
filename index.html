@@ -2787,7 +2787,7 @@ async function agLoad(){const ok=ses&&(ses.role==='master'||ses.role==='ag');if(
    for(const pid in ap||{})for(const aid in ap[pid]){const x=ap[pid][aid];if(x&&x.s)L.push({pid,aid,...x})}
    const AC=[];for(const k in ko||{}){try{const j=JSON.parse(ko[k].j);AC.push({...j,oid:k,on:ko[k].on===true,dueMs:ko[k].dueMs,pass:(sc&&sc[k])||''})}catch(e){}}
    AC.sort((a,b)=>String(a.name).localeCompare(String(b.name)));bkD.ac=AC}
-  else{const o=await rt('GET','bko/'+ses.id);if(!o)throw {status:403};agMe={...JSON.parse(o.j),on:o.on===true,dueMs:o.dueMs};
+  else{const o=await rt('GET','bko/'+ses.id);if(!o)throw {status:403};const pv=agProfOf(agMe);agMe={...JSON.parse(o.j),on:o.on===true,dueMs:o.dueMs};if(pv!==agProfOf(agMe)){const e=document.getElementById('lnpf');if(e)e.innerHTML=agProfOf(agMe)?'Profissão: <b>'+esc(agProfOf(agMe))+'</b>':'';else setTimeout(()=>{if(ses&&ses.role==='ag'&&!$('#modal').innerHTML.trim())render()},0)}
    try{const nn=await rt('GET','bk/nt/'+ses.id)||{};bkD.nt=Object.keys(nn).map(id=>({id,...nn[id]})).filter(x=>x&&x.t)}catch(e){bkD.nt=bkD.nt||[]}
    const pids=Object.keys(o.pgs||{});
    if(pids.length){try{const l=await rt('GET','bk/lg/'+pids[0]);agLogo=typeof l==='string'?l:''}catch(e){}}else agLogo='';
@@ -3101,7 +3101,7 @@ const agSel=(id,opts,v)=>`<select id="${id}">${opts.map(([a,b])=>`<option value=
 const agSv2=async(patch,msg)=>{const id=agCur(),c=bkD.pg[id];if(!c)return false;try{await agPut(id,{...c,...patch});render();toast(msg||'Salvo.');return true}catch(e){toast('Não foi possível salvar. '+(e.status===401||e.status===403?'Seu acesso pode ter vencido ou estar bloqueado.':'Tente de novo.'));return false}};
 function agNew(){const k=Object.keys(bkD.pg);if(agMe&&agMe.maxPg>0&&k.length>=agMe.maxPg){toast('Você atingiu o limite de '+agMe.maxPg+' loja(s) do seu acesso. Fale com o administrador.');return}
  $('#modal').innerHTML=`<div class="ov agm"><div class="md"><h2>${k.length?'Nova loja':'Cadastre a sua loja'}</h2><p class="note" style="margin:0 0 6px">Depois você define horários e serviços nas abas ao lado.</p>
- <label>Nome da loja</label><input id="lnn" maxlength="60" placeholder="Ex.: Studio Ana">
+ <p id="lnpf" class="note" style="margin:0 0 6px">${agProfOf(agMe)?'Profissão: <b>'+esc(agProfOf(agMe))+'</b>':''}</p><label>Nome da loja</label><input id="lnn" maxlength="60" placeholder="Ex.: Studio Ana">
  <label>Descrição (opcional)</label><input id="lnd" maxlength="160" placeholder="Ex.: Escolha o melhor dia e horário">
  <label>Endereço (opcional)</label><input id="lna" maxlength="140" placeholder="Rua, número, bairro, cidade">
  <label>WhatsApp da loja (com DDD)</label><input id="lnw" type="tel" inputmode="tel" placeholder="81999999999">
@@ -3496,7 +3496,7 @@ async function agSaveSrv(){const svc=[...document.querySelectorAll('#agsv .sv-r'
 async function agSaveLoja(){const n=$('#lon').value.trim();if(!n){toast('Digite o nome da loja.');return}const ml=$('#lom2').value.trim();if(ml&&!agMapOk(ml)){toast('Link do Google Maps inválido. Use o link de Compartilhar do Google Maps (https://maps.app.goo.gl/… ou https://www.google.com/maps/…).');return}const wa=$('#low').value.replace(/\D/g,'');if(wa&&(wa.length<10||wa.length>13)){toast('WhatsApp inválido. Digite com DDD.');return}
  await agSv2({n,d:$('#lod').value.trim(),ad:$('#loa').value.trim(),ml,wa,msg:$('#lom').value.trim()||AG_MSG},'Dados da loja salvos. Já aparecem no link da sua loja.')}
 function agOwnerHtml(){const nm=agMe?agMe.name:'',agBody=agOwnerBody();
- return `<header><h1 style="display:flex;align-items:center;gap:10px">${agLogo?`<img src="${agLogo}" alt="" style="height:34px;max-width:90px;object-fit:contain;border-radius:6px;background:#fff;padding:2px">`:logo(30)}<span>Agendamentos<small>${esc(nm)}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell">${agNavOn?agOwnerNav():''}<div class="mainc"${agNavOn?'':' style="grid-column:1/-1"'}>${agT==='hist'&&agHV==='bd'?'':agBdBanner()}${agBody}</div></div>`}
+ return `<header><h1 style="display:flex;align-items:center;gap:10px">${agLogo?`<img src="${agLogo}" alt="" style="height:34px;max-width:90px;object-fit:contain;border-radius:6px;background:#fff;padding:2px">`:logo(30)}<span>Agendamentos<small>${esc(nm)}${agProfOf(agMe)?' · '+esc(agProfOf(agMe)):''}</small></span></h1><div><button class="s tg" onclick="toggleTheme()"></button> <button class="s" onclick="logout()">Sair</button></div></header><div class="shell">${agNavOn?agOwnerNav():''}<div class="mainc"${agNavOn?'':' style="grid-column:1/-1"'}>${agT==='hist'&&agHV==='bd'?'':agBdBanner()}${agBody}</div></div>`}
 function render0(){const a=$('#app');
  if(AGQ){a.innerHTML=agPublic();return}
  if(ses&&ses.role==='rev'){const rr=db.resellers.find(r=>r.id===ses.id);if(rr&&stR(rr)==='atr'){ses=null;err=blockMsg(rr)}}
