@@ -3395,9 +3395,9 @@ const agHex=(h,s,l)=>'#'+agHsl(h,s,l).map(v=>v.toString(16).padStart(2,'0')).joi
 const agOn=(h,s,l)=>{const [r,g,b]=agHsl(h,s,l).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b>.4?'#0a1b33':'#fff'};
 function agThemeCss(c){const h=Math.round(c.h),s=Math.max(.3,Math.min(.8,c.s)),si=Math.min(s,.55);
  const pL=agHex(h,s,.33),pD=agHex(h,s,.62),iL=agHex(h,si,.14),iD=agHex(h,si,.17),tint=agHex(h,Math.min(s,.7),.94),acc=agHex(h,s,.5),onA=agOn(h,s,.5),dk=agHex(h,si,.15);
- const L=`--pri:${pL};--onpri:#fff;--ink:${iL}`,D=`--pri:${pD};--onpri:${agOn(h,s,.62)};--ink:${iD}`;
+ const L=`--pri:${pL};--onpri:#fff;--ink:${iL};--ok:${agHex(h,s,.3)}`,D=`--pri:${pD};--onpri:${agOn(h,s,.62)};--ink:${iD};--ok:${agHex(h,s,.66)}`;
  return `:root{${L}}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){${D}}}:root[data-theme="dark"]{${D}}
-.ag{--ink:${dk}}.ag-on{background:${dk}!important;border-color:${dk}!important}.ag-go{background:${acc};color:${onA}}.ag-wa{background:${dk}}.ag-pay.ag-on{background:${tint}!important;border-color:${acc}!important}.ag-h{background:linear-gradient(135deg,${dk},${agHex(h,si,.24)})}.ag-h a{color:${agHex(h,.8,.75)}!important}.ag-ok{background:${acc};color:${onA}}.ag-lb a{background:${dk};color:#fff}.ag-lb a+a{background:${acc};color:${onA}}.ag-loc svg{color:${pL}}.ag-c h2{color:${dk}}.ag-f input:focus,.ag-f textarea:focus{border-color:${acc};outline-color:${agHex(h,.7,.8)}}.ag-sum{background:${tint};border:1px solid ${agHex(h,.4,.82)};border-left:4px solid ${acc}}`}
+.agpm-pix{border-left-color:${agHex(h,s,.36)}}.agpm-cre{border-left-color:${agHex(h,s,.5)}}.agpm-deb{border-left-color:${agHex(h,s,.62)}}.agpm-din{border-left-color:${agHex(h,s,.74)}}.agk.ok b{color:var(--pri)}.ag{--ink:${dk}}.ag-on{background:${dk}!important;border-color:${dk}!important}.ag-go{background:${acc};color:${onA}}.ag-wa{background:${dk}}.ag-pay.ag-on{background:${tint}!important;border-color:${acc}!important}.ag-h{background:linear-gradient(135deg,${dk},${agHex(h,si,.24)})}.ag-h a{color:${agHex(h,.8,.75)}!important}.ag-ok{background:${acc};color:${onA}}.ag-lb a{background:${dk};color:#fff}.ag-lb a+a{background:${acc};color:${onA}}.ag-loc svg{color:${pL}}.ag-c h2{color:${dk}}.ag-f input:focus,.ag-f textarea:focus{border-color:${acc};outline-color:${agHex(h,.7,.8)}}.ag-sum{background:${tint};border:1px solid ${agHex(h,.4,.82)};border-left:4px solid ${acc}}`}
 const AG_TH=[['padrao','Padrão'],['oceano','Oceano',210,.72],['esmeralda','Esmeralda',152,.6],['rosa','Rosa',334,.7],['violeta','Violeta',262,.6],['laranja','Laranja',22,.85],['vinho','Vinho',350,.6],['dourado','Dourado',42,.75],['grafite','Grafite',215,.2],['logo','Cor da logo']];
 const agWmCss=lg=>`body::before{content:'';position:fixed;inset:0;background:url("${lg}") center/min(112vw,980px) no-repeat;opacity:.13;pointer-events:none;z-index:0}#app{position:relative;z-index:1}.ag-c{background:rgba(255,255,255,.8)}.card,.side,.mc,.agks>*{background:color-mix(in srgb,var(--card) 74%,transparent)!important}`;
 let agThS='';
@@ -3405,7 +3405,7 @@ function agThemeSet(lg,key){const sig=(key||'')+'|'+(lg?lg.length+lg.slice(-24):
  if(!lg&&(!key||key==='padrao'||key==='logo')){if(el)el.remove();return}
  const put=t=>{if(agThS!==sig)return;let e=document.getElementById('agTheme');if(!e){e=document.createElement('style');e.id='agTheme';document.head.appendChild(e)}e.textContent=t};
  const wm=lg?agWmCss(lg):'',t=AG_TH.find(x=>x[0]===key);
- if(key==='logo'&&lg){agDomColor(lg).then(c=>put((c?agThemeCss(c):'')+wm));if(el)el.textContent=wm;return}
+ if((key==='logo'||!key)&&lg){agDomColor(lg).then(c=>put((c?agThemeCss(c):'')+wm));if(el)el.textContent=wm;return}
  put((t&&t[2]!=null?agThemeCss({h:t[2],s:t[3]}):'')+wm)}
 function agThemeTick(){try{let lg='',k='';if(AGQ){lg=ag&&ag.logo||'';k=ag&&ag.cfg&&ag.cfg.th||''}else if(ses&&ses.role==='ag'){lg=agLogo||'';const c=bkD.pg[agCur()];k=c&&c.th||''}agThemeSet(lg,AG_TH.some(x=>x[0]===k)?k:'')}catch(e){}}
 function agThCard(){const c=bkD.pg[agCur()]||{},cur=AG_TH.some(x=>x[0]===c.th)?c.th:'padrao';
