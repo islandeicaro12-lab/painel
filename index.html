@@ -2939,21 +2939,23 @@ async function agAtLoad(){if(agAc.busy||!ses)return;agAc.busy=true;agAc.err='';
  catch(e){agAc={...agAc,ok:false,busy:false,err:'Não foi possível carregar as atividades. Publique as regras novas do Firebase (regras-firebase.json).'}}
  if(agT==='ativ'&&!$('#modal').innerHTML.trim())render()}
 function agAtNames(){const m=new Map();(agEm||[]).forEach(e=>m.set(agNorm(e.name),e.name));m.set('dono','Dono');agAc.list.forEach(x=>{const k=agNorm(x.u);if(!m.has(k))m.set(k,x.u)});return [...m.values()]}
-function agAtFilt(){const q=agNorm(agAc.q),w=agNorm(agAc.who);return agAc.list.filter(x=>(!w||agNorm(x.u)===w)&&(!q||agNorm(x.u).includes(q)||agNorm(x.a).includes(q)))}
+function agAtFilt(){const q=agNorm(agAc.q),w=agNorm(agAc.who),pe=agAc.per==null?'7':agAc.per,lim=pe==='all'?0:(()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(+pe));return d.getTime()})();return agAc.list.filter(x=>(!lim||x.t>=lim)&&(!w||agNorm(x.u)===w)&&(!q||agNorm(x.u).includes(q)||agNorm(x.a).includes(q)))}
 function agAtList(){const e=document.getElementById('agAtL');if(e)e.innerHTML=agAtRows()}
-function agAtRows(){const L=agAtFilt();if(!agAc.list.length)return '<p class="note" style="margin:0">Nenhuma atividade registrada ainda. Daqui para frente, tudo o que você e seus funcionários fizerem no painel aparece aqui.</p>';
- if(!L.length)return '<p class="note" style="margin:0">Nenhuma atividade encontrada para “'+esc(agAc.q||agAc.who)+'”.</p>';
+function agAtRows(){const LL=agAtFilt(),N=agAc.n||40,L=LL.slice(0,N);if(!agAc.list.length)return '<p class="note" style="margin:0">Nenhuma atividade registrada ainda. Daqui para frente, tudo o que você e seus funcionários fizerem no painel aparece aqui.</p>';
+ if(!L.length)return '<p class="note" style="margin:0">Nenhuma atividade encontrada neste período'+(agAc.q||agAc.who?' para “'+esc(agAc.q||agAc.who)+'”':'')+'. Experimente “Tudo”.</p>';
  let day='',h='';L.forEach(x=>{const d=new Date(x.t),dk=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   if(dk!==day){day=dk;h+=`<div class="agmh"><b>${dk===today()?'Hoje':fmt(dk)}</b></div>`}
   h+=`<div class="agh-r"><div class="tm"><b>${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</b></div><div class="nm"><b>${esc(x.u)}</b><small style="white-space:normal">${esc(x.a)}</small></div></div>`});
- return `<div class="agh-l">${h}</div><p class="note" style="margin:10px 0 0">${L.length} registro${L.length>1?'s':''}${agAc.list.length>=600?' · mostrando as 600 mais recentes':''}</p>`}
+ return `<div class="agh-l">${h}</div><p class="note" style="margin:10px 0 0">Mostrando ${L.length} de ${LL.length} registro${LL.length>1?'s':''}${agAc.list.length>=600?' · o histórico guarda os 600 mais recentes':''}</p>${LL.length>L.length?'<button class="s p" style="margin-top:8px" onclick="agAc.n=(agAc.n||40)+40;agAtList()">Mostrar mais 40</button>':''}`}
 function agAtBody(){if(!agAc.ok&&!agAc.busy&&!agAc.err){setTimeout(agAtLoad,0);if(agEm===null)agEmLoad()}
  if(agAc.err)return `<div class="err">${esc(agAc.err)}</div><button class="s" onclick="agAc.err='';agAtLoad();render()">Tentar de novo</button>`;
  if(!agAc.ok)return '<div class="card"><p class="note" style="margin:0">Carregando…</p></div>';
  const nm=agAtNames();
- return `<div class="card"><h2>Atividades</h2><p class="note" style="margin:0 0 10px">Tudo o que você e seus funcionários fizeram no painel: agendamentos, atendimentos, fiados, produtos e configurações. Pesquise pelo nome do funcionário.</p>
- <div class="cbar" style="margin-bottom:8px"><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="agAtQ" type="search" placeholder="Pesquisar pelo nome do funcionário…" value="${esc(agAc.q)}" oninput="agAc.q=this.value;agAtList()" autocomplete="off"></div><button class="s" onclick="agAc.ok=false;agAtLoad();render()">Atualizar</button></div>
- <div class="agbl" style="margin:0 0 4px"><button type="button" class="s ${agAc.who?'':'p'}" onclick="agAc.who='';render()">Todos</button>${nm.map(n=>`<button type="button" class="s ${agNorm(agAc.who)===agNorm(n)?'p':''}" onclick="agAc.who=this.dataset.n;render()" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>
+ const pe=agAc.per==null?'7':agAc.per;
+ return `<div class="card" style="position:sticky;top:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.12)"><h2>Atividades</h2><p class="note" style="margin:0 0 8px">Tudo o que você e seus funcionários fizeram no painel. Use a busca e os filtros abaixo para achar o que precisa.</p>
+ <div class="cbar" style="margin-bottom:8px"><div class="srch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="agAtQ" type="search" placeholder="Pesquisar por nome ou ação…" value="${esc(agAc.q)}" oninput="agAc.q=this.value;agAc.n=40;agAtList()" autocomplete="off"></div><button class="s" onclick="agAc.ok=false;agAtLoad();render()">Atualizar</button></div>
+ <div class="agbl agper" style="margin:0 0 6px">${[['0','Hoje'],['7','7 dias'],['30','30 dias'],['all','Tudo']].map(([k,t])=>`<button type="button" class="s ${pe===k?'p':''}" onclick="agAc.per='${k}';agAc.n=40;agAtList();document.querySelectorAll('.agper button').forEach(b=>b.classList.toggle('p',b.dataset.k==='${k}'))" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="agbl" style="margin:0"><button type="button" class="s ${agAc.who?'':'p'}" onclick="agAc.who='';agAc.n=40;render()">Todos</button>${nm.map(n=>`<button type="button" class="s ${agNorm(agAc.who)===agNorm(n)?'p':''}" onclick="agAc.who=this.dataset.n;agAc.n=40;render()" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>
  <div class="card" id="agAtL">${agAtRows()}</div>`}
 
 // ===== Aniversariantes =====
